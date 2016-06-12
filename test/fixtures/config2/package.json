@@ -1,0 +1,10 @@
+{
+  "lambci": {
+    "cmd": "from package.json",
+    "notifications": {
+      "slack": {
+        "channel": "#packagejson"
+      }
+    }
+  }
+}

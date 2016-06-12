@@ -1,0 +1,250 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "LambCI function and supporting infra",
+  "Parameters": {
+    "GithubToken": {
+      "Description": "GitHub token (see http://whatever.com)",
+      "Type" : "String",
+      "Default": "",
+      "AllowedPattern": "^$|^[0-9a-f]{40}$",
+      "ConstraintDescription": "Must be empty or a 40 char GitHub token"
+    },
+    "Repositories": {
+      "Description": "(optional) GitHub repos to add hook to (eg: 'facebook/react,emberjs/ember.js')",
+      "Type" : "CommaDelimitedList",
+      "Default": ""
+    },
+    "SlackToken": {
+      "Description": "(optional) Slack token (see http://whatever.com)",
+      "Type" : "String",
+      "Default": "",
+      "AllowedPattern": "^$|^xox.-[0-9]+-.+",
+      "ConstraintDescription": "Must be empty or a valid Slack token, eg: xoxb-1234"
+    },
+    "SlackChannel": {
+      "Description": "(optional) Slack channel (see http://whatever.com)",
+      "Type" : "String",
+      "Default": "#general",
+      "AllowedPattern": "^$|^#.+",
+      "ConstraintDescription": "Must be empty or a valid Slack channel, eg: #general"
+    }
+  },
+  "Resources": {
+    "BuildLambda": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-build"]]},
+        "Description": {"Fn::Join": ["", ["LambCI build function for stack: ", {"Ref": "AWS::StackName"}]]},
+        "Handler": "index.handler",
+        "MemorySize": "1536",
+        "Timeout": "300",
+        "Role": {"Fn::GetAtt": ["LambdaExecution", "Arn"]},
+        "Code": {
+          "S3Bucket": "lambci",
+          "S3Key": "fn/lambci-build-0.5.0.zip"
+        },
+        "Runtime": "nodejs4.3"
+      }
+    },
+    "BuildResults": {
+      "Type": "AWS::S3::Bucket"
+    },
+    "ConfigTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-config"]]},
+        "AttributeDefinitions": [
+          {"AttributeName": "project", "AttributeType": "S"}
+        ],
+        "KeySchema": [
+          {"AttributeName": "project", "KeyType": "HASH"}
+        ],
+        "ProvisionedThroughput": {"ReadCapacityUnits": "1", "WriteCapacityUnits": "1"}
+      }
+    },
+    "BuildsTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-builds"]]},
+        "AttributeDefinitions": [
+          {"AttributeName": "project", "AttributeType": "S"},
+          {"AttributeName": "buildNum", "AttributeType": "N"},
+          {"AttributeName": "eventContext", "AttributeType": "S"},
+          {"AttributeName": "commit", "AttributeType": "S"},
+          {"AttributeName": "requestId", "AttributeType": "S"}
+        ],
+        "KeySchema": [
+          {"AttributeName": "project", "KeyType": "HASH"},
+          {"AttributeName": "buildNum", "KeyType": "RANGE"}
+        ],
+        "ProvisionedThroughput": {"ReadCapacityUnits": "1", "WriteCapacityUnits": "1"},
+        "LocalSecondaryIndexes": [{
+          "IndexName": "eventContext",
+          "KeySchema": [
+            {"AttributeName": "project", "KeyType": "HASH"},
+            {"AttributeName": "eventContext", "KeyType": "RANGE"}
+          ],
+          "Projection": {"ProjectionType": "KEYS_ONLY"}
+        },{
+          "IndexName": "commit",
+          "KeySchema": [
+            {"AttributeName": "project", "KeyType": "HASH"},
+            {"AttributeName": "commit", "KeyType": "RANGE"}
+          ],
+          "Projection": {"ProjectionType": "KEYS_ONLY"}
+        },{
+          "IndexName": "requestId",
+          "KeySchema": [
+            {"AttributeName": "project", "KeyType": "HASH"},
+            {"AttributeName": "requestId", "KeyType": "RANGE"}
+          ],
+          "Projection": {"ProjectionType": "KEYS_ONLY"}
+        }]
+      }
+    },
+    "InvokeTopic" : {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "Subscription": [{"Endpoint": {"Fn::GetAtt": ["BuildLambda", "Arn"]}, "Protocol": "lambda"}]
+      }
+    },
+    "LambdaInvoke": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName" : {"Fn::GetAtt" : ["BuildLambda", "Arn"]},
+        "Action": "lambda:InvokeFunction",
+        "Principal": "sns.amazonaws.com",
+        "SourceArn": {"Ref" : "InvokeTopic"}
+      }
+    },
+    "LambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": {
+            "Effect": "Allow",
+            "Principal": {"Service": "lambda.amazonaws.com"},
+            "Action": "sts:AssumeRole"
+          }
+        },
+        "Policies": [{
+          "PolicyName": "WriteLogs",
+          "PolicyDocument": {
+            "Statement": {
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": [
+                {"Fn::Join": ["", ["arn:aws:logs:*:*:log-group:/aws/lambda/", {"Ref": "AWS::StackName"}, "-*"]]},
+                {"Fn::Join": ["", ["arn:aws:logs:*:*:log-group:/", {"Ref": "AWS::StackName"}, "/*"]]}
+              ]
+            }
+          }
+        },{
+          "PolicyName": "ReadWriteBucket",
+          "PolicyDocument": {
+            "Statement": {
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetObject",
+                "s3:PutObject"
+              ],
+              "Resource": {"Fn::Join": ["", ["arn:aws:s3:::", {"Ref": "BuildResults"}, "/*"]]}
+            }
+          }
+        },{
+          "PolicyName": "ReadTables",
+          "PolicyDocument": {
+            "Statement": {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetItem",
+                "dynamodb:Query",
+                "dynamodb:Scan"
+              ],
+              "Resource": {"Fn::Join": ["", ["arn:aws:dynamodb:*:*:table/", {"Ref": "AWS::StackName"}, "-*"]]}
+            }
+          }
+        },{
+          "PolicyName": "WriteTables",
+          "PolicyDocument": {
+            "Statement": {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:BatchWriteItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem"
+              ],
+              "Resource": [
+                {"Fn::Join": ["", ["arn:aws:dynamodb:*:*:table/", {"Ref": "AWS::StackName"}, "-config"]]},
+                {"Fn::Join": ["", ["arn:aws:dynamodb:*:*:table/", {"Ref": "AWS::StackName"}, "-builds"]]}
+              ]
+            }
+          }
+        }]
+      }
+    },
+    "SnsSender": {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "Policies": [{
+          "PolicyName": "PublishOnly",
+          "PolicyDocument": {
+            "Statement": {
+              "Effect": "Allow",
+              "Action": "sns:Publish",
+              "Resource": {"Ref": "InvokeTopic"}
+            }
+          }
+        }]
+      }
+    },
+    "SnsAccessKey" : {
+      "Type": "AWS::IAM::AccessKey",
+      "Properties": {
+        "UserName": {"Ref" : "SnsSender"}
+      }
+    },
+    "ConfigUpdater": {
+      "Type": "Custom::ConfigUpdater",
+      "Properties": {
+        "ServiceToken": {"Fn::GetAtt" : ["BuildLambda", "Arn"]},
+        "GithubToken": {"Ref": "GithubToken"},
+        "Repositories": {"Ref": "Repositories"},
+        "SlackToken": {"Ref": "SlackToken"},
+        "SlackChannel": {"Ref": "SlackChannel"},
+        "S3Bucket": {"Ref": "BuildResults"},
+        "SnsTopic": {"Ref": "InvokeTopic"},
+        "SnsAccessKey": {"Ref": "SnsAccessKey"},
+        "SnsSecret": {"Fn::GetAtt": ["SnsAccessKey", "SecretAccessKey"]}
+      }
+    }
+  },
+  "Outputs": {
+    "S3Bucket": {
+      "Description": "Name of the build results S3 bucket, see http://www.apple.com",
+      "Value": {"Ref": "BuildResults"}
+    },
+    "SnsTopic": {
+      "Description": "Enter this in GitHub",
+      "Value": {"Ref": "InvokeTopic"}
+    },
+    "SnsRegion": {
+      "Description": "Enter this in GitHub",
+      "Value": {"Ref": "AWS::Region"}
+    },
+    "SnsAccessKey": {
+      "Description": "Enter this in GitHub",
+      "Value": {"Ref": "SnsAccessKey"}
+    },
+    "SnsSecret": {
+      "Description": "Enter this in GitHub",
+      "Value": {"Fn::GetAtt": ["SnsAccessKey", "SecretAccessKey"]}
+    }
+  }
+}

@@ -1,28 +1,33 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambCI function and supporting infra",
+  "Description": "LambCI function and supporting services (see github.com/lambci/lambci for documentation)",
   "Parameters": {
+    "Version": {
+      "Description": "LambCI version",
+      "Type" : "String",
+      "Default": "0.5.0"
+    },
     "GithubToken": {
-      "Description": "GitHub token (see http://whatever.com)",
+      "Description": "GitHub OAuth token",
       "Type" : "String",
       "Default": "",
       "AllowedPattern": "^$|^[0-9a-f]{40}$",
       "ConstraintDescription": "Must be empty or a 40 char GitHub token"
     },
     "Repositories": {
-      "Description": "(optional) GitHub repos to add hook to (eg: 'facebook/react,emberjs/ember.js')",
+      "Description": "(optional) GitHub repos to add hook to, eg: facebook/react,emberjs/ember.js",
       "Type" : "CommaDelimitedList",
       "Default": ""
     },
     "SlackToken": {
-      "Description": "(optional) Slack token (see http://whatever.com)",
+      "Description": "(optional) Slack token",
       "Type" : "String",
       "Default": "",
       "AllowedPattern": "^$|^xox.-[0-9]+-.+",
       "ConstraintDescription": "Must be empty or a valid Slack token, eg: xoxb-1234"
     },
     "SlackChannel": {
-      "Description": "(optional) Slack channel (see http://whatever.com)",
+      "Description": "(optional) Slack channel",
       "Type" : "String",
       "Default": "#general",
       "AllowedPattern": "^$|^#.+",
@@ -41,7 +46,7 @@
         "Role": {"Fn::GetAtt": ["LambdaExecution", "Arn"]},
         "Code": {
           "S3Bucket": "lambci",
-          "S3Key": "fn/lambci-build-0.5.0.zip"
+          "S3Key": {"Fn::Join": ["", ["fn/lambci-build-", {"Ref": "Version"}, ".zip"]]}
         },
         "Runtime": "nodejs4.3"
       }
@@ -227,23 +232,23 @@
   },
   "Outputs": {
     "S3Bucket": {
-      "Description": "Name of the build results S3 bucket, see http://www.apple.com",
+      "Description": "Name of the build results S3 bucket, see github.com/lambci/lambci",
       "Value": {"Ref": "BuildResults"}
     },
     "SnsTopic": {
-      "Description": "Enter this in GitHub",
+      "Description": "Enter this for 'Sns topic' at github.com/<repo>/settings/hooks/new?service=amazonsns",
       "Value": {"Ref": "InvokeTopic"}
     },
     "SnsRegion": {
-      "Description": "Enter this in GitHub",
+      "Description": "Enter this for 'Sns region' at github.com/<repo>/settings/hooks/new?service=amazonsns",
       "Value": {"Ref": "AWS::Region"}
     },
     "SnsAccessKey": {
-      "Description": "Enter this in GitHub",
+      "Description": "Enter this for 'Aws key' at github.com/<repo>/settings/hooks/new?service=amazonsns",
       "Value": {"Ref": "SnsAccessKey"}
     },
     "SnsSecret": {
-      "Description": "Enter this in GitHub",
+      "Description": "Enter this for 'Aws secret' at github.com/<repo>/settings/hooks/new?service=amazonsns",
       "Value": {"Fn::GetAtt": ["SnsAccessKey", "SecretAccessKey"]}
     }
   }

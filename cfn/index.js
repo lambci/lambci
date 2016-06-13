@@ -93,8 +93,8 @@ function performUpdates(event, cb) {
   }
 
   var repos = props.Repositories || [], oldRepos = oldProps.Repositories || []
-  var addedRepos = repos.filter(repo => !~oldRepos.indexOf(repo))
-  var deletedRepos = oldRepos.filter(repo => !~repos.indexOf(repo))
+  var addedRepos = repos.filter(repo => repo && !~oldRepos.indexOf(repo))
+  var deletedRepos = oldRepos.filter(repo => repo && !~repos.indexOf(repo))
 
   var reposUpdated = repos.length && (addedRepos.length || deletedRepos.length)
   var snsUpdated = props.SnsTopic && props.SnsAccessKey && props.SnsSecret &&

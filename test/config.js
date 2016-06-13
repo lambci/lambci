@@ -103,16 +103,16 @@ describe('config', function() {
 
   })
 
-  describe('file configs', function() {
+  describe('files', function() {
 
     it('should load from .lambci.js if overrides and secrets are allowed', function() {
       var configDir = `${__dirname}/fixtures/config1`
-      var build = {eventType: 'push', branch: 'test-something'}
+      var build = {eventType: 'push', branch: 'test-something', cloneDir: configDir}
       var baseConfig = {
         allowConfigOverrides: true,
         inheritSecrets: true,
       }
-      var config = configUtils.resolveFileConfigs(baseConfig, build, configDir)
+      var config = configUtils.resolveFileConfigs(baseConfig, build)
       assert.deepEqual(config, {
         cmd: 'from .lambci.js',
         env: {SOURCE: '.lambci.js'},
@@ -124,12 +124,12 @@ describe('config', function() {
 
     it('should load from .lambci.json if overrides but not secrets are allowed', function() {
       var configDir = `${__dirname}/fixtures/config1`
-      var build = {eventType: 'push', branch: 'test-something'}
+      var build = {eventType: 'push', branch: 'test-something', cloneDir: configDir}
       var baseConfig = {
         allowConfigOverrides: true,
         inheritSecrets: false,
       }
-      var config = configUtils.resolveFileConfigs(baseConfig, build, configDir)
+      var config = configUtils.resolveFileConfigs(baseConfig, build)
       assert.deepEqual(config, {
         cmd: 'from .lambci.json',
         env: {SOURCE: '.lambci.json'},
@@ -141,22 +141,22 @@ describe('config', function() {
 
     it('should not load anything if no overrides are allowed', function() {
       var configDir = `${__dirname}/fixtures/config1`
-      var build = {eventType: 'push', branch: 'test-something'}
+      var build = {eventType: 'push', branch: 'test-something', cloneDir: configDir}
       var baseConfig = {
         allowConfigOverrides: false,
       }
-      var config = configUtils.resolveFileConfigs(baseConfig, build, configDir)
+      var config = configUtils.resolveFileConfigs(baseConfig, build)
       assert.deepEqual(config, baseConfig)
     })
 
     it('should load from package.json if no .lambci.json and no inherits', function() {
       var configDir = `${__dirname}/fixtures/config2`
-      var build = {eventType: 'push', branch: 'test-something'}
+      var build = {eventType: 'push', branch: 'test-something', cloneDir: configDir}
       var baseConfig = {
         allowConfigOverrides: true,
         inheritSecrets: false,
       }
-      var config = configUtils.resolveFileConfigs(baseConfig, build, configDir)
+      var config = configUtils.resolveFileConfigs(baseConfig, build)
       assert.deepEqual(config, {
         cmd: 'from package.json',
         notifications: {slack: {channel: '#packagejson'}},
@@ -167,12 +167,12 @@ describe('config', function() {
 
     it('should load from package.json if no .lambci.json with inherits', function() {
       var configDir = `${__dirname}/fixtures/config2`
-      var build = {eventType: 'push', branch: 'test-something'}
+      var build = {eventType: 'push', branch: 'test-something', cloneDir: configDir}
       var baseConfig = {
         allowConfigOverrides: true,
         inheritSecrets: true,
       }
-      var config = configUtils.resolveFileConfigs(baseConfig, build, configDir)
+      var config = configUtils.resolveFileConfigs(baseConfig, build)
       assert.deepEqual(config, {
         cmd: 'from .lambci.js',
         env: {SOURCE: '.lambci.js'},

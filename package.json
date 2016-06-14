@@ -9,7 +9,6 @@
   "scripts": {
     "test": "mocha",
     "integration": "node test/integration.js",
-    "rebuild": "docker run -v \"$PWD\":/var/task lambci/lambda:build npm install nodegit@0.13.1",
     "pkg": "rm -f lambda.zip && zip -qyr lambda.zip . -x@.lambdaignore",
     "deploy": "npm run pkg && aws lambda update-function-code --function-name lambci-build --zip-file fileb://lambda.zip",
     "publish": "npm run pkg && export VERSION=$(node -p 'require(\"./package.json\").version') && npm run s3put && npm run s3copy",
@@ -21,8 +20,7 @@
     "ansi_up": "^1.3.0",
     "async": "^1.5.2",
     "aws-sdk": "^2.3.19",
-    "nave": "^1.0.1",
-    "nodegit": "0.13.1"
+    "nave": "^1.0.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",

@@ -26,7 +26,7 @@ exports.raw = function(msg) {
 
 exports.getBuildStream = function(build) {
   build.logFile = build.logFile || '/tmp/log.txt'
-  return fs.createWriteStream(build.logFile)
+  return fs.createWriteStream(build.logFile, {flags: 'a'})
 }
 
 exports.getTail = function(build) {

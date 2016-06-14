@@ -1,9 +1,7 @@
 var path = require('path')
 var spawn = require('child_process').spawn
-var execSync = require('child_process').execSync
 var async = require('async')
 var AWS = require('aws-sdk')
-var nodegit = require('nodegit')
 var utils = require('../utils')
 var log = require('../utils/log')
 var configUtils = require('../utils/config')
@@ -24,25 +22,16 @@ function runBuild(build, context, cb) {
 
   // Sometimes errors will occur that we don't catch, and Lambda will retry those requests,
   // so check if we've seen this request ID before, and if so, ignore it
-  db.checkIfRetry(build, function(err, data) {
-    if (err) return cb(err)
-    if (data) {
-      log.info(`Ignoring retry request for build #${data.buildNum}`)
-      return cb() // TODO: Ensure Github/Slack statuses are 'finished' too
-    }
-
-    cloneAndBuild(build, cb)
-  })
-
-}
-
-function cloneAndBuild(build, cb) {
-
   async.parallel({
-    build: (cb) => db.initBuild(build, cb),
+    retry: (cb) => db.checkIfRetry(build, cb),
     configs: (cb) => db.getConfigs(['global', build.project], cb),
   }, function(err, data) {
     if (err) return cb(err)
+
+    if (data.retry) {
+      log.info(`Ignoring retry request for build #${data.buildNum}`)
+      return cb() // TODO: Ensure Github/Slack statuses are 'finished' too
+    }
 
     var config = configUtils.initConfig(data.configs, build)
 
@@ -51,9 +40,18 @@ function cloneAndBuild(build, cb) {
       return cb()
     }
 
+    cloneAndBuild(build, config, cb)
+  })
+}
+
+function cloneAndBuild(build, config, cb) {
+
+  db.initBuild(build, function(err, build) {
+    if (err) return cb(err)
+
     build.token = config.secretEnv.GITHUB_TOKEN
     build.logUrl = log.initBuildLog(config, build)
-    build.cloneDir = path.join(configUtils.BASE_BUILD_DIR, build.repo, build.branch)
+    build.cloneDir = path.join(configUtils.BASE_BUILD_DIR, build.repo)
 
     github.createClient(build)
 
@@ -73,7 +71,7 @@ function cloneAndBuild(build, cb) {
 
     build.statusEmitter.emit('start', build)
 
-    clone(build, function(err) {
+    clone(build, config, function(err) {
       if (err && /^Reference .+ not found$/.test(err.message)) {
         err = new Error(`Could not find branch ${build.checkoutBranch} on ${build.cloneUrl}`)
       }
@@ -107,51 +105,52 @@ function buildDone(err, data, build, config, cb) {
   cb(err, data)
 }
 
-function clone(build, cb) {
+function clone(build, config, cb) {
 
   // Just double check we're in tmp!
   if (build.cloneDir.indexOf(configUtils.BASE_BUILD_DIR) !== 0) return
 
+  var cloneUrl = build.cloneUrl, maskCmd = cmd => cmd
+  if (build.isPrivate && build.token) {
+    cloneUrl = cloneUrl.replace('//github.com', `//${build.token}@github.com`)
+    maskCmd = cmd => cmd.replace(new RegExp(build.token, 'g'), 'XXXX')
+  }
+
+  var cloneCmd = `git clone --depth 5 ${cloneUrl} -b ${build.checkoutBranch} ${build.cloneDir}`
+  var checkoutCmd = `cd ${build.cloneDir} && git checkout -qf ${build.commit}`
+
+  // Bit awkward, but we don't want the token written to disk anywhere
+  if (build.isPrivate && build.token && !config.inheritSecrets) {
+    cloneCmd = [
+      `mkdir -p ${build.cloneDir}`,
+      `cd ${build.cloneDir} && git init && git pull --depth 5 ${cloneUrl} ${build.checkoutBranch}`,
+    ]
+  }
+
   // No caching of clones for now – can revisit this if we want to
-  execSync(`rm -rf ${configUtils.BASE_BUILD_DIR}`)
+  var cmds = [`rm -rf ${configUtils.BASE_BUILD_DIR}`].concat(cloneCmd, checkoutCmd)
 
   log.info(`Cloning ${build.cloneUrl} with branch ${build.checkoutBranch}`)
 
-  /* eslint new-cap:0 */
-  nodegit.Clone(
-    build.cloneUrl,
-    build.cloneDir,
-    {
-      checkoutBranch: build.checkoutBranch,
-      fetchOpts: {
-        callbacks: {
-          credentials: build.token && build.isPrivate ?
-            function() { return nodegit.Cred.userpassPlaintextNew(build.token, 'x-oauth-basic') } : undefined,
-          // NodeGit still has issues with github certificates
-          certificateCheck: build.cloneUrl.indexOf('https://github.com/') === 0 ?
-            function() { return 1 } : undefined,
-        },
-      },
-    }
-  ).then(function(repo) {
-    log.info(`Looking up branch ${build.checkoutBranch}, commit ${build.commit}`)
-    return nodegit.Object.lookup(repo, build.commit, nodegit.Object.TYPE.COMMIT)
-  }).then(function(obj) {
-    log.info('Hard resetting')
-    return nodegit.Reset.reset(obj.owner(), obj, nodegit.Reset.TYPE.HARD)
-  })
-  .done(() => cb(), (err) => cb(err))
+  var env = prepareLambdaConfig({}).env
+  var runCmd = (cmd, cb) => runInBash(cmd, {env: env, logCmd: maskCmd(cmd)}, build, cb)
+
+  async.forEachSeries(cmds, runCmd, cb)
 }
 
 function lambdaBuild(build, config, cb) {
 
   config = prepareLambdaConfig(config)
 
-  var cmd = config.cmd
-  var env = configUtils.resolveEnv(config)
+  var opts = {
+    cwd: build.cloneDir,
+    env: configUtils.resolveEnv(config),
+  }
 
-  log.info(`$ ${cmd}`)
+  runInBash(config.cmd, opts, build, cb)
+}
 
+function runInBash(cmd, opts, build, cb) {
   // Would love to create a pseudo terminal here (pty), but don't have permissions in Lambda
   /*
   var proc = require('pty.js').spawn('/bin/bash', ['-c', config.cmd], {
@@ -166,11 +165,13 @@ function lambdaBuild(build, config, cb) {
   }
   */
 
+  var logCmd = opts.logCmd || cmd
+  delete opts.logCmd
+
+  log.info(`$ ${logCmd}`)
+
   var logStream = log.getBuildStream(build)
-  var proc = spawn('/bin/bash', ['-c', cmd], {
-    cwd: build.cloneDir,
-    env: env,
-  })
+  var proc = spawn('/bin/bash', ['-c', cmd], opts)
   proc.stdout.pipe(process.stdout)
   proc.stdout.pipe(logStream)
   proc.stderr.pipe(process.stderr)
@@ -179,7 +180,7 @@ function lambdaBuild(build, config, cb) {
   proc.on('close', function(code) {
     var err
     if (code) {
-      err = new Error(`Command "${cmd}" failed with code ${code}`)
+      err = new Error(`Command "${logCmd}" failed with code ${code}`)
       err.code = code
       err.logTail = log.getTail(build)
     }
@@ -221,13 +222,16 @@ function dockerBuild(config, cb) {
 // For when executing under Lambda (but not ECS/Docker)
 function prepareLambdaConfig(config) {
 
+  var usrDir = `${configUtils.HOME_DIR}/usr`
   var defaultLambdaConfig = {
     env: {
       HOME: configUtils.HOME_DIR,
       SHELL: '/bin/bash',
-      PATH: process.env.PATH,
-      LD_LIBRARY_PATH: process.env.LD_LIBRARY_PATH,
+      PATH: `${usrDir}/bin:${process.env.PATH}`,
+      LD_LIBRARY_PATH: `${usrDir}/lib64:${process.env.LD_LIBRARY_PATH}`,
       NODE_PATH: process.env.NODE_PATH,
+      GIT_TEMPLATE_DIR: `${usrDir}/share/git-core/templates`,
+      GIT_EXEC_PATH: `${usrDir}/libexec/git-core`,
 
       // To try to get colored output
       NPM_CONFIG_COLOR: 'always',
@@ -246,7 +250,7 @@ function prepareLambdaConfig(config) {
   var pathEnvVars = ['PATH', 'LD_LIBRARY_PATH', 'NODE_PATH']
   pathEnvVars.forEach(key => {
     if (config.env && config.env[key]) {
-      config.env[key] = [config.env[key], process.env[key]].join(':')
+      config.env[key] = [config.env[key], defaultLambdaConfig[key]].join(':')
     }
   })
 

@@ -8,15 +8,8 @@
 test/*
 node_modules/*/test/*
 node_modules/*/tests/*
-node_modules/*/images/*
 node_modules/*/docs/*
 node_modules/*/examples/*
-node_modules/nodegit/guides/*
-node_modules/nodegit/vendor/*
-node_modules/nodegit/src/*
-node_modules/nodegit/include/*
-node_modules/nodegit/generate/*
-node_modules/nodegit/build/Release/.deps/*
 node_modules/mocha/*
 node_modules/.bin/mocha
 node_modules/.bin/_mocha

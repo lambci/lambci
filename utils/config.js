@@ -57,6 +57,7 @@ exports.DEFAULT_CONFIG = {
 exports.initSync = function() {
   execSync(`mkdir -p ${exports.HOME_DIR}`)
   execSync(`cp -r ${__dirname}/../home/. ${exports.HOME_DIR}`)
+  execSync(`tar -xf ${__dirname}/../vendor/git.tar -C ${exports.HOME_DIR}`)
 }
 
 exports.initConfig = function(configs, build) {

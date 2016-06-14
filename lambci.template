@@ -5,7 +5,7 @@
     "Version": {
       "Description": "LambCI version",
       "Type" : "String",
-      "Default": "0.5.0"
+      "Default": "0.6.0"
     },
     "GithubToken": {
       "Description": "GitHub OAuth token",

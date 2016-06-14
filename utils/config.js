@@ -18,7 +18,7 @@ exports.BASE_BUILD_DIR = path.join(exports.BASE_DIR, 'build') // eg: /tmp/lambci
 // 'global' config from DynamoDB
 // 'gh/<owner>/<reponame>' config from DynamoDB
 // package.json file with 'lambci' key
-// .lambci.json or .lambci.js file
+// .lambci.js or .lambci.json file
 
 exports.DEFAULT_CONFIG = {
   cmd: 'npm install && npm test',
@@ -92,23 +92,37 @@ exports.resolveEnv = function(config) {
 }
 
 function resolveBranchConfig(config, build) {
-  var configObj
+  var configObj, key
 
   if (build.eventType == 'pull_request') {
-    var key = build.isFork ? (build.isPrivate ? 'fromForkPrivateRepo' : 'fromForkPublicRepo') :
-      (build.isPrivate ? 'fromSelfPrivateRepo' : 'fromSelfPublicRepo')
-    configObj = (config.pullRequests || {})[key]
+    var pullRequests = config.pullRequests
 
+    if (typeof pullRequests == 'boolean') {
+      configObj = pullRequests
+    } else {
+      pullRequests = pullRequests || {}
+      key = build.isFork ?
+        (build.isPrivate ? 'fromForkPrivateRepo' : 'fromForkPublicRepo') :
+        (build.isPrivate ? 'fromSelfPrivateRepo' : 'fromSelfPublicRepo')
+      configObj = pullRequests[key]
+    }
   } else { // eventType == 'push'
-    configObj = (config.branches || {})[build.branch]
-    if (configObj == null) {
-      var matchingKey = Object.keys(config.branches || {}).find(branch => {
-        var match = branch.match(/^!?\/(.+)\/$/)
-        if (!match) return false
-        var keyMatches = new RegExp(match[1]).test(build.branch)
-        return branch[0] == '!' ? !keyMatches : keyMatches
-      })
-      configObj = (config.branches || {})[matchingKey]
+    var branches = config.branches
+
+    if (typeof branches == 'boolean') {
+      configObj = branches
+    } else {
+      branches = branches || {}
+      configObj = branches[build.branch]
+      if (configObj == null) {
+        key = Object.keys(branches).find(branch => {
+          var match = branch.match(/^!?\/(.+)\/$/)
+          if (!match) return false
+          var keyMatches = new RegExp(match[1]).test(build.branch)
+          return branch[0] == '!' ? !keyMatches : keyMatches
+        })
+        configObj = branches[key]
+      }
     }
   }
   if (typeof configObj == 'boolean') {

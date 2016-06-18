@@ -25,6 +25,7 @@ function runBuild(build, context, cb) {
   async.parallel({
     retry: (cb) => db.checkIfRetry(build, cb),
     configs: (cb) => db.getConfigs(['global', build.project], cb),
+    checkVersion: configUtils.checkVersion,
   }, function(err, data) {
     if (err) return cb(err)
 

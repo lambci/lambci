@@ -9,12 +9,14 @@
   "scripts": {
     "test": "mocha",
     "integration": "node test/integration.js",
+    "v": "node -p 'require(\"./package.json\").version'",
     "pkg": "rm -f lambda.zip && zip -qyr lambda.zip . -x@.lambdaignore",
     "deploy": "npm run pkg && aws lambda update-function-code --function-name lambci-build --zip-file fileb://lambda.zip",
-    "publish": "npm run pkg && export VERSION=$(node -p 'require(\"./package.json\").version') && npm run s3put && npm run s3copy",
-    "s3put": "aws s3api put-object --bucket lambci --key fn/lambci-build-${VERSION}.zip --body lambda.zip",
-    "s3copy": "aws s3api copy-object --copy-source lambci/fn/lambci-build-${VERSION}.zip --bucket lambci --key fn/lambci-build-latest.zip",
-    "update-stack": "export VERSION=$(node -p 'require(\"./package.json\").version') && aws cloudformation update-stack --stack-name lambci --template-body file://lambci.template --capabilities CAPABILITY_IAM --parameters ParameterKey=Version,ParameterValue=${VERSION} ParameterKey=GithubToken,UsePreviousValue=True ParameterKey=Repositories,UsePreviousValue=True ParameterKey=SlackToken,UsePreviousValue=True ParameterKey=SlackChannel,UsePreviousValue=True"
+    "publish": "npm run put-pkg && npm run copy-pkg && npm run put-version",
+    "put-pkg": "npm run pkg && aws s3api put-object --bucket lambci --key fn/lambci-build-$(npm run -s v).zip --body lambda.zip",
+    "copy-pkg": "aws s3api copy-object --copy-source lambci/fn/lambci-build-$(npm run -s v).zip --bucket lambci --key fn/lambci-build-latest.zip",
+    "put-version": "npm run -s v > /tmp/lambci.txt && aws s3api put-object --bucket lambci --key fn/latest.txt --body /tmp/lambci.txt --acl public-read",
+    "update-stack": "aws cloudformation update-stack --stack-name lambci --template-body file://lambci.template --capabilities CAPABILITY_IAM --parameters ParameterKey=Version,ParameterValue=$(npm run -s v) ParameterKey=GithubToken,UsePreviousValue=True ParameterKey=Repositories,UsePreviousValue=True ParameterKey=SlackToken,UsePreviousValue=True ParameterKey=SlackChannel,UsePreviousValue=True"
   },
   "dependencies": {
     "ansi_up": "^1.3.0",

@@ -2,12 +2,16 @@ var path = require('path')
 var fs = require('fs')
 var execSync = require('child_process').execSync
 var utils = require('.')
+var log = require('./log')
 
 // Function name is often something like `lambci-build` or `lambci-build-ET00B7R7T0AN`
 // So this will usually resolve to `lambci`
 exports.STACK = (process.env.AWS_LAMBDA_FUNCTION_NAME || 'lambci').replace(/-.+$/, '')
 
 exports.VERSION = require('../package.json').version
+
+// This is used to check latest pkg version – feel free to remove if you don't want this
+exports.CHECK_VERSION_URL = `https://lambci.s3.amazonaws.com/fn/latest.txt?x-lambci-version=${exports.VERSION}`
 
 exports.BASE_DIR = path.join('/tmp', exports.STACK) // eg: /tmp/lambci
 exports.HOME_DIR = path.join(exports.BASE_DIR, 'home') // eg: /tmp/lambci/home
@@ -92,6 +96,21 @@ exports.resolveFileConfigs = function(config, build) {
 exports.resolveEnv = function(config) {
   var secretEnv = config.inheritSecrets && config.secretEnv
   return utils.merge(Object.create(null), config.env, secretEnv || {})
+}
+
+exports.checkVersion = function(cb) {
+  if (!exports.CHECK_VERSION_URL) return cb()
+  utils.request(exports.CHECK_VERSION_URL, function(err, res, body) {
+    if (err || res.statusCode != 200) {
+      log.error('Could not fetch latest LambCI version: %s', err || body)
+      return cb()
+    }
+    var latestVersion = body.trim()
+    if (utils.semverCmp(exports.VERSION, latestVersion) < 0) {
+      log.info(`Your LambCI version is out of date. Latest is: v${latestVersion}`)
+    }
+    cb(null, latestVersion)
+  })
 }
 
 function resolveBranchConfig(config, build) {

@@ -64,3 +64,30 @@ exports.merge = function(target, source) { // eslint-disable-line no-unused-vars
   return target
 }
 
+//              NUM            . NUM            . NUM            -beta.3.4 (optional)           +build.meta.data (ignore)
+var SEMVER = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[\da-z\-]+(?:\.[\da-z\-]+)*)?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?$/i
+var SIMPLE_NUMBER = /^(0|[1-9][0-9]*)$/
+
+exports.semverCmp = function(ver1, ver2) {
+  if (ver1 === ver2) return 0
+  var match1 = ver1.match(SEMVER), match2 = ver2.match(SEMVER)
+  if (!match1) return match2 ? 1 : 0
+  if (!match2) return -1
+  for (var i = 1; i <= 3; i++) {
+    var num1 = +match1[i], num2 = +match2[i]
+    if (num1 < num2) return -1
+    if (num1 > num2) return 1
+  }
+  if (!match1[4]) return match2[4] ? 1 : 0
+  if (!match2[4]) return -1
+  var preRels1 = match1[4].slice(1).split('.'), preRels2 = match2[4].slice(1).split('.')
+  for (i = 0; i < Math.max(preRels1.length, preRels2.length); i++) {
+    var preRel1 = SIMPLE_NUMBER.test(preRels1[i]) ? +preRels1[i] : preRels1[i]
+    var preRel2 = SIMPLE_NUMBER.test(preRels2[i]) ? +preRels2[i] : preRels2[i]
+    if (i >= preRels1.length || (typeof preRel2 == 'string' && typeof preRel1 == 'number')) return -1
+    if (i >= preRels2.length || (typeof preRel1 == 'string' && typeof preRel2 == 'number')) return 1
+    if (preRel1 < preRel2) return -1
+    if (preRel1 > preRel2) return 1
+  }
+  return 0
+}

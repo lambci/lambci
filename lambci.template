@@ -142,10 +142,7 @@
                 "logs:CreateLogStream",
                 "logs:PutLogEvents"
               ],
-              "Resource": [
-                {"Fn::Join": ["", ["arn:aws:logs:*:*:log-group:/aws/lambda/", {"Ref": "AWS::StackName"}, "-*"]]},
-                {"Fn::Join": ["", ["arn:aws:logs:*:*:log-group:/", {"Ref": "AWS::StackName"}, "/*"]]}
-              ]
+              "Resource": {"Fn::Join": ["", ["arn:aws:logs:*:*:log-group:/aws/lambda/", {"Ref": "AWS::StackName"}, "-*"]]}
             }
           }
         },{
@@ -155,7 +152,8 @@
               "Effect": "Allow",
               "Action": [
                 "s3:GetObject",
-                "s3:PutObject"
+                "s3:PutObject",
+                "s3:PutObjectAcl"
               ],
               "Resource": {"Fn::Join": ["", ["arn:aws:s3:::", {"Ref": "BuildResults"}, "/*"]]}
             }

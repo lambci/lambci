@@ -64,6 +64,3 @@ exports.merge = function(target, source) { // eslint-disable-line no-unused-vars
   return target
 }
 
-exports.bashEscape = function(str) {
-  return (str || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$')
-}

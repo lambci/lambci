@@ -29,6 +29,8 @@ exports.DEFAULT_CONFIG = {
     GITHUB_TOKEN: '',
     SLACK_TOKEN: '',
   },
+  s3Bucket: '',
+  s3PublicSecretNames: true,
   inheritSecrets: true,
   allowConfigOverrides: true,
   notifications: {

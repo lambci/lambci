@@ -35,8 +35,9 @@ function runBuild(build, context, cb) {
 
     var config = configUtils.initConfig(data.configs, build)
 
-    if (!config.build) {
-      log.info('config.build set to false – not running build')
+    // If config says we can't build, and we can't override, then we're done
+    if (!config.build && !config.allowConfigOverrides) {
+      log.info('config.build set to false and cannot override – not running build')
       return cb()
     }
 
@@ -46,42 +47,39 @@ function runBuild(build, context, cb) {
 
 function cloneAndBuild(build, config, cb) {
 
-  db.initBuild(build, function(err, build) {
+  build.token = config.secretEnv.GITHUB_TOKEN
+  build.cloneDir = path.join(configUtils.BASE_BUILD_DIR, build.repo)
+
+  clone(build, config, function(err) {
     if (err) return cb(err)
 
-    build.token = config.secretEnv.GITHUB_TOKEN
-    build.logUrl = log.initBuildLog(config, build)
-    build.cloneDir = path.join(configUtils.BASE_BUILD_DIR, build.repo)
+    // Now that we've cloned the repository we can check for config files
+    config = configUtils.prepareBuildConfig(config, build)
 
-    github.createClient(build)
+    if (!config.build) {
+      log.info('config.build set to false – not running build')
+      return cb()
+    }
 
-    slack.createClient(config.secretEnv.SLACK_TOKEN, config.notifications.slack, build)
+    db.initBuild(build, function(err, build) {
+      if (err) return cb(err)
 
-    var origListeners = process.listeners('uncaughtException')
-    var done = utils.once(function(err, data) {
-      process.removeListener('uncaughtException', done)
-      origListeners.forEach(listener => process.on('uncaughtException', listener))
-      buildDone(err, data, build, config, cb)
-    })
-    process.removeAllListeners('uncaughtException')
-    process.on('uncaughtException', done)
+      build.logUrl = log.initBuildLog(config, build)
 
-    log.info(`Build #${build.buildNum} started...`)
-    log.info(`Logging to: ${build.logUrl}`)
-
-    build.statusEmitter.emit('start', build)
-
-    clone(build, config, function(err) {
-      if (err && /^Reference .+ not found$/.test(err.message)) {
-        err = new Error(`Could not find branch ${build.checkoutBranch} on ${build.cloneUrl}`)
+      if (build.token) {
+        github.createClient(build)
       }
-      if (err && /^Object not found/.test(err.message)) {
-        err = new Error(`Could not find commit ${build.commit} on ${build.cloneUrl}`)
-      }
-      if (err) return done(err)
 
-      // Now that we've cloned the repository we can check for config files
-      config = configUtils.prepareBuildConfig(config, build)
+      if (config.secretEnv.SLACK_TOKEN) {
+        slack.createClient(config.secretEnv.SLACK_TOKEN, config.notifications.slack, build)
+      }
+
+      var done = patchUncaughtHandlers(build, config, cb)
+
+      log.info(`Build #${build.buildNum} started...`)
+      log.info(`Logging to: ${build.logUrl}`)
+
+      build.statusEmitter.emit('start', build)
 
       if (config.docker) {
         dockerBuild(config, done)
@@ -92,6 +90,18 @@ function cloneAndBuild(build, config, cb) {
   })
 }
 
+function patchUncaughtHandlers(build, config, cb) {
+  var origListeners = process.listeners('uncaughtException')
+  var done = utils.once(function(err, data) {
+    process.removeListener('uncaughtException', done)
+    origListeners.forEach(listener => process.on('uncaughtException', listener))
+    buildDone(err, data, build, config, cb)
+  })
+  process.removeAllListeners('uncaughtException')
+  process.on('uncaughtException', done)
+  return done
+}
+
 function buildDone(err, data, build, config, cb) {
 
   // Don't update statuses if we're doing a docker build and we launched successfully
@@ -100,6 +110,7 @@ function buildDone(err, data, build, config, cb) {
   log.info(err ? `Build #${build.buildNum} failed: ${err.message}` :
     `Build #${build.buildNum} successful!`)
 
+  build.status = err ? 'failure' : 'success'
   build.statusEmitter.emit('finish', err, build)
 
   cb(err, data)

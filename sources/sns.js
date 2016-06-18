@@ -22,6 +22,7 @@ exports.parseEvent = function(snsEvent) {
 function BuildInfo(startedAt) {
   this.startedAt = startedAt || new Date()
 
+  this.status = 'pending'
   this.statusEmitter = new EventEmitter()
 
   this.project = ''

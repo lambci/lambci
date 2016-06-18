@@ -8,6 +8,7 @@ var configUtils = require('../utils/config')
 var db = require('../db')
 var github = require('../sources/github')
 var slack = require('../notifications/slack')
+var sns = require('../notifications/sns')
 
 var ecs = new AWS.ECS()
 
@@ -71,8 +72,12 @@ function cloneAndBuild(build, config, cb) {
         github.createClient(build)
       }
 
-      if (config.secretEnv.SLACK_TOKEN) {
+      if (config.notifications.slack && config.secretEnv.SLACK_TOKEN) {
         slack.createClient(config.secretEnv.SLACK_TOKEN, config.notifications.slack, build)
+      }
+
+      if (config.notifications.sns) {
+        sns.createClient(config.notifications.sns, build)
       }
 
       var done = patchUncaughtHandlers(build, config, cb)

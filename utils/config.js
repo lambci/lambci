@@ -43,6 +43,10 @@ exports.DEFAULT_CONFIG = {
       username: 'LambCI',
       asUser: false,
     },
+    // Example SNS notifications config:
+    // sns: {
+      // topicArn: 'arn:aws:sns:us-east-1:1234:lambci-StatusTopic-1WF8BT36',
+    // },
   },
   build: false, // Build nothing by default except master and PRs
   branches: {

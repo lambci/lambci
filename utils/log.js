@@ -46,6 +46,13 @@ exports.getTail = function(build) {
   }
 }
 
+// From https://github.com/chalk/ansi-regex
+var ANSI_REGEX = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g
+
+exports.stripAnsi = function(txt) {
+  return txt.replace(ANSI_REGEX, '')
+}
+
 exports.initBuildLog = function(config, build) {
 
   if (!config.s3Bucket) {

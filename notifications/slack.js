@@ -5,9 +5,6 @@ var log = require('../utils/log')
 
 var USER_AGENT = config.STACK
 
-// From https://github.com/chalk/ansi-regex
-var ANSI_REGEX = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g
-
 exports.createClient = function(token, options, build) {
   return new SlackClient(token, options, build)
 }
@@ -42,7 +39,7 @@ function SlackClient(token, options, build) {
     if (err) {
       var txt = err.message
       if (err.logTail) {
-        txt = `...\n${err.logTail.replace(ANSI_REGEX, '')}\n` + txt
+        txt = `...\n${log.stripAnsi(err.logTail)}\n` + txt
       }
 
       status.color = 'danger'

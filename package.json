@@ -16,8 +16,8 @@
     "put-pkg": "npm run pkg && aws s3api put-object --bucket lambci --key fn/lambci-build-$(npm run -s v).zip --body lambda.zip",
     "copy-pkg": "aws s3api copy-object --copy-source lambci/fn/lambci-build-$(npm run -s v).zip --bucket lambci --key fn/lambci-build-latest.zip",
     "put-version": "npm run -s v > /tmp/lambci.txt && aws s3api put-object --bucket lambci --key fn/latest.txt --body /tmp/lambci.txt --acl public-read",
-    "update-stack": "aws cloudformation update-stack --stack-name lambci --template-body file://lambci.template --capabilities CAPABILITY_IAM --parameters ParameterKey=Version,ParameterValue=$(npm run -s v) ParameterKey=GithubToken,UsePreviousValue=True ParameterKey=Repositories,UsePreviousValue=True ParameterKey=SlackToken,UsePreviousValue=True ParameterKey=SlackChannel,UsePreviousValue=True",
-    "describe-stack": "aws cloudformation describe-stacks --stack-name lambci --query 'Stacks[0].StackStatus'"
+    "stack-update": "aws cloudformation update-stack --stack-name lambci --template-body file://lambci.template --capabilities CAPABILITY_IAM --parameters ParameterKey=Version,ParameterValue=$(npm run -s v) ParameterKey=GithubToken,UsePreviousValue=True ParameterKey=Repositories,UsePreviousValue=True ParameterKey=SlackToken,UsePreviousValue=True ParameterKey=SlackChannel,UsePreviousValue=True",
+    "stack-status": "aws cloudformation describe-stacks --stack-name lambci --query 'Stacks[0].StackStatus'"
   },
   "dependencies": {
     "ansi_up": "^1.3.0",

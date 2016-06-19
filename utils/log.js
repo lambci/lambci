@@ -55,13 +55,13 @@ exports.stripAnsi = function(txt) {
 
 exports.initBuildLog = function(config, build) {
 
+  build.lambdaLogUrl = exports.lambdaLogUrl(build)
+
   if (!config.s3Bucket) {
-    return `https://console.aws.amazon.com/cloudwatch/home?region=${process.env.AWS_REGION}#logEvent:` +
-      `group=${encodeURIComponent(build.logGroupName)};` +
-      `stream=${encodeURIComponent(build.logStreamName)};` +
-      `start=${encodeURIComponent(build.startedAt.toISOString().slice(0, 19))}Z`
+    return build.lambdaLogUrl
   }
 
+  build.buildDirUrl = exports.buildDirUrl(build, config.s3Bucket)
   build.logFile = build.logFile || '/tmp/log.txt'
 
   var filename = 'index'
@@ -110,8 +110,19 @@ exports.initBuildLog = function(config, build) {
 
   s3uploader()
 
-  return makeS3Public ? `https://${bucket}.s3.amazonaws.com/${buildKey}` :
-    `https://console.aws.amazon.com/s3/home?region=${process.env.AWS_REGION}#&bucket=${bucket}&prefix=${buildDir}`
+  return makeS3Public ? `https://${bucket}.s3.amazonaws.com/${buildKey}` : `${build.buildDirUrl}/${build.buildNum}`
+}
+
+exports.lambdaLogUrl = function(build) {
+  return `https://console.aws.amazon.com/cloudwatch/home?region=${process.env.AWS_REGION}#logEvent:` +
+    `group=${encodeURIComponent(build.logGroupName)};` +
+    `stream=${encodeURIComponent(build.logStreamName)};` +
+    `start=${encodeURIComponent(build.startedAt.toISOString().slice(0, 19))}Z`
+}
+
+exports.buildDirUrl = function(build, bucket) {
+  return `https://console.aws.amazon.com/s3/home?region=${process.env.AWS_REGION}#` +
+    `&bucket=${bucket}&prefix=${build.project}/builds`
 }
 
 function uploadS3Log(build, bucket, key, branchKey, branchStatusKey, makePublic, cb) {

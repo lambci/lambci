@@ -1,7 +1,15 @@
+var utils = require('../utils')
+
 module.exports = render
 
 function render(params) {
   var build = params.build
+  var logHtml = params.log
+
+  var totalElapsedSecs = Math.floor((Date.now() - build.startedAt) / 1000)
+  var elapsedMins = Math.floor(totalElapsedSecs / 60)
+  var elapsedSecs = totalElapsedSecs % 60
+  var elapsedTxt = (elapsedMins ? `${elapsedMins} min ` : '') + (elapsedSecs ? `${elapsedSecs} sec` : '')
 
   var buildClasses = 'fa-cog fa-spin pending'
   switch (build.status) {
@@ -13,6 +21,23 @@ function render(params) {
       break
   }
 
+  var branchLink = build.prNum ? `<a href="https://github.com/${build.repo}/pull/${build.prNum}">PR #${build.prNum}</a>` :
+    `<a href="https://github.com/${build.repo}/tree/${build.branch}">${build.branch}</a>`
+
+  var compareUrl = `https://github.com/${build.repo}/compare/${build.baseCommit}...${build.commit}`
+  var compareTxt = `${build.baseCommit.slice(0, 7)}..${build.commit.slice(0, 7)}`
+  var commentTxt = utils.htmlEncode(build.comment.split('\n')[0])
+  var commentTitle = build.prNum ? 'Pull request title' : 'Head commit comment'
+
+  // Could calculate gravatar imgs here from email
+  var committers = Object.keys(build.committers || []).slice(0, 10).map(key => {
+    var username = build.committers[key]
+    return `<a href="https://github.com/${username}">${username}</a>`
+  })
+  var committersTitle = build.prNum ? 'Base repo user/organization' : 'Committers and authors'
+
+  var userTitle = build.prNum ? 'Pull request opener' : 'Branch pusher'
+
   return `
 <html>
 <head>
@@ -22,6 +47,8 @@ function render(params) {
   <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet">
   <style>
     h1 { margin-top: 0.5em; font-weight: normal; font-size: 1.6em; }
+    a { color: inherit; text-decoration: none }
+    a:hover { text-decoration: underline }
     td { padding-right: 2em; }
     .clearfix:after { content: ""; display: table; clear: both; }
     .fa { vertical-align: text-top; margin-right: 0.4em; }
@@ -35,29 +62,58 @@ function render(params) {
   <div style="width: 100%; max-width: 60em; margin-left: auto; margin-right: auto; margin-top: 0; margin-bottom: 0">
 
     <div class="clearfix">
-      <h1 style="float: left; margin-right: 2em"><i class="fa fa-github"></i>${build.repo}</h1>
-      <h1 style="float: left"><i class="fa fa-code-fork"></i>${build.branch}</h1>
+      <h1 style="float: left; margin-right: 2em"><i class="fa fa-github"></i><a href="https://github.com/${build.repo}">${build.repo}</a></h1>
+      <h1 style="float: left"><i class="fa fa-code-fork"></i>${branchLink}</h1>
       <h1 style="float: right"><i class="fa ${buildClasses}"></i>Build #${build.buildNum}</h1>
     </div>
 
     <table style="color: #636363; border: 1px solid #D3D3D3; padding: 5px; margin-bottom: 20px">
       <tr>
-        <td><i class="fa fa-code-fork"></i>234af..234af</td>
-        <td><i class="fa fa-user"></i>mhart</td>
-        <td><i class="fa fa-calendar-o"></i>2016-01-12 12:34:56</td>
+        <td colspan="3" title="${commentTitle}" style="border-bottom: 1px solid #D3D3D3; padding-bottom: 5px">
+          <i class="fa fa-comment-o"></i>${commentTxt}
+        </td>
       </tr>
       <tr>
-        <td>234af..234af</td>
-        <td><i class="fa fa-clock-o"></i>1m26s</td>
-        <td><i class="fa fa-clock-o"></i>1m26s</td>
+        <td title="Head commit" style="padding-top: 5px">
+          <i class="fa fa-link"></i><a href="https://github.com/${build.repo}/commit/${build.commit}">${build.commit.slice(0, 7)}</a>
+        </td>
+        <td title="${userTitle}">
+          <i class="fa fa-cloud-upload"></i><a href="https://github.com/${build.user}">${build.user}</a>
+        </td>
+        <td title="Build start date/time">
+          <i class="fa fa-calendar-o"></i><span id="startedAt" title="${build.startedAt.toISOString()}">${build.startedAt.toISOString()}</span>
+        </td>
+      </tr>
+      <tr>
+        <td title="Commit comparison">
+          <i class="fa fa-sliders"></i><a href="${compareUrl}">${compareTxt}</a>
+        </td>
+        <td title="${committersTitle}">
+          <i class="fa fa-users"></i>${committers.join(', ')}
+        </td>
+        <td title="Elapsed build time">
+          <i class="fa fa-clock-o"></i>${elapsedTxt}
+        </td>
       </tr>
     </table>
 
+    <div style="float: right; color: #FFF; margin-top: 10px; margin-right: 10px">
+      <i class="fa fa-lock"></i><a href="${build.lambdaLogUrl}">Lambda log</a>
+    </div>
+    <div style="float: right; color: #FFF; margin-top: 10px; margin-right: 20px">
+      <i class="fa fa-lock"></i><a href="${build.buildDirUrl}">All builds</a>
+    </div>
+
     <div style="background-color: #1A0000; color: #FFF; padding: 20px; margin: 0">
-      <pre style="margin: 0">${params.log}</pre>
+      <pre style="margin: 0; width: 100%; overflow: scroll">${logHtml}</pre>
     </div>
 
   </div>
+
+  <script>
+    var startedAt = document.getElementById('startedAt')
+    startedAt.textContent = new Date(startedAt.title).toLocaleString()
+  </script>
 </body>
 </html>
 

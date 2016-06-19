@@ -64,6 +64,16 @@ exports.merge = function(target, source) { // eslint-disable-line no-unused-vars
   return target
 }
 
+exports.htmlEncode = function(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;') // Included as advised by OWASP
+}
+
 //              NUM            . NUM            . NUM            -beta.3.4 (optional)           +build.meta.data (ignore)
 var SEMVER = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[\da-z\-]+(?:\.[\da-z\-]+)*)?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?$/i
 var SIMPLE_NUMBER = /^(0|[1-9][0-9]*)$/

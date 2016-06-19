@@ -38,10 +38,12 @@ function BuildInfo(startedAt) {
   this.cloneUrl = ''
   this.checkoutBranch = ''
   this.commit = ''
+  this.baseCommit = ''
+  this.comment = ''
+  this.user = ''
+  this.committers = []
 
   this.isFork = false
   this.prNum = 0
-  this.user = ''
-  this.avatar = ''
 }
 

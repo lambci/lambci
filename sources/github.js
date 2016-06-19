@@ -214,11 +214,16 @@ exports.parseEvent = function(event, eventType, build) {
     build.cloneUrl = headRepo.clone_url
     build.checkoutBranch = (head.ref || '').replace(/^refs\/heads\//, '')
     build.commit = head.sha
+    build.baseCommit = base.sha
+    build.comment = event.pull_request.title || ''
+    build.user = (event.pull_request.user || {}).login
+    build.committers = [head.user].reduce((users, user) => {
+      users[user.avatar_url] = user.login
+      return users
+    }, Object.create(null))
 
     build.isFork = headRepo.full_name != build.repo
     build.prNum = prNum
-    build.user = (head.user || {}).login
-    build.avatar = (head.user || {}).avatar_url
 
   } else {
     // https://developer.github.com/v3/activity/events/types/#pushevent
@@ -234,6 +239,15 @@ exports.parseEvent = function(event, eventType, build) {
     build.cloneUrl = event.repository.clone_url
     build.checkoutBranch = branch
     build.commit = (event.head_commit || {}).id
+    build.baseCommit = event.before
+    build.comment = (event.head_commit || {}).message || ''
+    build.user = (event.pusher || {}).name
+    build.committers = (event.commits || []).reduce((committers, commit) => {
+      var author = commit.author || {}, committer = commit.committer || {}
+      committers[author.email] = author.username
+      committers[committer.email] = committer.username
+      return committers
+    }, Object.create(null))
   }
 
   if (!/^[a-zA-Z0-9-_.]+\/[a-zA-Z0-9-_.]+$/.test(build.repo)) {

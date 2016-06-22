@@ -13,9 +13,10 @@ exports.SlackClient = SlackClient
 
 function SlackClient(token, options, build) {
   this.token = token
-  this.channel = options.channel || '#general'
-  this.username = options.username || 'LambCI'
-  this.asUser = options.asUser || false
+  this.channel = options.channel
+  this.username = options.username
+  this.iconUrl = options.iconUrl
+  this.asUser = options.asUser
   this.lastTs = null // Most recent timestamp
 
   this.repo = build.repo
@@ -82,8 +83,8 @@ SlackClient.prototype.postMessage = function(body, cb) {
   body.token = body.token || this.token
   body.channel = body.channel || this.channel
   body.username = body.username || this.username
+  body.icon_url = body.icon_url || this.iconUrl
   body.as_user = body.as_user || this.asUser
-  body.icon_url = body.icon_url || 'https://s3-us-west-2.amazonaws.com/slack-files2/bot_icons/2015-05-27/5102998449_48.png'
 
   this.request({path: '/api/chat.postMessage', body: body}, (err, data) => {
     if (err) return cb(err)
@@ -108,8 +109,8 @@ SlackClient.prototype.update = function(body, cb) {
   body.channel = body.channel || this.channel // Must be the encoded ID, eg C024BE91L
   body.ts = body.ts || this.lastTs
   body.username = body.username || this.username
+  body.icon_url = body.icon_url || this.iconUrl
   body.as_user = body.as_user || this.asUser
-  body.icon_url = body.icon_url || 'https://s3-us-west-2.amazonaws.com/slack-files2/bot_icons/2015-05-27/5102998449_48.png'
 
   if (!body.ts) {
     return this.postMessage(body, cb)

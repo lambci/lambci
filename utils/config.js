@@ -41,6 +41,7 @@ exports.DEFAULT_CONFIG = {
     slack: {
       channel: '#general',
       username: 'LambCI',
+      iconUrl: 'https://lambci.s3.amazonaws.com/assets/logo-48x48.png',
       asUser: false,
     },
     // Example SNS notifications config:

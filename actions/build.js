@@ -98,28 +98,32 @@ function cloneAndBuild(build, config, cb) {
 
 function patchUncaughtHandlers(build, config, cb) {
   var origListeners = process.listeners('uncaughtException')
-  var done = utils.once(function(err, data) {
+  var done = utils.once(function(err) {
     process.removeListener('uncaughtException', done)
     origListeners.forEach(listener => process.on('uncaughtException', listener))
-    buildDone(err, data, build, config, cb)
+    buildDone(err, build, config, cb)
   })
   process.removeAllListeners('uncaughtException')
   process.on('uncaughtException', done)
   return done
 }
 
-function buildDone(err, data, build, config, cb) {
+function buildDone(err, build, config, cb) {
 
   // Don't update statuses if we're doing a docker build and we launched successfully
-  if (!err && config.docker) return cb(null, data)
+  if (!err && config.docker) return cb()
 
   log.info(err ? `Build #${build.buildNum} failed: ${err.message}` :
     `Build #${build.buildNum} successful!`)
 
+  build.endedAt = new Date()
   build.status = err ? 'failure' : 'success'
   build.statusEmitter.emit('finish', err, build)
 
-  cb(err, data)
+  db.finishBuild(build, function(dbErr) {
+    log.logIfErr(dbErr)
+    cb(err)
+  })
 }
 
 function clone(build, config, cb) {
@@ -127,9 +131,9 @@ function clone(build, config, cb) {
   // Just double check we're in tmp!
   if (build.cloneDir.indexOf(configUtils.BASE_BUILD_DIR) !== 0) return
 
-  var cloneUrl = build.cloneUrl, maskCmd = cmd => cmd
+  var cloneUrl = `https://github.com/${build.cloneRepo}.git`, maskCmd = cmd => cmd
   if (build.isPrivate && build.token) {
-    cloneUrl = cloneUrl.replace('//github.com', `//${build.token}@github.com`)
+    cloneUrl = `https://${build.token}@github.com/${build.cloneRepo}.git`
     maskCmd = cmd => cmd.replace(new RegExp(build.token, 'g'), 'XXXX')
   }
 
@@ -147,7 +151,7 @@ function clone(build, config, cb) {
   // No caching of clones for now – can revisit this if we want to
   var cmds = [`rm -rf ${configUtils.BASE_BUILD_DIR}`].concat(cloneCmd, checkoutCmd)
 
-  log.info(`Cloning ${build.cloneUrl} with branch ${build.checkoutBranch}`)
+  log.info(`Cloning ${maskCmd(cloneUrl)} with branch ${build.checkoutBranch}`)
 
   var env = prepareLambdaConfig({}).env
   var runCmd = (cmd, cb) => runInBash(cmd, {env: env, logCmd: maskCmd(cmd)}, build, cb)

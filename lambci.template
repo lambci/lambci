@@ -74,7 +74,7 @@
         "AttributeDefinitions": [
           {"AttributeName": "project", "AttributeType": "S"},
           {"AttributeName": "buildNum", "AttributeType": "N"},
-          {"AttributeName": "eventContext", "AttributeType": "S"},
+          {"AttributeName": "trigger", "AttributeType": "S"},
           {"AttributeName": "commit", "AttributeType": "S"},
           {"AttributeName": "requestId", "AttributeType": "S"}
         ],
@@ -84,10 +84,10 @@
         ],
         "ProvisionedThroughput": {"ReadCapacityUnits": "1", "WriteCapacityUnits": "1"},
         "LocalSecondaryIndexes": [{
-          "IndexName": "eventContext",
+          "IndexName": "trigger",
           "KeySchema": [
             {"AttributeName": "project", "KeyType": "HASH"},
-            {"AttributeName": "eventContext", "KeyType": "RANGE"}
+            {"AttributeName": "trigger", "KeyType": "RANGE"}
           ],
           "Projection": {"ProjectionType": "KEYS_ONLY"}
         },{

@@ -70,21 +70,54 @@ exports.initBuild = function(build, cb) {
   exports.getBuildNum(build.project, function(err, buildNum) {
     if (err) return cb(err)
     build.buildNum = buildNum
+    var committers = new Set(Object.keys(build.committers || {}).map(key => build.committers[key]))
     client.updateItem({
       TableName: table,
       Key: mapToDb({project: build.project, buildNum}),
-      UpdateExpression: 'SET eventContext = :eventContext, #commit = :commit, requestId = :requestId, startedAt = :startedAt',
-      ExpressionAttributeNames: {'#commit': 'commit'},
+      UpdateExpression: 'SET requestId = :requestId, #trigger = :trigger, #commit = :commit, cloneRepo = :cloneRepo, ' +
+        'checkoutBranch = :checkoutBranch, startedAt = :startedAt, #status = :status, baseCommit = :baseCommit, ' +
+        `#comment = :comment, #user = :user ${committers.size ? ', committers = :committers' : ''}`,
+      ExpressionAttributeNames: {
+        '#trigger': 'trigger',
+        '#commit': 'commit',
+        '#status': 'status',
+        '#comment': 'comment',
+        '#user': 'user',
+      },
       ExpressionAttributeValues: mapToDb({
-        ':eventContext': build.eventContext,
-        ':commit': build.commit,
         ':requestId': build.requestId,
+        ':trigger': build.trigger,
+        ':commit': build.commit,
+        ':cloneRepo': build.cloneRepo,
+        ':checkoutBranch': build.checkoutBranch,
         ':startedAt': build.startedAt.toISOString(),
+        ':status': build.status,
+        ':baseCommit': build.baseCommit,
+        ':comment': build.comment,
+        ':user': build.user,
+        ':committers': committers.size ? committers : undefined,
       }),
     }, function(err) {
       if (err) return cb(friendlyErr(table, err))
       cb(null, build)
     })
+  })
+}
+
+exports.finishBuild = function(build, cb) {
+  var table = BUILDS_TABLE
+  client.updateItem({
+    TableName: table,
+    Key: mapToDb({project: build.project, buildNum: build.buildNum}),
+    UpdateExpression: 'SET endedAt = :endedAt, #status = :status',
+    ExpressionAttributeNames: {'#status': 'status'},
+    ExpressionAttributeValues: mapToDb({
+      ':endedAt': build.endedAt.toISOString(),
+      ':status': build.status,
+    }),
+  }, function(err) {
+    if (err) return cb(friendlyErr(table, err))
+    cb()
   })
 }
 
@@ -160,11 +193,11 @@ function mapAttrToDb(val) {
     return {B: val.toString('base64')}
   }
   if (val instanceof Set) {
-    if (!val.size) return undefined
-    var firstVal = val.values().next().value
-    if (typeof firstVal === 'string') return {SS: val}
-    if (typeof firstVal === 'number') return {NS: val.map(numToStr)}
-    if (Buffer.isBuffer(firstVal)) return {BS: val.map(x => x.toString('base64'))}
+    val = Array.from(val)
+    if (!val.length) return undefined
+    if (typeof val[0] === 'string') return {SS: val}
+    if (typeof val[0] === 'number') return {NS: val.map(numToStr)}
+    if (Buffer.isBuffer(val[0])) return {BS: val.map(x => x.toString('base64'))}
   }
   return {M: mapToDb(val)}
 }

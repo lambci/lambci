@@ -82,9 +82,9 @@ exports.prepareBuildConfig = function(config, build) {
     env: {
       CI: true,
       LAMBCI: true,
-      LAMBCI_REPOSITORY: build.repo,
+      LAMBCI_REPO: build.repo,
       LAMBCI_BRANCH: build.branch,
-      LAMBCI_CLONE_URL: build.cloneUrl,
+      LAMBCI_CLONE_REPO: build.cloneRepo,
       LAMBCI_CHECKOUT_BRANCH: build.checkoutBranch,
       LAMBCI_COMMIT: build.commit,
       LAMBCI_PULL_REQUEST: build.prNum || '',

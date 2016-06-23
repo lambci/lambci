@@ -209,20 +209,16 @@ exports.parseEvent = function(event, eventType, build) {
       throw new Error(`base repo ${baseRepo.full_name} is different from event repo ${build.repo}`)
     }
 
-    build.eventContext = `pr/${prNum}`
+    build.trigger = `pr/${prNum}`
     build.branch = (base.ref || '').replace(/^refs\/heads\//, '')
-    build.cloneUrl = headRepo.clone_url
+    build.cloneRepo = headRepo.full_name
     build.checkoutBranch = (head.ref || '').replace(/^refs\/heads\//, '')
     build.commit = head.sha
     build.baseCommit = base.sha
     build.comment = event.pull_request.title || ''
     build.user = (event.pull_request.user || {}).login
-    build.committers = [head.user].reduce((users, user) => {
-      users[user.avatar_url] = user.login
-      return users
-    }, Object.create(null))
 
-    build.isFork = headRepo.full_name != build.repo
+    build.isFork = build.cloneRepo != build.repo
     build.prNum = prNum
 
   } else {
@@ -234,14 +230,15 @@ exports.parseEvent = function(event, eventType, build) {
       return {ignore: `Branch ${branch} was deleted`}
     }
 
-    build.eventContext = `push/${branch}`
+    build.trigger = `push/${branch}`
     build.branch = branch
-    build.cloneUrl = event.repository.clone_url
+    build.cloneRepo = build.repo
     build.checkoutBranch = branch
     build.commit = (event.head_commit || {}).id
     build.baseCommit = event.before
     build.comment = (event.head_commit || {}).message || ''
     build.user = (event.pusher || {}).name
+
     build.committers = (event.commits || []).reduce((committers, commit) => {
       var author = commit.author || {}, committer = commit.committer || {}
       committers[author.email] = author.username
@@ -256,10 +253,6 @@ exports.parseEvent = function(event, eventType, build) {
 
   if (!/^[0-9a-f]+$/.test(build.commit) || /^0+$/.test(build.commit)) {
     throw new Error(`Commit is invalid: ${build.commit}`)
-  }
-
-  if (!build.cloneUrl) {
-    build.cloneUrl = `https://github.com/${build.repo}.git`
   }
 
   return build

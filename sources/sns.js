@@ -28,20 +28,22 @@ function BuildInfo(startedAt) {
   this.project = ''
   this.buildNum = 0
 
+  this.ignore = false
   this.event = null
   this.eventType = ''
   this.repo = ''
   this.isPrivate = true
 
-  this.eventContext = ''
+  this.trigger = ''
   this.branch = ''
-  this.cloneUrl = ''
+  this.cloneRepo = ''
   this.checkoutBranch = ''
   this.commit = ''
   this.baseCommit = ''
   this.comment = ''
   this.user = ''
-  this.committers = []
+
+  this.committers = null
 
   this.isFork = false
   this.prNum = 0

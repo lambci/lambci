@@ -6,7 +6,7 @@ function render(params) {
   var build = params.build
   var logHtml = params.log
 
-  var totalElapsedSecs = Math.floor((Date.now() - build.startedAt) / 1000)
+  var totalElapsedSecs = Math.floor(((build.endedAt || Date.now()) - build.startedAt) / 1000)
   var elapsedMins = Math.floor(totalElapsedSecs / 60)
   var elapsedSecs = totalElapsedSecs % 60
   var elapsedTxt = (elapsedMins ? `${elapsedMins} min ` : '') + (elapsedSecs ? `${elapsedSecs} sec` : '')
@@ -29,14 +29,13 @@ function render(params) {
   var commentTxt = utils.htmlEncode(build.comment.split('\n')[0])
   var commentTitle = build.prNum ? 'Pull request title' : 'Head commit comment'
 
-  // Could calculate gravatar imgs here from email
-  var committers = Object.keys(build.committers || []).slice(0, 10).map(key => {
-    var username = build.committers[key]
-    return `<a href="https://github.com/${username}">${username}</a>`
-  })
-  var committersTitle = build.prNum ? 'Base repo user/organization' : 'Committers and authors'
-
   var userTitle = build.prNum ? 'Pull request opener' : 'Branch pusher'
+
+  // Could calculate gravatar imgs here from email
+  var users = build.prNum ? [build.repo.split('/')[0]] : Object.keys(build.committers || {}).slice(0, 10).map(key => build.committers[key])
+  var usersIcon = users.length > 1 ? 'fa-users' : 'fa-user'
+  var usersStr = users.map(username => `<a href="https://github.com/${username}">${username}</a>`).join(', ')
+  var usersTitle = build.prNum ? 'Base repo user/organization' : 'Committers and authors'
 
   return `
 <html>
@@ -88,8 +87,8 @@ function render(params) {
         <td title="Commit comparison">
           <i class="fa fa-sliders"></i><a href="${compareUrl}">${compareTxt}</a>
         </td>
-        <td title="${committersTitle}">
-          <i class="fa fa-users"></i>${committers.join(', ')}
+        <td title="${usersTitle}">
+          <i class="fa ${usersIcon}"></i>${usersStr}
         </td>
         <td title="Elapsed build time">
           <i class="fa fa-clock-o"></i>${elapsedTxt}

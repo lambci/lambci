@@ -39,7 +39,7 @@ exports.getConfigs = function(projects, cb) {
   var req = {RequestItems: {}}
   req.RequestItems[table] = {Keys: projects.map(project => { return {project} }).map(mapToDb)}
 
-  log.info(`Looking up keys in ${CONFIG_TABLE}: ${projects.join(', ')}`)
+  log.info(`Looking up keys in ${CONFIG_TABLE}: ${projects.join(', ')}\n`)
 
   client.batchGetItem(req, function(err, data) {
     if (err) return cb(friendlyErr(table, err))

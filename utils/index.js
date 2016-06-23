@@ -1,6 +1,7 @@
 var https = require('https')
 var url = require('url')
 var querystring = require('querystring')
+var stream = require('stream')
 
 // Just like normal Node.js https request, but supports `url`, `body` and `timeout` params
 exports.request = function(options, cb) {
@@ -100,4 +101,24 @@ exports.semverCmp = function(ver1, ver2) {
     if (preRel1 > preRel2) return 1
   }
   return 0
+}
+
+exports.lineStream = function(writeLine) {
+  var lastLine = new Buffer(''), delim = new Buffer('\n')
+  return new stream.Transform({
+    transform(chunk, encoding, cb) {
+      chunk = Buffer.concat([lastLine, chunk])
+      var delimIx = -1, offset = 0
+      while ((delimIx = chunk.indexOf(delim, offset)) >= 0) {
+        writeLine(chunk.slice(offset, delimIx).toString('utf8'))
+        offset = delimIx + delim.length
+      }
+      lastLine = chunk.slice(offset)
+      cb()
+    },
+    flush(cb) {
+      if (lastLine.length) writeLine(lastLine.toString('utf8'))
+      cb()
+    },
+  })
 }

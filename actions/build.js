@@ -82,8 +82,9 @@ function cloneAndBuild(build, config, cb) {
 
       var done = patchUncaughtHandlers(build, config, cb)
 
+      log.info('')
       log.info(`Build #${build.buildNum} started...`)
-      log.info(`Logging to: ${build.logUrl}`)
+      log.info(`Logging to: ${build.logUrl}\n`)
 
       build.statusEmitter.emit('start', build)
 
@@ -151,10 +152,8 @@ function clone(build, config, cb) {
   // No caching of clones for now – can revisit this if we want to
   var cmds = [`rm -rf ${configUtils.BASE_BUILD_DIR}`].concat(cloneCmd, checkoutCmd)
 
-  log.info(`Cloning ${maskCmd(cloneUrl)} with branch ${build.checkoutBranch}`)
-
   var env = prepareLambdaConfig({}).env
-  var runCmd = (cmd, cb) => runInBash(cmd, {env: env, logCmd: maskCmd(cmd)}, build, cb)
+  var runCmd = (cmd, cb) => runInBash(cmd, {env: env, logCmd: maskCmd(cmd)}, cb)
 
   async.forEachSeries(cmds, runCmd, cb)
 }
@@ -168,10 +167,10 @@ function lambdaBuild(build, config, cb) {
     env: configUtils.resolveEnv(config),
   }
 
-  runInBash(config.cmd, opts, build, cb)
+  runInBash(config.cmd, opts, cb)
 }
 
-function runInBash(cmd, opts, build, cb) {
+function runInBash(cmd, opts, cb) {
   // Would love to create a pseudo terminal here (pty), but don't have permissions in Lambda
   /*
   var proc = require('pty.js').spawn('/bin/bash', ['-c', config.cmd], {
@@ -191,19 +190,16 @@ function runInBash(cmd, opts, build, cb) {
 
   log.info(`$ ${logCmd}`)
 
-  var logStream = log.getBuildStream(build)
   var proc = spawn('/bin/bash', ['-c', cmd], opts)
-  proc.stdout.pipe(process.stdout)
-  proc.stdout.pipe(logStream)
-  proc.stderr.pipe(process.stderr)
-  proc.stderr.pipe(logStream)
+  proc.stdout.pipe(utils.lineStream(log.info))
+  proc.stderr.pipe(utils.lineStream(log.error))
   proc.on('error', cb)
   proc.on('close', function(code) {
     var err
     if (code) {
       err = new Error(`Command "${logCmd}" failed with code ${code}`)
       err.code = code
-      err.logTail = log.getTail(build)
+      err.logTail = log.getTail()
     }
     cb(err)
   })

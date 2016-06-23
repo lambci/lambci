@@ -1,12 +1,14 @@
+var util = require('util')
 var fs = require('fs')
 var crypto = require('crypto')
-var execSync = require('child_process').execSync
 var async = require('async')
 var AWS = require('aws-sdk')
 var ansiUp = require('ansi_up')
 var buildTemplate = require('../html/build.html.js')
 
-var s3 = new AWS.S3()
+// We buffer all logs in-memory, including cmd output
+// TODO: make this buffer to file to ensure we don't run out of mem
+var LOG_BUFFER = []
 
 var SVGS = {
   pending: fs.readFileSync(`${__dirname}/../html/pending.svg`, 'utf8'),
@@ -14,15 +16,24 @@ var SVGS = {
   failing: fs.readFileSync(`${__dirname}/../html/failing.svg`, 'utf8'),
 }
 
+var s3 = new AWS.S3()
+
 exports.logIfErr = function(err) {
   if (err) exports.error(err.stack || err)
 }
 
+exports.init = function() {
+  LOG_BUFFER = []
+  exports.info.apply(exports, arguments)
+}
+
 exports.info = function() {
+  LOG_BUFFER.push(util.format.apply(util, arguments))
   console.log.apply(console, arguments)
 }
 
 exports.error = function() {
+  LOG_BUFFER.push(util.format.apply(util, arguments))
   console.error.apply(console, arguments)
 }
 
@@ -33,17 +44,8 @@ exports.raw = function(msg) {
   process.stdout.write(msg)
 }
 
-exports.getBuildStream = function(build) {
-  build.logFile = build.logFile || '/tmp/log.txt'
-  return fs.createWriteStream(build.logFile, {flags: 'a'})
-}
-
-exports.getTail = function(build) {
-  try {
-    return execSync(`tail -20 ${build.logFile}`, {encoding: 'utf8'})
-  } catch (e) {
-    return ''
-  }
+exports.getTail = function() {
+  return LOG_BUFFER.slice(-20).join('\n')
 }
 
 // From https://github.com/chalk/ansi-regex
@@ -62,7 +64,6 @@ exports.initBuildLog = function(config, build) {
   }
 
   build.buildDirUrl = exports.buildDirUrl(build, config.s3Bucket)
-  build.logFile = build.logFile || '/tmp/log.txt'
 
   var filename = 'index'
   var buildDir = `${build.project}/builds/${build.buildNum}`
@@ -126,24 +127,20 @@ exports.buildDirUrl = function(build, bucket) {
 }
 
 function uploadS3Log(build, bucket, key, branchKey, branchStatusKey, makePublic, cb) {
-  fs.readFile(build.logFile, 'utf8', function(err, logTxt) {
-    if (err && err.code != 'ENOENT') return cb(err)
+  var params = {
+    build: build,
+    log: ansiUp.linkify(ansiUp.ansi_to_html(ansiUp.escape_for_html(LOG_BUFFER.join('\n')))),
+  }
 
-    var params = {
-      build: build,
-      log: ansiUp.linkify(ansiUp.ansi_to_html(ansiUp.escape_for_html(logTxt || ''))),
-    }
-
-    s3.upload({
-      Bucket: bucket,
-      Key: key,
-      ContentType: 'text/html; charset=utf-8',
-      Body: buildTemplate(params),
-      ACL: makePublic ? 'public-read' : undefined,
-    }, function(err) {
-      if (err) return cb(err)
-      updateS3Branch(build, bucket, key, branchKey, branchStatusKey, makePublic, cb)
-    })
+  s3.upload({
+    Bucket: bucket,
+    Key: key,
+    ContentType: 'text/html; charset=utf-8',
+    Body: buildTemplate(params),
+    ACL: makePublic ? 'public-read' : undefined,
+  }, function(err) {
+    if (err) return cb(err)
+    updateS3Branch(build, bucket, key, branchKey, branchStatusKey, makePublic, cb)
   })
 }
 

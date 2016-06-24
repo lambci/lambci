@@ -37,6 +37,7 @@ exports.DEFAULT_CONFIG = {
   s3PublicSecretNames: true,
   inheritSecrets: true,
   allowConfigOverrides: true,
+  clearTmp: true,
   notifications: {
     slack: {
       channel: '#general',
@@ -65,10 +66,22 @@ exports.DEFAULT_CONFIG = {
   },
 }
 
-exports.initSync = function() {
-  execSync(`mkdir -p ${exports.HOME_DIR}`)
-  execSync(`cp -r ${__dirname}/../home/. ${exports.HOME_DIR}`)
-  execSync(`tar -xf ${__dirname}/../vendor/git.tar -C ${exports.HOME_DIR}`)
+exports.initSync = function(config) {
+  // If we're in potentially unsafe environments (eg, we run public builds),
+  // then we don't want ppl messing with *anything* in /tmp, so we blow it away each time
+  // Can set `clearTmp` to avoid recreating the HOME_DIR, etc each time
+  if (config.clearTmp) {
+    // Don't have permissions to delete /tmp but can delete everything in it
+    // Could also do `find ... -delete` for all files, but this is quicker
+    execSync('find /tmp -mindepth 1 -maxdepth 1 -exec rm -rf {} +')
+  }
+  execSync(`
+    if ! [ -d ${exports.HOME_DIR} ]; then
+      mkdir -p ${exports.HOME_DIR}
+      cp -r ${__dirname}/../home/. ${exports.HOME_DIR}
+      tar -xf ${__dirname}/../vendor/git.tar -C ${exports.HOME_DIR}
+    fi
+  `)
 }
 
 exports.initConfig = function(configs, build) {

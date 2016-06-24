@@ -43,6 +43,8 @@ function runBuild(build, context, cb) {
       return cb()
     }
 
+    configUtils.initSync(config)
+
     cloneAndBuild(build, config, cb)
   })
 }
@@ -149,7 +151,7 @@ function clone(build, config, cb) {
     ]
   }
 
-  // No caching of clones for now – can revisit this if we want to
+  // No caching of clones for now – can revisit this if we want to – but for now, safer to save space
   var cmds = [`rm -rf ${configUtils.BASE_BUILD_DIR}`].concat(cloneCmd, checkoutCmd)
 
   var env = prepareLambdaConfig({}).env

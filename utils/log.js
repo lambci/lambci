@@ -22,6 +22,10 @@ exports.logIfErr = function(err) {
   if (err) exports.error(err.stack || err)
 }
 
+// We rely on a singleton logger (for the buffer), so this is kinda hacky
+// (ie, cannot execute concurrent invocations from the same process)
+// We could return a new logger instance, but... meh.
+// Lambda doesn't execute concurrently in the same process anyway.
 exports.init = function() {
   LOG_BUFFER = []
   exports.info.apply(exports, arguments)

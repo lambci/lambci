@@ -5,8 +5,6 @@ var cfn = require('./cfn')
 var actions = require('./actions')
 var sns = require('./sources/sns')
 
-config.initSync()
-
 exports.handler = function(event, context, cb) {
 
   log.init(`LambCI v${config.VERSION} triggered on stack "${config.STACK}"\n`) // STACK is usually 'lambci'

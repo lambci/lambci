@@ -36,7 +36,7 @@ function SlackClient(token, options, build) {
   })
 
   build.statusEmitter.on('finish', (err, buildInfo) => {
-    var status = {}
+    var status = {}, elapsedTxt = utils.elapsedTxt(buildInfo.startedAt, buildInfo.endedAt)
     if (err) {
       var txt = err.message
       if (err.logTail) {
@@ -44,11 +44,11 @@ function SlackClient(token, options, build) {
       }
 
       status.color = 'danger'
-      status.title = `Build #${buildInfo.buildNum} failed`
+      status.title = `Build #${buildInfo.buildNum} failed (${elapsedTxt})`
       status.text = '```' + txt.replace(/```/g, "'''") + '```' // TODO: not sure best way to escape ```
     } else {
       status.color = 'good'
-      status.title = `Build #${buildInfo.buildNum} successful!`
+      status.title = `Build #${buildInfo.buildNum} successful (${elapsedTxt})`
     }
     this.statusQueue.push(status, log.logIfErr)
   })

@@ -75,6 +75,13 @@ exports.htmlEncode = function(str) {
     .replace(/\//g, '&#x2F;') // Included as advised by OWASP
 }
 
+exports.elapsedTxt = function(start, end) {
+  var totalElapsedSecs = Math.floor(((end || Date.now()) - start) / 1000)
+  var elapsedMins = Math.floor(totalElapsedSecs / 60)
+  var elapsedSecs = totalElapsedSecs % 60
+  return (elapsedMins ? `${elapsedMins} min ` : '') + (elapsedSecs ? `${elapsedSecs} sec` : '')
+}
+
 //              NUM            . NUM            . NUM            -beta.3.4 (optional)           +build.meta.data (ignore)
 var SEMVER = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[\da-z\-]+(?:\.[\da-z\-]+)*)?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?$/i
 var SIMPLE_NUMBER = /^(0|[1-9][0-9]*)$/

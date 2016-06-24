@@ -6,10 +6,7 @@ function render(params) {
   var build = params.build
   var logHtml = params.log
 
-  var totalElapsedSecs = Math.floor(((build.endedAt || Date.now()) - build.startedAt) / 1000)
-  var elapsedMins = Math.floor(totalElapsedSecs / 60)
-  var elapsedSecs = totalElapsedSecs % 60
-  var elapsedTxt = (elapsedMins ? `${elapsedMins} min ` : '') + (elapsedSecs ? `${elapsedSecs} sec` : '')
+  var elapsedTxt = utils.elapsedTxt(build.startedAt, build.endedAt)
 
   var buildClasses = 'fa-cog fa-spin pending'
   switch (build.status) {

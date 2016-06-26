@@ -6,7 +6,6 @@
 *CONTRIBUTING*
 .git/*
 test/*
-Dockerfile
 node_modules/*/test/*
 node_modules/*/tests/*
 node_modules/*/docs/*

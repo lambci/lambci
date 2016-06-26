@@ -241,14 +241,16 @@ function dockerBuild(config, cb) {
 // For when executing under Lambda (but not ECS/Docker)
 function prepareLambdaConfig(config) {
 
+  var pythonDir = `${__dirname}/../python`
   var usrDir = `${configUtils.HOME_DIR}/usr`
   var defaultLambdaConfig = {
     env: {
       HOME: configUtils.HOME_DIR,
       SHELL: '/bin/bash',
-      PATH: `${usrDir}/bin:${process.env.PATH}`,
+      PATH: `${configUtils.HOME_DIR}/.local/bin:${usrDir}/bin:${pythonDir}/bin:${process.env.PATH}`,
       LD_LIBRARY_PATH: `${usrDir}/lib64:${process.env.LD_LIBRARY_PATH}`,
       NODE_PATH: process.env.NODE_PATH,
+      PYTHONPATH: `${pythonDir}/lib/python2.7/site-packages`,
       GIT_TEMPLATE_DIR: `${usrDir}/share/git-core/templates`,
       GIT_EXEC_PATH: `${usrDir}/libexec/git-core`,
 

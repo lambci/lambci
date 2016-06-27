@@ -11,7 +11,7 @@ ENV GIT_EXEC_PATH $HOME/usr/libexec/git-core
 
 ADD . /var/task
 ADD ./home $HOME
-ADD ./vendor/git.tar $HOME
+ADD ./vendor/git-2.4.3.tar $HOME
 
 USER root
 RUN chown -R slicer:497 /var/task

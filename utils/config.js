@@ -75,11 +75,15 @@ exports.initSync = function(config) {
     // Could also do `find ... -delete` for all files, but this is quicker
     execSync('find /tmp -mindepth 1 -maxdepth 1 -exec rm -rf {} +')
   }
+  // The git executables blow up in size when zipped for some reason,
+  // so we leave them tarred and untar in /tmp/...
+  // TODO: figure out if there's a way around this
+  // TODO: is there anything else we want to add in home?
   execSync(`
     if ! [ -d ${exports.HOME_DIR} ]; then
       mkdir -p ${exports.HOME_DIR}
       cp -r ${__dirname}/../home/. ${exports.HOME_DIR}
-      tar -C ${exports.HOME_DIR} -xf ${__dirname}/../vendor/git.tar
+      tar -C ${exports.HOME_DIR} -xf ${__dirname}/../vendor/git-2.4.3.tar
     fi
   `)
 }

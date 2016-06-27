@@ -92,9 +92,10 @@ function performUpdates(event, cb) {
     configUpdates.push({notifications: {slack: {channel: props.SlackChannel}}})
   }
 
-  var repos = props.Repositories || [], oldRepos = oldProps.Repositories || []
-  var addedRepos = repos.filter(repo => repo && !~oldRepos.indexOf(repo))
-  var deletedRepos = oldRepos.filter(repo => repo && !~repos.indexOf(repo))
+  var repos = props.Repositories.map(repo => repo.trim()).filter(Boolean) || []
+  var oldRepos = oldProps.Repositories.map(repo => repo.trim()).filter(Boolean) || []
+  var addedRepos = repos.filter(repo => !~oldRepos.indexOf(repo))
+  var deletedRepos = oldRepos.filter(repo => !~repos.indexOf(repo))
 
   var reposUpdated = repos.length && (addedRepos.length || deletedRepos.length)
   var snsUpdated = props.SnsTopic && props.SnsAccessKey && props.SnsSecret &&
@@ -110,7 +111,7 @@ function performUpdates(event, cb) {
     updates.push(cb => db.updateGlobalConfig(utils.merge.apply(null, configUpdates), cb))
   }
 
-  var updatedRepos = githubTokenUpdated || snsUpdated ? repos : addedRepos
+  var updatedRepos = (githubTokenUpdated || snsUpdated) ? repos : addedRepos
 
   updates.push(function updateRepos(cb) {
     async.forEach(updatedRepos, function updateRepoHook(repo, cb) {

@@ -5,6 +5,7 @@ var sts = new AWS.STS()
 
 // var lambdaEvent = require('../../docker/push.private.json')
 // var lambdaEvent = require('../../docker/pullRequest.private.json')
+// var lambdaEvent = require('./fixtures/pullRequest.failure.json')
 var lambdaEvent = require('./fixtures/pullRequest.synchronize.json')
 
 if (require.main == module) {

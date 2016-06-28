@@ -49,7 +49,11 @@ exports.raw = function(msg) {
 }
 
 exports.getTail = function() {
-  return LOG_BUFFER.slice(-20).join('\n')
+  var lastLines = LOG_BUFFER.slice(-20)
+  if (lastLines.length < LOG_BUFFER.length) {
+    lastLines.unshift('...')
+  }
+  return exports.stripAnsi(lastLines.join('\n'))
 }
 
 // From https://github.com/chalk/ansi-regex

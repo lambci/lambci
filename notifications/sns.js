@@ -66,7 +66,7 @@ Log: ${this.logUrl}
     if (err) {
       message += `Error: ${err.message}`
       if (err.logTail) {
-        message += `\n...\n${log.stripAnsi(err.logTail)}`
+        message += `\n${err.logTail}`
       }
       subject = `LambCI Build #${buildInfo.buildNum} failed`
     }

@@ -68,7 +68,12 @@ function cloneAndBuild(build, config, cb) {
     db.initBuild(build, function(err, build) {
       if (err) return cb(err)
 
+      log.info('')
+      log.info(`Build #${build.buildNum} started...\n`)
+
       build.logUrl = log.initBuildLog(config, build)
+
+      log.info(`Build log: ${build.logUrl}\n`)
 
       if (build.token) {
         github.createClient(build)
@@ -83,10 +88,6 @@ function cloneAndBuild(build, config, cb) {
       }
 
       var done = patchUncaughtHandlers(build, config, cb)
-
-      log.info('')
-      log.info(`Build #${build.buildNum} started...`)
-      log.info(`Logging to: ${build.logUrl}\n`)
 
       build.statusEmitter.emit('start', build)
 

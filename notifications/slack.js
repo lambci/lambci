@@ -40,7 +40,7 @@ function SlackClient(token, options, build) {
     if (err) {
       var txt = err.message
       if (err.logTail) {
-        txt = `...\n${log.stripAnsi(err.logTail)}\n` + txt
+        txt = `${err.logTail}\n${txt}`
       }
 
       status.color = 'danger'

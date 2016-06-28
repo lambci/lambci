@@ -247,7 +247,13 @@ function prepareLambdaConfig(config) {
     env: {
       HOME: configUtils.HOME_DIR,
       SHELL: '/bin/bash',
-      PATH: `${configUtils.HOME_DIR}/.local/bin:${usrDir}/bin:${pythonDir}/bin:${process.env.PATH}`,
+      PATH: [
+        `${configUtils.HOME_DIR}/.local/bin`,
+        `${usrDir}/bin`,
+        `${pythonDir}/bin`,
+        `${__dirname}/../node_modules/.bin`,
+        `${process.env.PATH}`,
+      ].join(':'),
       LD_LIBRARY_PATH: `${usrDir}/lib64:${process.env.LD_LIBRARY_PATH}`,
       NODE_PATH: process.env.NODE_PATH,
       PYTHONPATH: `${pythonDir}/lib/python2.7/site-packages`,

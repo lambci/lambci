@@ -1,4 +1,5 @@
 var async = require('async')
+var AWS = require('aws-sdk')
 var utils = require('../utils')
 var log = require('../utils/log')
 var db = require('../db')
@@ -98,8 +99,9 @@ function performUpdates(event, cb) {
   var deletedRepos = oldRepos.filter(repo => !~repos.indexOf(repo))
 
   var reposUpdated = repos.length && (addedRepos.length || deletedRepos.length)
-  var snsUpdated = props.SnsTopic && props.SnsAccessKey && props.SnsSecret &&
-    (props.SnsTopic != oldProps.SnsTopic || props.SnsAccessKey != oldProps.SnsAccessKey || props.SnsSecret != oldProps.SnsSecret)
+
+  var snsUpdated = ['SnsTopic', 'SnsAccessKey', 'SnsSecret', 'SnsFailuresRole']
+    .some(prop => props[prop] && props[prop] != oldProps[prop])
 
   if (!configUpdates.length && !reposUpdated && !snsUpdated) {
     return cb(null, 'No stack properties need updates')
@@ -117,8 +119,11 @@ function performUpdates(event, cb) {
     async.forEach(updatedRepos, function updateRepoHook(repo, cb) {
       var githubClient = github.createClient({token: props.GithubToken, repo: repo})
       githubClient.createOrUpdateSnsHook(props.SnsAccessKey, props.SnsSecret, props.SnsTopic, function(err) {
-        if (err) err.message = `Error updating SNS Hook for ${repo}: ${err.message}`
-        cb(err)
+        if (err) {
+          log.error('Error updating SNS Hook for %s: %s\n%j', repo, err.message || err, err)
+          log.error('You can update it at https://github.com/%s/settings/hooks', repo)
+        }
+        cb() // Don't fail on errors updating hooks – can update manually
       })
     }, cb)
   })
@@ -129,12 +134,23 @@ function performUpdates(event, cb) {
       githubClient.deleteSnsHook(null, function(err) {
         if (err) {
           log.error('Error deleting SNS Hook for %s: %s\n%j', repo, err.message || err, err)
-          log.error('Please manually delete it at https://github.com/%s/settings/hooks', repo)
+          log.error('You can delete it at https://github.com/%s/settings/hooks', repo)
         }
         cb() // Don't fail on errors deleting hooks – can remove manually
       })
     }, cb)
   })
+
+  if (snsUpdated) {
+    updates.push(function updateSnsFailureRole(cb) {
+      log.info('Updating SNS topic to log failures')
+      new AWS.SNS().setTopicAttributes({
+        TopicArn: props.SnsTopic,
+        AttributeName: 'LambdaFailureFeedbackRoleArn',
+        AttributeValue: props.SnsFailuresRole,
+      }, cb)
+    })
+  }
 
   async.parallel(updates, err => cb(err))
 }

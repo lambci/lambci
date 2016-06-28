@@ -189,6 +189,15 @@
               ]
             }
           }
+        },{
+          "PolicyName": "UpdateSnsTopic",
+          "PolicyDocument": {
+            "Statement": {
+              "Effect": "Allow",
+              "Action": "sns:SetTopicAttributes",
+              "Resource": {"Fn::Join": ["", ["arn:aws:sns:*:*:", {"Ref": "AWS::StackName"}, "-*"]]}
+            }
+          }
         }]
       }
     },
@@ -213,6 +222,34 @@
         "UserName": {"Ref" : "SnsSender"}
       }
     },
+    "SnsFailures": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": {
+            "Effect": "Allow",
+            "Principal": {"Service": "sns.amazonaws.com"},
+            "Action": "sts:AssumeRole"
+          }
+        },
+        "Policies": [{
+          "PolicyName": "WriteLogs",
+          "PolicyDocument": {
+            "Statement": {
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:PutMetricFilter",
+                "logs:PutRetentionPolicy"
+              ],
+              "Resource": {"Fn::Join": ["", ["arn:aws:logs:*:*:log-group:sns/*/*/", {"Fn::GetAtt" : ["InvokeTopic", "TopicName"]}, "/*"]]}
+            }
+          }
+        }]
+      }
+    },
     "ConfigUpdater": {
       "Type": "Custom::ConfigUpdater",
       "Properties": {
@@ -224,7 +261,8 @@
         "S3Bucket": {"Ref": "BuildResults"},
         "SnsTopic": {"Ref": "InvokeTopic"},
         "SnsAccessKey": {"Ref": "SnsAccessKey"},
-        "SnsSecret": {"Fn::GetAtt": ["SnsAccessKey", "SecretAccessKey"]}
+        "SnsSecret": {"Fn::GetAtt": ["SnsAccessKey", "SecretAccessKey"]},
+        "SnsFailuresRole": {"Fn::GetAtt" : ["SnsFailures", "Arn"]}
       }
     }
   },

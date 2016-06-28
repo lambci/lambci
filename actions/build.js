@@ -140,14 +140,14 @@ function clone(build, config, cb) {
     maskCmd = cmd => cmd.replace(new RegExp(build.token, 'g'), 'XXXX')
   }
 
-  var cloneCmd = `git clone --depth 5 ${cloneUrl} -b ${build.checkoutBranch} ${build.cloneDir}`
+  var cloneCmd = `git clone --depth ${config.git.depth} ${cloneUrl} -b ${build.checkoutBranch} ${build.cloneDir}`
   var checkoutCmd = `cd ${build.cloneDir} && git checkout -qf ${build.commit}`
 
   // Bit awkward, but we don't want the token written to disk anywhere
   if (build.isPrivate && build.token && !config.inheritSecrets) {
     cloneCmd = [
       `mkdir -p ${build.cloneDir}`,
-      `cd ${build.cloneDir} && git init && git pull --depth 5 ${cloneUrl} ${build.checkoutBranch}`,
+      `cd ${build.cloneDir} && git init && git pull --depth ${config.git.depth} ${cloneUrl} ${build.checkoutBranch}`,
     ]
   }
 

@@ -26,7 +26,6 @@ exports.BASE_BUILD_DIR = path.join(exports.BASE_DIR, 'build') // eg: /tmp/lambci
 
 exports.DEFAULT_CONFIG = {
   cmd: 'npm install && npm test',
-  // cmd: 'nave use 6 bash -c "env && node --version && npm --version && npm install && npm test"',
   env: {
   },
   secretEnv: {
@@ -34,10 +33,6 @@ exports.DEFAULT_CONFIG = {
     SLACK_TOKEN: '',
   },
   s3Bucket: '',
-  s3PublicSecretNames: true,
-  inheritSecrets: true,
-  allowConfigOverrides: true,
-  clearTmp: true,
   notifications: {
     slack: {
       channel: '#general',
@@ -63,6 +58,13 @@ exports.DEFAULT_CONFIG = {
       allowConfigOverrides: ['cmd', 'env'],
     },
     fromForkPrivateRepo: false,
+  },
+  s3PublicSecretNames: true,
+  inheritSecrets: true,
+  allowConfigOverrides: true,
+  clearTmp: true,
+  git: {
+    depth: 5,
   },
 }
 

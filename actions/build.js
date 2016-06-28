@@ -255,9 +255,10 @@ function prepareLambdaConfig(config) {
       GIT_EXEC_PATH: `${usrDir}/libexec/git-core`,
 
       // To try to get colored output
-      NPM_CONFIG_COLOR: 'always',
       TERM: 'xterm-256color',
       FORCE_COLOR: true,
+      NPM_CONFIG_COLOR: 'always',
+      MOCHA_COLORS: true,
     },
     secretEnv: {
       AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,

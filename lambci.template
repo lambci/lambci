@@ -4,31 +4,31 @@
   "Parameters": {
     "Version": {
       "Description": "LambCI version",
-      "Type" : "String",
+      "Type": "String",
       "Default": "0.8.0"
     },
     "GithubToken": {
       "Description": "GitHub OAuth token",
-      "Type" : "String",
+      "Type": "String",
       "Default": "",
       "AllowedPattern": "^$|^[0-9a-f]{40}$",
       "ConstraintDescription": "Must be empty or a 40 char GitHub token"
     },
     "Repositories": {
       "Description": "(optional) GitHub repos to add hook to, eg: facebook/react,emberjs/ember.js",
-      "Type" : "CommaDelimitedList",
+      "Type": "CommaDelimitedList",
       "Default": ""
     },
     "SlackToken": {
-      "Description": "(optional) Slack token",
-      "Type" : "String",
+      "Description": "(optional) Slack API token",
+      "Type": "String",
       "Default": "",
       "AllowedPattern": "^$|^xox.-[0-9]+-.+",
       "ConstraintDescription": "Must be empty or a valid Slack token, eg: xoxb-1234"
     },
     "SlackChannel": {
       "Description": "(optional) Slack channel",
-      "Type" : "String",
+      "Type": "String",
       "Default": "#general",
       "AllowedPattern": "^$|^#.+",
       "ConstraintDescription": "Must be empty or a valid Slack channel, eg: #general"
@@ -107,7 +107,7 @@
         }]
       }
     },
-    "InvokeTopic" : {
+    "InvokeTopic": {
       "Type": "AWS::SNS::Topic",
       "Properties": {
         "Subscription": [{"Endpoint": {"Fn::GetAtt": ["BuildLambda", "Arn"]}, "Protocol": "lambda"}]
@@ -116,10 +116,10 @@
     "LambdaInvoke": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
-        "FunctionName" : {"Fn::GetAtt" : ["BuildLambda", "Arn"]},
+        "FunctionName": {"Fn::GetAtt": ["BuildLambda", "Arn"]},
         "Action": "lambda:InvokeFunction",
         "Principal": "sns.amazonaws.com",
-        "SourceArn": {"Ref" : "InvokeTopic"}
+        "SourceArn": {"Ref": "InvokeTopic"}
       }
     },
     "LambdaExecution": {
@@ -216,10 +216,10 @@
         }]
       }
     },
-    "SnsAccessKey" : {
+    "SnsAccessKey": {
       "Type": "AWS::IAM::AccessKey",
       "Properties": {
-        "UserName": {"Ref" : "SnsSender"}
+        "UserName": {"Ref": "SnsSender"}
       }
     },
     "SnsFailures": {
@@ -244,7 +244,7 @@
                 "logs:PutMetricFilter",
                 "logs:PutRetentionPolicy"
               ],
-              "Resource": {"Fn::Join": ["", ["arn:aws:logs:*:*:log-group:sns/*/*/", {"Fn::GetAtt" : ["InvokeTopic", "TopicName"]}, "/*"]]}
+              "Resource": {"Fn::Join": ["", ["arn:aws:logs:*:*:log-group:sns/*/*/", {"Fn::GetAtt": ["InvokeTopic", "TopicName"]}, "/*"]]}
             }
           }
         }]
@@ -253,7 +253,7 @@
     "ConfigUpdater": {
       "Type": "Custom::ConfigUpdater",
       "Properties": {
-        "ServiceToken": {"Fn::GetAtt" : ["BuildLambda", "Arn"]},
+        "ServiceToken": {"Fn::GetAtt": ["BuildLambda", "Arn"]},
         "GithubToken": {"Ref": "GithubToken"},
         "Repositories": {"Ref": "Repositories"},
         "SlackToken": {"Ref": "SlackToken"},
@@ -262,7 +262,7 @@
         "SnsTopic": {"Ref": "InvokeTopic"},
         "SnsAccessKey": {"Ref": "SnsAccessKey"},
         "SnsSecret": {"Fn::GetAtt": ["SnsAccessKey", "SecretAccessKey"]},
-        "SnsFailuresRole": {"Fn::GetAtt" : ["SnsFailures", "Arn"]}
+        "SnsFailuresRole": {"Fn::GetAtt": ["SnsFailures", "Arn"]}
       }
     }
   },

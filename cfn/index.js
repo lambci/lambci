@@ -93,8 +93,8 @@ function performUpdates(event, cb) {
     configUpdates.push({notifications: {slack: {channel: props.SlackChannel}}})
   }
 
-  var repos = props.Repositories.map(repo => repo.trim()).filter(Boolean) || []
-  var oldRepos = oldProps.Repositories.map(repo => repo.trim()).filter(Boolean) || []
+  var repos = (props.Repositories || []).map(repo => repo.trim()).filter(Boolean)
+  var oldRepos = (oldProps.Repositories || []).map(repo => repo.trim()).filter(Boolean)
   var addedRepos = repos.filter(repo => !~oldRepos.indexOf(repo))
   var deletedRepos = oldRepos.filter(repo => !~repos.indexOf(repo))
 

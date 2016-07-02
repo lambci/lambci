@@ -68,6 +68,9 @@ function cloneAndBuild(build, config, cb) {
     db.initBuild(build, function(err, build) {
       if (err) return cb(err)
 
+      // TODO: must be a better place to put this?
+      config.env.LAMBCI_BUILD_NUM = build.buildNum
+
       log.info('')
       log.info(`Build #${build.buildNum} started...\n`)
 

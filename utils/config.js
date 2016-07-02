@@ -4,9 +4,9 @@ var execSync = require('child_process').execSync
 var utils = require('.')
 var log = require('./log')
 
-// Function name is often something like `lambci-build` or `lambci-build-ET00B7R7T0AN`
-// So this will usually resolve to `lambci`
-exports.STACK = (process.env.AWS_LAMBDA_FUNCTION_NAME || 'lambci').replace(/-.+$/, '')
+// Function name is often something like `lambci-build` or `lambci-public-build`
+// So this will usually resolve to `lambci` or `lambci-public` or similar
+exports.STACK = (process.env.AWS_LAMBDA_FUNCTION_NAME || 'lambci').replace(/-build.*$/, '')
 
 exports.VERSION = require('../package.json').version
 

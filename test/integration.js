@@ -16,7 +16,7 @@ function runBuild() {
   dockerLambda({
     event: lambdaEvent,
     addEnvVars: true,
-    dockerArgs: ['-e', 'AWS_LAMBDA_FUNCTION_NAME=lambci-build'],
+    dockerArgs: ['-e', `AWS_LAMBDA_FUNCTION_NAME=${process.env.STACK || 'lambci'}-build`],
     spawnOptions: {encoding: 'utf8', stdio: 'inherit'},
   })
 }

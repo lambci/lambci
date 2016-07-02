@@ -245,7 +245,7 @@ exports.parseEvent = function(event, eventType, build) {
     build.comment = (event.head_commit || {}).message || ''
     build.user = (event.pusher || {}).name
 
-    build.committers = (event.commits || []).reduce((committers, commit) => {
+    build.committers = (event.commits || []).concat(event.head_commit).reduce((committers, commit) => {
       var author = commit.author || {}, committer = commit.committer || {}
       committers[author.email] = author.username
       committers[committer.email] = committer.username

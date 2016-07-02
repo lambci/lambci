@@ -6,7 +6,11 @@ var sts = new AWS.STS()
 // var lambdaEvent = require('../../docker/push.private.json')
 // var lambdaEvent = require('../../docker/pullRequest.private.json')
 // var lambdaEvent = require('./fixtures/pullRequest.failure.json')
-var lambdaEvent = require('./fixtures/pullRequest.synchronize.json')
+// var lambdaEvent = require('./fixtures/push.maxSize.1.json')
+// var lambdaEvent = require('./fixtures/push.maxSize.2.json')
+// var lambdaEvent = require('./fixtures/push.maxSize.3.json')
+// var lambdaEvent = require('./fixtures/pullRequest.synchronize.json')
+var lambdaEvent = require('./fixtures/push.normal.json')
 
 if (require.main == module) {
   assumeRole(runBuild)

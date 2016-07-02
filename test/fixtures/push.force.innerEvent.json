@@ -1,19 +1,19 @@
 {
   "ref": "refs/heads/mhart-patch-1",
-  "before": "76b5774dfde78b14011c8fd880dcb0e389e82e03",
-  "after": "630a79d3395a839a48fada5079ac1cd2e4391c9e",
+  "before": "f5c50fa625e096c82a2defd99d9860497f1ec20d",
+  "after": "a0c794a979e29d44b7ef889c12d1703089f3e474",
   "created": false,
   "deleted": false,
   "forced": true,
   "base_ref": null,
-  "compare": "https://github.com/mhart/test-ci-project/compare/76b5774dfde7...630a79d3395a",
+  "compare": "https://github.com/mhart/test-ci-project/compare/f5c50fa625e0...a0c794a979e2",
   "commits": [
     {
-      "id": "630a79d3395a839a48fada5079ac1cd2e4391c9e",
+      "id": "a0c794a979e29d44b7ef889c12d1703089f3e474",
       "distinct": true,
-      "message": "Create README.md",
-      "timestamp": "2015-05-01T22:56:19-04:00",
-      "url": "https://github.com/mhart/test-ci-project/commit/630a79d3395a839a48fada5079ac1cd2e4391c9e",
+      "message": "Add failing test",
+      "timestamp": "2015-05-02T12:18:36-04:00",
+      "url": "https://github.com/mhart/test-ci-project/commit/a0c794a979e29d44b7ef889c12d1703089f3e474",
       "author": {
         "name": "Michael Hart",
         "email": "michael.hart.au@gmail.com",
@@ -24,19 +24,20 @@
         "email": "michael.hart.au@gmail.com",
         "username": "mhart"
       },
-      "added": [
-        "README.md"
-      ],
+      "added": [],
       "removed": [],
-      "modified": []
+      "modified": [
+        "README.md",
+        "test/bar.test.js"
+      ]
     }
   ],
   "head_commit": {
-    "id": "630a79d3395a839a48fada5079ac1cd2e4391c9e",
+    "id": "a0c794a979e29d44b7ef889c12d1703089f3e474",
     "distinct": true,
-    "message": "Create README.md",
-    "timestamp": "2015-05-01T22:56:19-04:00",
-    "url": "https://github.com/mhart/test-ci-project/commit/630a79d3395a839a48fada5079ac1cd2e4391c9e",
+    "message": "Add failing test",
+    "timestamp": "2015-05-02T12:18:36-04:00",
+    "url": "https://github.com/mhart/test-ci-project/commit/a0c794a979e29d44b7ef889c12d1703089f3e474",
     "author": {
       "name": "Michael Hart",
       "email": "michael.hart.au@gmail.com",
@@ -47,11 +48,12 @@
       "email": "michael.hart.au@gmail.com",
       "username": "mhart"
     },
-    "added": [
-      "README.md"
-    ],
+    "added": [],
     "removed": [],
-    "modified": []
+    "modified": [
+      "README.md",
+      "test/bar.test.js"
+    ]
   },
   "repository": {
     "id": 34931472,
@@ -103,7 +105,7 @@
     "releases_url": "https://api.github.com/repos/mhart/test-ci-project/releases{/id}",
     "created_at": 1430529913,
     "updated_at": "2015-05-02T01:25:16Z",
-    "pushed_at": 1430535393,
+    "pushed_at": 1430583523,
     "git_url": "git://github.com/mhart/test-ci-project.git",
     "ssh_url": "git@github.com:mhart/test-ci-project.git",
     "clone_url": "https://github.com/mhart/test-ci-project.git",

@@ -1,4 +1,6 @@
 var https = require('https')
+var zlib = require('zlib')
+var crypto = require('crypto')
 var AWS = require('aws-sdk')
 var utils = require('../utils')
 var config = require('../utils/config')
@@ -125,6 +127,98 @@ exports.checkIfRetry = function(build, cb) {
   }, function(err, data) {
     if (err) return cb(friendlyErr(table, err))
     cb(null, data.Items[0])
+  })
+}
+
+// GitHub will split up messages that are too large to deliver individually:
+// https://github.com/github/github-services/blob/e779a49a/lib/services/amazon_sns.rb#L44-L55
+//
+// We add these partial messages to the builds table, and once they've all
+// arrived, then we reconstruct the original message by patching them back together
+exports.addPartialEvent = function(event, cb) {
+  var table = BUILDS_TABLE
+  var key = {project: `partial/${event.checksum}`, buildNum: 0}
+  client.get({
+    TableName: table,
+    Key: key,
+    ConsistentRead: true,
+  }, function(err, data) {
+    if (err) return cb(friendlyErr(table, err))
+    var pagesSoFar = data && data.Item && data.Item.pagesSoFar
+    if (pagesSoFar >= event.page_total - 1) {
+      return exports.reconstructPartialEvent(event, cb)
+    }
+    client.put({
+      TableName: table,
+      Item: {
+        project: key.project,
+        buildNum: event.page_number,
+        message: zlib.gzipSync(event.message),
+      },
+    }, function(err) {
+      if (err) return cb(friendlyErr(table, err))
+      client.update({
+        TableName: table,
+        Key: key,
+        UpdateExpression: 'ADD pagesSoFar :one',
+        ExpressionAttributeValues: {':one': 1},
+        ReturnValues: 'UPDATED_NEW',
+      }, function(err, data) {
+        if (err) return cb(friendlyErr(table, err))
+        var pagesSoFar = data && data.Attributes && data.Attributes.pagesSoFar
+        if (pagesSoFar >= event.page_total) {
+          return exports.reconstructPartialEvent(event, cb)
+        }
+        cb()
+      })
+    })
+  })
+}
+
+exports.reconstructPartialEvent = function(event, cb) {
+  var table = BUILDS_TABLE
+  var pagesToGet = []
+  for (var i = 1; i <= event.page_total; i++) {
+    if (i != event.page_number) pagesToGet.push(i)
+  }
+  var getRequest = {RequestItems: {}}
+  getRequest.RequestItems[table] = {
+    ConsistentRead: true,
+    Keys: pagesToGet.map(page => { return {project: `partial/${event.checksum}`, buildNum: page} }),
+  }
+  var deleteRequest = {RequestItems: {}}
+  deleteRequest.RequestItems[table] = pagesToGet.concat(0, event.page_number).map(page => {
+    return {DeleteRequest: {Key: {project: `partial/${event.checksum}`, buildNum: page}}}
+  })
+
+  // TODO: process UnprocessedKeys
+  client.batchGet(getRequest, function(err, data) {
+    if (err) return cb(friendlyErr(table, err))
+    if (!data.Responses[table] || !data.Responses[table].length) {
+      return cb(new Error('Count not fetch partial events'))
+    }
+    var fullEvent, fullMessage = data.Responses[table]
+      .map(item => { return {page_number: item.buildNum, message: zlib.gunzipSync(item.message)} })
+      .concat(event)
+      .sort((a, b) => a.page_number - b.page_number)
+      .map(item => item.message)
+      .join('')
+
+    var checksum = crypto.createHash('md5').update(fullMessage).digest('hex')
+    if (checksum != event.checksum) {
+      return cb(new Error(`Reconstructed message checksum ${checksum} doesn't match original ${event.checksum}`))
+    }
+
+    try {
+      fullEvent = JSON.parse(fullMessage)
+    } catch (e) {
+      return cb(new Error(`Could not parse reconstructed message as JSON: ${e.message}`))
+    }
+
+    // Delete partials out of band – just log if we have an error
+    client.batchWrite(deleteRequest, log.logIfErr)
+
+    cb(null, fullEvent)
   })
 }
 

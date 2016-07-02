@@ -1,0 +1,7 @@
+{
+  "error": "Message exceeds the maximum SNS size limit of 256K",
+  "page_total": 3,
+  "page_number": 3,
+  "checksum": "1832827e00b87ee8739458a2e7bfa9c8",
+  "message": "michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"committer\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"added\":[],\"removed\":[],\"modified\":[\".dockerignore\",\".gitignore\",\"package.json\"]},\"repository\":{\"id\":34931472,\"name\":\"test-ci-project\",\"full_name\":\"mhart/test-ci-project\",\"owner\":{\"name\":\"mhart\",\"email\":\"michael.hart.au@gmail.com\"},\"private\":false,\"description\":null,\"fork\":false,\"created_at\":1430529913,\"updated_at\":\"2016-06-02T22:36:43Z\",\"pushed_at\":1467496195,\"clone_url\":\"https://github.com/mhart/test-ci-project.git\",\"homepage\":null,\"size\":892,\"stargazers_count\":0,\"watchers_count\":0,\"language\":\"JavaScript\",\"has_issues\":true,\"has_downloads\":true,\"has_wiki\":true,\"has_pages\":false,\"forks_count\":1,\"open_issues_count\":1,\"forks\":1,\"open_issues\":1,\"watchers\":0,\"default_branch\":\"master\",\"stargazers\":0,\"master_branch\":\"master\"},\"pusher\":{\"name\":\"mhart\",\"email\":\"michael.hart.au@gmail.com\"},\"sender\":{\"login\":\"mhart\",\"id\":367936,\"avatar_url\":\"https://avatars.githubusercontent.com/u/367936?v=3\",\"gravatar_id\":\"\",\"type\":\"User\",\"site_admin\":false}}"
+}

@@ -1,0 +1,27 @@
+{
+    "Records": [
+        {
+            "EventSource": "aws:sns",
+            "EventVersion": "1.0",
+            "EventSubscriptionArn": "arn:aws:sns:us-east-1:999000111222:lambci-InvokeTopic-1234ABCD:2555e238-c1f1-455d-a414-add26ecdcf6a",
+            "Sns": {
+                "Type": "Notification",
+                "MessageId": "57b1e5a0-86f8-577e-9589-a81eb9dae199",
+                "TopicArn": "arn:aws:sns:us-east-1:999000111222:lambci-InvokeTopic-1234ABCD",
+                "Subject": null,
+                "Message": "{\"ref\":\"refs/heads/master\",\"before\":\"5e0f22b382bcb594420cd93387c9ca4a10040b1c\",\"after\":\"a0e1c022661238e05fddb937350da7c6c1172786\",\"created\":false,\"deleted\":false,\"forced\":false,\"base_ref\":null,\"compare\":\"https://github.com/mhart/test-ci-project/compare/5e0f22b382bc...a0e1c0226612\",\"commits\":[{\"id\":\"02ff5b42679b0844dccf030720fc3792890fb60f\",\"tree_id\":\"cc4a519110422b1a8af3252cb8a6c697c4765fa5\",\"distinct\":true,\"message\":\"Try Go with make\",\"timestamp\":\"2016-06-28T21:58:46-04:00\",\"author\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"committer\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"added\":[\"build-go-make.sh\"],\"removed\":[],\"modified\":[\"package.json\"]},{\"id\":\"f7fa87465ddf38bb557ff7ebdd1b46564296cf12\",\"tree_id\":\"f90aee3374f4e7e617d01465278c2c9abab0381f\",\"distinct\":true,\"message\":\"Add test Dockerfile\",\"timestamp\":\"2016-06-30T17:44:22-04:00\",\"author\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"committer\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"added\":[\".dockerignore\",\"Dockerfile.test\"],\"removed\":[],\"modified\":[]},{\"id\":\"a0e1c022661238e05fddb937350da7c6c1172786\",\"tree_id\":\"e07ab28dcfb7b39495f01af5393c8d11438593b9\",\"distinct\":true,\"message\":\"Revert to single npm test command\",\"timestamp\":\"2016-07-02T17:49:49-04:00\",\"author\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"committer\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"added\":[],\"removed\":[],\"modified\":[\".dockerignore\",\".gitignore\",\"package.json\"]}],\"head_commit\":{\"id\":\"a0e1c022661238e05fddb937350da7c6c1172786\",\"tree_id\":\"e07ab28dcfb7b39495f01af5393c8d11438593b9\",\"distinct\":true,\"message\":\"Revert to single npm test command\",\"timestamp\":\"2016-07-02T17:49:49-04:00\",\"author\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"committer\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"added\":[],\"removed\":[],\"modified\":[\".dockerignore\",\".gitignore\",\"package.json\"]},\"repository\":{\"id\":34931472,\"name\":\"test-ci-project\",\"full_name\":\"mhart/test-ci-project\",\"owner\":{\"name\":\"mhart\",\"email\":\"michael.hart.au@gmail.com\"},\"private\":false,\"description\":null,\"fork\":false,\"created_at\":1430529913,\"updated_at\":\"2016-06-02T22:36:43Z\",\"pushed_at\":1467496195,\"clone_url\":\"https://github.com/mhart/test-ci-project.git\",\"homepage\":null,\"size\":892,\"stargazers_count\":0,\"watchers_count\":0,\"language\":\"JavaScript\",\"has_issues\":true,\"has_downloads\":true,\"has_wiki\":true,\"has_pages\":false,\"forks_count\":1,\"open_issues_count\":1,\"forks\":1,\"open_issues\":1,\"watchers\":0,\"default_branch\":\"master\",\"stargazers\":0,\"master_branch\":\"master\"},\"pusher\":{\"name\":\"mhart\",\"email\":\"michael.hart.au@gmail.com\"},\"sender\":{\"login\":\"mhart\",\"id\":367936,\"avatar_url\":\"https://avatars.githubusercontent.com/u/367936?v=3\",\"gravatar_id\":\"\",\"type\":\"User\",\"site_admin\":false}}",
+                "Timestamp": "2015-05-02T02:56:34.841Z",
+                "SignatureVersion": "1",
+                "Signature": "qEnHcNmxX57ssMfHAYXfzHpg+DIblA1wc+FE8mtktdDMcPXlnMjAiIvAMq9cFtJOgiEbC6wy8DymypS8odXMdg1jMPgYAOEApwU3zyOEhIa82ciLnIkZkg5q+fsoAt4mfOqoAPdhq0qUzzDv0vZsqu8sZNXL5BFxdNWRpDRBQX2AiVG+ShUNCsORxfRysCxwc8OPtwuwR9D3Z35cMfY9EqF3rCIEggkeiMc99pyGfIxYoD3oOwAoYVV3JnsYGVD8K+QUvph/IaXp/Js/9jwRaoGAK6pWGbwUwOVHwLRz/rmaQ7qz7km1MGbgseZfaV83v9PtdL9v5uhsgMmSWuF3sA==",
+                "SigningCertUrl": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-d6d679a1d18e95c2f9ffcf11f4f9e198.pem",
+                "UnsubscribeUrl": "https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:999000111222:lambci-InvokeTopic-1234ABCD:2555e238-c1f1-455d-a414-add26ecdcf6a",
+                "MessageAttributes": {
+                    "X-Github-Event": {
+                        "Type": "String",
+                        "Value": "push"
+                    }
+                }
+            }
+        }
+    ]
+}

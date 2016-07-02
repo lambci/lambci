@@ -1,0 +1,7 @@
+{
+  "error": "Message exceeds the maximum SNS size limit of 256K",
+  "page_total": 3,
+  "page_number": 1,
+  "checksum": "1832827e00b87ee8739458a2e7bfa9c8",
+  "message": "{\"ref\":\"refs/heads/master\",\"before\":\"5e0f22b382bcb594420cd93387c9ca4a10040b1c\",\"after\":\"a0e1c022661238e05fddb937350da7c6c1172786\",\"created\":false,\"deleted\":false,\"forced\":false,\"base_ref\":null,\"compare\":\"https://github.com/mhart/test-ci-project/compare/5e0f22b382bc...a0e1c0226612\",\"commits\":[{\"id\":\"02ff5b42679b0844dccf030720fc3792890fb60f\",\"tree_id\":\"cc4a519110422b1a8af3252cb8a6c697c4765fa5\",\"distinct\":true,\"message\":\"Try Go with make\",\"timestamp\":\"2016-06-28T21:58:46-04:00\",\"author\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"committer\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"added\":[\"build-go-make.sh\"],\"removed\":[],\"modified\":[\"package.json\"]},{\"id\":\"f7fa87465ddf38bb557ff7ebdd1b46564296cf12\",\"tree_id\":\"f90aee3374f4e7e617d01465278c2c9abab0381f\",\"distinct\":true,\"message\":\"Add test Dockerfile\",\"timestamp\":\"2016-06-30T17:44:22-04:00\",\"author\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"committer"
+}

@@ -38,19 +38,16 @@ function snsBuild(snsEvent, context, cb) {
     cb(null, data)
   })
 
-  var build
-  try {
-    build = sns.parseEvent(snsEvent)
-  } catch (e) {
-    return done(e)
-  }
+  sns.parseEvent(snsEvent, function(err, build) {
+    if (err) return done(err)
 
-  if (build.ignore) {
-    log.info(build.ignore)
-    log.info('Not running build')
-    return done()
-  }
+    if (build.ignore) {
+      log.info(build.ignore)
+      log.info('Not running build')
+      return done()
+    }
 
-  actions.build(build, context, done)
+    actions.build(build, context, done)
+  })
 }
 

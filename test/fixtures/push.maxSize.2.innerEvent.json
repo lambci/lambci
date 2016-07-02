@@ -1,0 +1,7 @@
+{
+  "error": "Message exceeds the maximum SNS size limit of 256K",
+  "page_total": 3,
+  "page_number": 2,
+  "checksum": "1832827e00b87ee8739458a2e7bfa9c8",
+  "message": "\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"added\":[\".dockerignore\",\"Dockerfile.test\"],\"removed\":[],\"modified\":[]},{\"id\":\"a0e1c022661238e05fddb937350da7c6c1172786\",\"tree_id\":\"e07ab28dcfb7b39495f01af5393c8d11438593b9\",\"distinct\":true,\"message\":\"Revert to single npm test command\",\"timestamp\":\"2016-07-02T17:49:49-04:00\",\"author\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"committer\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"added\":[],\"removed\":[],\"modified\":[\".dockerignore\",\".gitignore\",\"package.json\"]}],\"head_commit\":{\"id\":\"a0e1c022661238e05fddb937350da7c6c1172786\",\"tree_id\":\"e07ab28dcfb7b39495f01af5393c8d11438593b9\",\"distinct\":true,\"message\":\"Revert to single npm test command\",\"timestamp\":\"2016-07-02T17:49:49-04:00\",\"author\":{\"name\":\"Michael Hart\",\"email\":\""
+}

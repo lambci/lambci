@@ -38,16 +38,16 @@ function snsBuild(snsEvent, context, cb) {
     cb(null, data)
   })
 
-  sns.parseEvent(snsEvent, function(err, build) {
+  sns.parseEvent(snsEvent, function(err, buildData) {
     if (err) return done(err)
 
-    if (build.ignore) {
-      log.info(build.ignore)
+    if (buildData.ignore) {
+      log.info(buildData.ignore)
       log.info('Not running build')
       return done()
     }
 
-    actions.build(build, context, done)
+    actions.build(buildData, context, done)
   })
 }
 

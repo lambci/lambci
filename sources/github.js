@@ -155,7 +155,7 @@ GithubClient.prototype.request = function(options, cb) {
   })
 }
 
-exports.parseEvent = function(event, eventType, build) {
+exports.parseEvent = function(event, eventType) {
 
   // Remove redundant fields like urls
   exports.trimEvent(event)
@@ -177,13 +177,13 @@ exports.parseEvent = function(event, eventType, build) {
     throw new Error('repository field is missing from GitHub event')
   }
 
-  build = build || {}
-
-  build.event = event
-  build.eventType = eventType
-  build.repo = event.repository.full_name
-  build.isPrivate = event.repository.private
-  build.project = `gh/${build.repo}`
+  var build = {
+    event,
+    eventType,
+    repo: event.repository.full_name,
+    project: `gh/${event.repository.full_name}`,
+    isPrivate: event.repository.private,
+  }
 
   if (eventType == 'pull_request') {
     // https://developer.github.com/v3/activity/events/types/#pullrequestevent
@@ -209,7 +209,6 @@ exports.parseEvent = function(event, eventType, build) {
       throw new Error(`base repo ${baseRepo.full_name} is different from event repo ${build.repo}`)
     }
 
-    build.trigger = `pr/${prNum}`
     build.branch = (base.ref || '').replace(/^refs\/heads\//, '')
     build.cloneRepo = headRepo.full_name
     build.checkoutBranch = (head.ref || '').replace(/^refs\/heads\//, '')
@@ -227,7 +226,7 @@ exports.parseEvent = function(event, eventType, build) {
     var branchMatch = (event.ref || '').match(/^refs\/heads\/(.+)$/)
 
     if (!branchMatch) {
-      return {ignore: `Ref does not match branch: ${event.ref}`}
+      return {ignore: `Ref does not match any branches: ${event.ref}`}
     }
 
     var branch = branchMatch[1]
@@ -236,7 +235,6 @@ exports.parseEvent = function(event, eventType, build) {
       return {ignore: `Branch ${branch} was deleted`}
     }
 
-    build.trigger = `push/${branch}`
     build.branch = branch
     build.cloneRepo = build.repo
     build.checkoutBranch = branch
@@ -245,12 +243,11 @@ exports.parseEvent = function(event, eventType, build) {
     build.comment = (event.head_commit || {}).message || ''
     build.user = (event.pusher || {}).name
 
-    build.committers = (event.commits || []).concat(event.head_commit).reduce((committers, commit) => {
-      var author = commit.author || {}, committer = commit.committer || {}
-      committers[author.email] = author.username
-      committers[committer.email] = committer.username
+    build.committers = new Set((event.commits || []).concat(event.head_commit || {}).reduce((committers, commit) => {
+      if (commit.author) committers.push(commit.author.username)
+      if (commit.committer) committers.push(commit.committer.username)
       return committers
-    }, Object.create(null))
+    }, []))
   }
 
   if (!/^[a-zA-Z0-9-_.]+\/[a-zA-Z0-9-_.]+$/.test(build.repo)) {

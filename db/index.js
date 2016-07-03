@@ -73,7 +73,12 @@ exports.getBuild = function(project, buildNum, cb) {
     Key: {project, buildNum},
   }, function(err, data) {
     if (err) return cb(friendlyErr(table, err))
-    cb(null, data && data.Item)
+    var buildData = (data || {}).Item
+    // Convert DynamoDB sets to JS sets
+    if (buildData && buildData.committers && buildData.committers.values) {
+      buildData.committers = new Set(buildData.committers.values)
+    }
+    cb(null, buildData)
   })
 }
 
@@ -82,7 +87,6 @@ exports.initBuild = function(build, cb) {
   exports.getBuildNum(build.project, function(err, buildNum) {
     if (err) return cb(err)
     build.buildNum = buildNum
-    var committers = new Set(Object.keys(build.committers || {}).map(key => build.committers[key]))
     client.put({
       TableName: table,
       Item: {
@@ -100,7 +104,7 @@ exports.initBuild = function(build, cb) {
         baseCommit: build.baseCommit,
         comment: build.comment,
         user: build.user,
-        committers: committers.size ? client.createSet(Array.from(committers)) : undefined,
+        committers: (build.committers || {}).size ? client.createSet(Array.from(build.committers)) : undefined,
       },
     }, function(err) {
       if (err) return cb(friendlyErr(table, err))

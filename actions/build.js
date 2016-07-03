@@ -14,12 +14,10 @@ var ecs = new AWS.ECS()
 
 module.exports = runBuild
 
-function runBuild(build, context, cb) {
-  // TODO: figure out whether to use mergeable or not
+function runBuild(buildData, context, cb) {
+  // TODO: figure out whether to use mergeable flags on GH events or not
 
-  build.requestId = context.awsRequestId
-  build.logGroupName = context.logGroupName
-  build.logStreamName = context.logStreamName
+  var build = new BuildInfo(buildData, context)
 
   // Sometimes errors will occur that we don't catch, and Lambda will retry those requests,
   // so check if we've seen this request ID before, and if so, ignore it
@@ -31,8 +29,8 @@ function runBuild(build, context, cb) {
     if (err) return cb(err)
 
     if (data.retry) {
-      log.info(`Ignoring retry request for build #${data.buildNum}`)
-      return cb() // TODO: Ensure Github/Slack statuses are 'finished' too
+      log.info(`Ignoring retry request for build #${data.retry.buildNum}`)
+      return cb() // TODO: Ensure Github/Slack statuses are 'finished' too?
     }
 
     var config = configUtils.initConfig(data.configs, build)
@@ -52,7 +50,6 @@ function runBuild(build, context, cb) {
 function cloneAndBuild(build, config, cb) {
 
   build.token = config.secretEnv.GITHUB_TOKEN
-  build.cloneDir = path.join(configUtils.BASE_BUILD_DIR, build.repo)
 
   clone(build, config, function(err) {
     if (err) return cb(err)
@@ -301,5 +298,55 @@ function prepareDockerConfig(config) {
     },
   }
   return utils.merge(defaultDockerConfig, config)
+}
+
+function BuildInfo(buildData, context) {
+  this.startedAt = new Date()
+  this.endedAt = null
+
+  this.status = 'pending'
+  this.statusEmitter = new (require('events'))()
+
+  this.project = buildData.project
+  this.buildNum = buildData.buildNum || 0
+
+  this.repo = buildData.repo || this.project.replace(/^gh\//, '')
+
+  if (buildData.trigger) {
+    var triggerPieces = buildData.trigger.split('/')
+    this.trigger = buildData.trigger
+    this.eventType = triggerPieces[0] == 'pr' ? 'pull_request' : 'push'
+    this.prNum = triggerPieces[0] == 'pr' ? +triggerPieces[1] : 0
+    this.branch = triggerPieces[0] == 'push' ? triggerPieces[1] : (buildData.branch || 'master')
+  } else {
+    this.eventType = buildData.eventType
+    this.prNum = buildData.prNum
+    this.branch = buildData.branch
+    this.trigger = this.prNum ? `pr/${this.prNum}` : `push/${this.branch}`
+  }
+
+  this.event = buildData.event
+  this.isPrivate = buildData.isPrivate
+
+  this.branch = buildData.branch
+  this.cloneRepo = buildData.cloneRepo || this.repo
+  this.checkoutBranch = buildData.checkoutBranch || this.branch
+  this.commit = buildData.commit
+  this.baseCommit = buildData.baseCommit
+  this.comment = buildData.comment
+  this.user = buildData.user
+
+  this.committers = buildData.committers
+
+  this.isFork = this.cloneRepo != this.repo
+
+  this.requestId = context.awsRequestId
+  this.logGroupName = context.logGroupName
+  this.logStreamName = context.logStreamName
+
+  this.cloneDir = path.join(configUtils.BASE_BUILD_DIR, this.repo)
+
+  this.token = ''
+  this.logUrl = ''
 }
 

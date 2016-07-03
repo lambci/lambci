@@ -1,0 +1,27 @@
+{
+    "Records": [
+        {
+            "EventSource": "aws:sns",
+            "EventVersion": "1.0",
+            "EventSubscriptionArn": "arn:aws:sns:us-east-1:999000111222:lambci-InvokeTopic-1234ABCD:2555e238-c1f1-455d-a414-add26ecdcf6a",
+            "Sns": {
+                "Type": "Notification",
+                "MessageId": "19999169-1e48-573e-bd29-dca8ba4b65de",
+                "TopicArn": "arn:aws:sns:us-east-1:999000111222:lambci-InvokeTopic-1234ABCD",
+                "Subject": null,
+                "Message": "{\"ref\":\"refs/tags/whatever\",\"before\":\"0000000000000000000000000000000000000000\",\"after\":\"ab64f6ecd8775edb64af24d9adfbbe9ce54f030a\",\"created\":true,\"deleted\":false,\"forced\":true,\"base_ref\":\"refs/heads/master\",\"compare\":\"https://github.com/mhart/test-ci-project/compare/whatever\",\"commits\":[],\"head_commit\":{\"id\":\"ab64f6ecd8775edb64af24d9adfbbe9ce54f030a\",\"tree_id\":\"6516e23572fd5137cce4e877ceafc9576f084c7d\",\"distinct\":true,\"message\":\"fix cmd\",\"timestamp\":\"2016-06-27T22:57:51-04:00\",\"author\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"committer\":{\"name\":\"Michael Hart\",\"email\":\"michael.hart.au@gmail.com\",\"username\":\"mhart\"},\"added\":[],\"removed\":[],\"modified\":[\"package.json\"]},\"repository\":{\"id\":34931472,\"name\":\"test-ci-project\",\"full_name\":\"mhart/test-ci-project\",\"owner\":{\"name\":\"mhart\",\"email\":\"michael.hart.au@gmail.com\"},\"private\":false,\"description\":null,\"fork\":false,\"created_at\":1430529913,\"updated_at\":\"2016-06-02T22:36:43Z\",\"pushed_at\":1467083098,\"clone_url\":\"https://github.com/mhart/test-ci-project.git\",\"homepage\":null,\"size\":325,\"stargazers_count\":0,\"watchers_count\":0,\"language\":\"JavaScript\",\"has_issues\":true,\"has_downloads\":true,\"has_wiki\":true,\"has_pages\":false,\"forks_count\":1,\"open_issues_count\":1,\"forks\":1,\"open_issues\":1,\"watchers\":0,\"default_branch\":\"master\",\"stargazers\":0,\"master_branch\":\"master\"},\"pusher\":{\"name\":\"mhart\",\"email\":\"michael.hart.au@gmail.com\"},\"sender\":{\"login\":\"mhart\",\"id\":367936,\"avatar_url\":\"https://avatars.githubusercontent.com/u/367936?v=3\",\"gravatar_id\":\"\",\"type\":\"User\",\"site_admin\":false}}",
+                "Timestamp": "2015-05-04T16:43:47.657Z",
+                "SignatureVersion": "1",
+                "Signature": "nGIanfewZfjGx0pAKIY+vCT5Eow3ZAtqYeNz0aiAAgtCNl2uLTf84UCxgwgqhfF1elzoXpitQuIb6U5rZhbcXBSGh29YWgcW1aVXXOhjnPWvWhljVix8HIp4jT+K3SN/y2RneJkcHAL9rYBVpOuGMs/XOjXcSWDUQAZqylVsv9Gn/DFB1wbdLsrES57kb1j1J8plIyiLvSIIATpjBTZ/DDNh8v3umJYGG3xe79fdcmVYXG0UoqYjgXWOCTBg3e1r2cRqvilue1D9piJHgyG4UTMo54D/ouSsJJ4ZBeVtgi1YH8BUMQPtOVqQe3K4gP6nkFIx0RWIXmnp+LhwYBzn4w==",
+                "SigningCertUrl": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-d6d679a1d18e95c2f9ffcf11f4f9e198.pem",
+                "UnsubscribeUrl": "https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:999000111222:lambci-InvokeTopic-1234ABCD:2555e238-c1f1-455d-a414-add26ecdcf6a",
+                "MessageAttributes": {
+                    "X-Github-Event": {
+                        "Type": "String",
+                        "Value": "push"
+                    }
+                }
+            }
+        }
+    ]
+}

@@ -1,10 +1,7 @@
-var EventEmitter = require('events')
 var github = require('./github')
 var db = require('../db')
 
 exports.parseEvent = function(snsEvent, cb) {
-  var build = new BuildInfo()
-
   var innerEvent
 
   try {
@@ -25,49 +22,20 @@ exports.parseEvent = function(snsEvent, cb) {
       if (!fullEvent) {
         return cb(null, {ignore: 'Only received a partial event'})
       }
-      parseGithubEvent(fullEvent, eventType, build, cb)
+      parseGithubEvent(fullEvent, eventType, cb)
     })
   }
 
-  parseGithubEvent(innerEvent, eventType, build, cb)
+  parseGithubEvent(innerEvent, eventType, cb)
 }
 
-function parseGithubEvent(event, eventType, build, cb) {
+function parseGithubEvent(event, eventType, cb) {
+  var buildData
   try {
-    build = github.parseEvent(event, eventType, build)
+    buildData = github.parseEvent(event, eventType)
   } catch (e) {
     return cb(e)
   }
-  cb(null, build)
-}
-
-function BuildInfo(startedAt) {
-  this.startedAt = startedAt || new Date()
-
-  this.status = 'pending'
-  this.statusEmitter = new EventEmitter()
-
-  this.project = ''
-  this.buildNum = 0
-
-  this.ignore = false
-  this.event = null
-  this.eventType = ''
-  this.repo = ''
-  this.isPrivate = true
-
-  this.trigger = ''
-  this.branch = ''
-  this.cloneRepo = ''
-  this.checkoutBranch = ''
-  this.commit = ''
-  this.baseCommit = ''
-  this.comment = ''
-  this.user = ''
-
-  this.committers = null
-
-  this.isFork = false
-  this.prNum = 0
+  cb(null, buildData)
 }
 

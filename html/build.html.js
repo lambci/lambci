@@ -29,7 +29,7 @@ function render(params) {
   var userTitle = build.prNum ? 'Pull request opener' : 'Branch pusher'
 
   // Could calculate gravatar imgs here from email
-  var users = build.prNum ? [build.repo.split('/')[0]] : Object.keys(build.committers || {}).slice(0, 10).map(key => build.committers[key])
+  var users = build.prNum ? [build.repo.split('/')[0]] : Array.from(build.committers).slice(0, 10)
   var usersIcon = users.length > 1 ? 'fa-users' : 'fa-user'
   var usersStr = users.map(username => `<a href="https://github.com/${username}">${username}</a>`).join(', ')
   var usersTitle = build.prNum ? 'Base repo user/organization' : 'Committers and authors'

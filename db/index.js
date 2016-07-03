@@ -66,6 +66,17 @@ exports.getBuildNum = function(project, cb) {
   })
 }
 
+exports.getBuild = function(project, buildNum, cb) {
+  var table = BUILDS_TABLE
+  client.get({
+    TableName: table,
+    Key: {project, buildNum},
+  }, function(err, data) {
+    if (err) return cb(friendlyErr(table, err))
+    cb(null, data && data.Item)
+  })
+}
+
 exports.initBuild = function(build, cb) {
   var table = BUILDS_TABLE
   exports.getBuildNum(build.project, function(err, buildNum) {
@@ -79,6 +90,8 @@ exports.initBuild = function(build, cb) {
         buildNum,
         requestId: build.requestId,
         trigger: build.trigger,
+        isPrivate: build.isPrivate,
+        branch: build.branch,
         commit: build.commit,
         cloneRepo: build.cloneRepo,
         checkoutBranch: build.checkoutBranch,

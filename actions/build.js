@@ -4,7 +4,7 @@ var async = require('async')
 var AWS = require('aws-sdk')
 var utils = require('../utils')
 var log = require('../utils/log')
-var configUtils = require('../utils/config')
+var config = require('../utils/config')
 var db = require('../db')
 var github = require('../sources/github')
 var slack = require('../notifications/slack')
@@ -24,7 +24,7 @@ function runBuild(buildData, context, cb) {
   async.parallel({
     retry: (cb) => db.checkIfRetry(build, cb),
     configs: (cb) => db.getConfigs(['global', build.project], cb),
-    checkVersion: configUtils.checkVersion,
+    checkVersion: config.checkVersion,
   }, function(err, data) {
     if (err) return cb(err)
 
@@ -33,31 +33,29 @@ function runBuild(buildData, context, cb) {
       return cb() // TODO: Ensure Github/Slack statuses are 'finished' too?
     }
 
-    var config = configUtils.initConfig(data.configs, build)
+    build.config = config.initConfig(data.configs, build)
 
     // If config says we can't build, and we can't override, then we're done
-    if (!config.build && !config.allowConfigOverrides) {
+    if (!build.config.build && !build.config.allowConfigOverrides) {
       log.info('config.build set to false and cannot override – not running build')
       return cb()
     }
 
-    configUtils.initSync(config)
+    config.initSync(build.config)
 
-    cloneAndBuild(build, config, cb)
+    cloneAndBuild(build, cb)
   })
 }
 
-function cloneAndBuild(build, config, cb) {
+function cloneAndBuild(build, cb) {
 
-  build.token = config.secretEnv.GITHUB_TOKEN
-
-  clone(build, config, function(err) {
+  clone(build, function(err) {
     if (err) return cb(err)
 
     // Now that we've cloned the repository we can check for config files
-    config = configUtils.prepareBuildConfig(config, build)
+    build.config = config.prepareBuildConfig(build)
 
-    if (!config.build) {
+    if (!build.config.build) {
       log.info('config.build set to false – not running build')
       return cb()
     }
@@ -65,13 +63,10 @@ function cloneAndBuild(build, config, cb) {
     db.initBuild(build, function(err, build) {
       if (err) return cb(err)
 
-      // TODO: must be a better place to put this?
-      config.env.LAMBCI_BUILD_NUM = build.buildNum
-
       log.info('')
       log.info(`Build #${build.buildNum} started...\n`)
 
-      build.logUrl = log.initBuildLog(config, build)
+      build.logUrl = log.initBuildLog(build)
 
       log.info(`Build log: ${build.logUrl}\n`)
 
@@ -79,43 +74,46 @@ function cloneAndBuild(build, config, cb) {
         github.createClient(build)
       }
 
-      if (config.notifications.slack && config.secretEnv.SLACK_TOKEN) {
-        slack.createClient(config.secretEnv.SLACK_TOKEN, config.notifications.slack, build)
+      if (build.config.notifications.slack && build.config.secretEnv.SLACK_TOKEN) {
+        slack.createClient(build.config.secretEnv.SLACK_TOKEN, build.config.notifications.slack, build)
       }
 
-      if (config.notifications.sns) {
-        sns.createClient(config.notifications.sns, build)
+      if (build.config.notifications.sns) {
+        sns.createClient(build.config.notifications.sns, build)
       }
 
-      var done = patchUncaughtHandlers(build, config, cb)
+      var done = patchUncaughtHandlers(build, cb)
 
       build.statusEmitter.emit('start', build)
 
-      if (config.docker) {
-        dockerBuild(config, done)
+      // TODO: must be a better place to put this?
+      build.config.env.LAMBCI_BUILD_NUM = build.buildNum
+
+      if (build.config.docker) {
+        dockerBuild(build, done)
       } else {
-        lambdaBuild(build, config, done)
+        lambdaBuild(build, done)
       }
     })
   })
 }
 
-function patchUncaughtHandlers(build, config, cb) {
+function patchUncaughtHandlers(build, cb) {
   var origListeners = process.listeners('uncaughtException')
   var done = utils.once(function(err) {
     process.removeListener('uncaughtException', done)
     origListeners.forEach(listener => process.on('uncaughtException', listener))
-    buildDone(err, build, config, cb)
+    buildDone(err, build, cb)
   })
   process.removeAllListeners('uncaughtException')
   process.on('uncaughtException', done)
   return done
 }
 
-function buildDone(err, build, config, cb) {
+function buildDone(err, build, cb) {
 
   // Don't update statuses if we're doing a docker build and we launched successfully
-  if (!err && config.docker) return cb()
+  if (!err && build.config.docker) return cb()
 
   log.info(err ? `Build #${build.buildNum} failed: ${err.message}` :
     `Build #${build.buildNum} successful!`)
@@ -130,10 +128,14 @@ function buildDone(err, build, config, cb) {
   })
 }
 
-function clone(build, config, cb) {
+function clone(build, cb) {
 
   // Just double check we're in tmp!
-  if (build.cloneDir.indexOf(configUtils.BASE_BUILD_DIR) !== 0) return
+  if (build.cloneDir.indexOf(config.BASE_BUILD_DIR) !== 0) {
+    return cb(new Error(`clone directory ${build.cloneDir} not in base directory ${config.BASE_BUILD_DIR}`))
+  }
+
+  build.token = build.config.secretEnv.GITHUB_TOKEN
 
   var cloneUrl = `https://github.com/${build.cloneRepo}.git`, maskCmd = cmd => cmd
   if (build.isPrivate && build.token) {
@@ -141,19 +143,20 @@ function clone(build, config, cb) {
     maskCmd = cmd => cmd.replace(new RegExp(build.token, 'g'), 'XXXX')
   }
 
-  var cloneCmd = `git clone --depth ${config.git.depth} ${cloneUrl} -b ${build.checkoutBranch} ${build.cloneDir}`
+  var depth = build.config.git.depth
+  var cloneCmd = `git clone --depth ${depth} ${cloneUrl} -b ${build.checkoutBranch} ${build.cloneDir}`
   var checkoutCmd = `cd ${build.cloneDir} && git checkout -qf ${build.commit}`
 
   // Bit awkward, but we don't want the token written to disk anywhere
-  if (build.isPrivate && build.token && !config.inheritSecrets) {
+  if (build.isPrivate && build.token && !build.config.inheritSecrets) {
     cloneCmd = [
       `mkdir -p ${build.cloneDir}`,
-      `cd ${build.cloneDir} && git init && git pull --depth ${config.git.depth} ${cloneUrl} ${build.checkoutBranch}`,
+      `cd ${build.cloneDir} && git init && git pull --depth ${depth} ${cloneUrl} ${build.checkoutBranch}`,
     ]
   }
 
   // No caching of clones for now – can revisit this if we want to – but for now, safer to save space
-  var cmds = [`rm -rf ${configUtils.BASE_BUILD_DIR}`].concat(cloneCmd, checkoutCmd)
+  var cmds = [`rm -rf ${config.BASE_BUILD_DIR}`].concat(cloneCmd, checkoutCmd)
 
   var env = prepareLambdaConfig({}).env
   var runCmd = (cmd, cb) => runInBash(cmd, {env: env, logCmd: maskCmd(cmd)}, cb)
@@ -161,16 +164,16 @@ function clone(build, config, cb) {
   async.forEachSeries(cmds, runCmd, cb)
 }
 
-function lambdaBuild(build, config, cb) {
+function lambdaBuild(build, cb) {
 
-  config = prepareLambdaConfig(config)
+  build.config = prepareLambdaConfig(build.config)
 
   var opts = {
     cwd: build.cloneDir,
-    env: configUtils.resolveEnv(config),
+    env: config.resolveEnv(build.config),
   }
 
-  runInBash(config.cmd, opts, cb)
+  runInBash(build.config.cmd, opts, cb)
 }
 
 function runInBash(cmd, opts, cb) {
@@ -208,15 +211,15 @@ function runInBash(cmd, opts, cb) {
   })
 }
 
-function dockerBuild(config, cb) {
-  var ECS_CLUSTER = configUtils.STACK
-  var ECS_TASK_DEFINITION = `${configUtils.STACK}-build`
+function dockerBuild(build, cb) {
+  var ECS_CLUSTER = config.STACK
+  var ECS_TASK_DEFINITION = `${config.STACK}-build`
   var ECS_CONTAINER = 'build'
 
-  config = prepareDockerConfig(config)
+  build.config = prepareDockerConfig(build.config)
 
-  var cmd = config.docker.containerCmd
-  var env = configUtils.resolveEnv(config)
+  var cmd = build.config.docker.containerCmd
+  var env = config.resolveEnv(build.config)
 
   var ecsEnv = Object.keys(env).map(function(key) {
     return {name: key, value: env[key] == null ? '' : String(env[key])}
@@ -240,26 +243,29 @@ function dockerBuild(config, cb) {
 }
 
 // For when executing under Lambda (but not ECS/Docker)
-function prepareLambdaConfig(config) {
+function prepareLambdaConfig(buildConfig) {
 
-  var pythonDir = `${__dirname}/../python`
-  var usrDir = `${configUtils.HOME_DIR}/usr`
+  var pythonDir = path.join(__dirname, '../python')
+  var usrDir = path.join(config.HOME_DIR, 'usr')
   var defaultLambdaConfig = {
     env: {
-      HOME: configUtils.HOME_DIR,
+      HOME: config.HOME_DIR,
       SHELL: '/bin/bash',
       PATH: [
-        `${configUtils.HOME_DIR}/.local/bin`,
-        `${usrDir}/bin`,
-        `${pythonDir}/bin`,
-        `${__dirname}/../node_modules/.bin`,
-        `${process.env.PATH}`,
+        path.join(config.HOME_DIR, '.local/bin'),
+        path.join(usrDir, 'bin'),
+        path.join(pythonDir, 'bin'),
+        path.join(__dirname, '../node_modules/.bin'),
+        process.env.PATH,
       ].join(':'),
-      LD_LIBRARY_PATH: `${usrDir}/lib64:${process.env.LD_LIBRARY_PATH}`,
+      LD_LIBRARY_PATH: [
+        path.join(usrDir, 'lib64'),
+        process.env.LD_LIBRARY_PATH,
+      ].join(':'),
       NODE_PATH: process.env.NODE_PATH,
-      PYTHONPATH: `${pythonDir}/lib/python2.7/site-packages`,
-      GIT_TEMPLATE_DIR: `${usrDir}/share/git-core/templates`,
-      GIT_EXEC_PATH: `${usrDir}/libexec/git-core`,
+      PYTHONPATH: path.join(pythonDir, 'lib/python2.7/site-packages'),
+      GIT_TEMPLATE_DIR: path.join(usrDir, 'share/git-core/templates'),
+      GIT_EXEC_PATH: path.join(usrDir, 'libexec/git-core'),
 
       // To try to get colored output
       TERM: 'xterm-256color',
@@ -278,26 +284,27 @@ function prepareLambdaConfig(config) {
   // Treat PATH variables specially
   var pathEnvVars = ['PATH', 'LD_LIBRARY_PATH', 'NODE_PATH']
   pathEnvVars.forEach(key => {
-    if (config.env && config.env[key]) {
-      config.env[key] = [config.env[key], defaultLambdaConfig[key]].join(':')
+    if (buildConfig.env && buildConfig.env[key]) {
+      buildConfig.env[key] = [buildConfig.env[key], defaultLambdaConfig[key]].join(':')
     }
   })
 
-  return utils.merge(defaultLambdaConfig, config)
+  return utils.merge(defaultLambdaConfig, buildConfig)
 }
 
 // For when executing under ECS/Docker (but not Lambda)
-function prepareDockerConfig(config) {
+function prepareDockerConfig(buildConfig) {
+  var dockerConfig = buildConfig.docker
   var defaultDockerConfig = {
     env: {
-      LAMBCI_DOCKER_CMD: config.docker.cmd,
-      LAMBCI_DOCKER_FILE: config.docker.file,
-      LAMBCI_DOCKER_TAG: config.docker.tag,
-      LAMBCI_DOCKER_BUILD_ARGS: config.docker.buildArgs,
-      LAMBCI_DOCKER_RUN_ARGS: config.docker.runArgs,
+      LAMBCI_DOCKER_CMD: dockerConfig.cmd,
+      LAMBCI_DOCKER_FILE: dockerConfig.file,
+      LAMBCI_DOCKER_TAG: dockerConfig.tag,
+      LAMBCI_DOCKER_BUILD_ARGS: dockerConfig.buildArgs,
+      LAMBCI_DOCKER_RUN_ARGS: dockerConfig.runArgs,
     },
   }
-  return utils.merge(defaultDockerConfig, config)
+  return utils.merge(defaultDockerConfig, buildConfig)
 }
 
 function BuildInfo(buildData, context) {
@@ -336,17 +343,20 @@ function BuildInfo(buildData, context) {
   this.comment = buildData.comment
   this.user = buildData.user
 
+  this.isFork = this.cloneRepo != this.repo
+
   this.committers = buildData.committers
 
-  this.isFork = this.cloneRepo != this.repo
+  this.config = buildData.config
+  this.cloneDir = path.join(config.BASE_BUILD_DIR, this.repo)
 
   this.requestId = context.awsRequestId
   this.logGroupName = context.logGroupName
   this.logStreamName = context.logStreamName
 
-  this.cloneDir = path.join(configUtils.BASE_BUILD_DIR, this.repo)
-
   this.token = ''
   this.logUrl = ''
+  this.lambdaLogUrl = ''
+  this.buildDirUrl = ''
 }
 

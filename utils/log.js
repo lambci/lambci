@@ -63,7 +63,8 @@ exports.stripAnsi = function(txt) {
   return txt.replace(ANSI_REGEX, '')
 }
 
-exports.initBuildLog = function(config, build) {
+exports.initBuildLog = function(build) {
+  var config = build.config
 
   build.lambdaLogUrl = exports.lambdaLogUrl(build)
 

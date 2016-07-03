@@ -49,12 +49,21 @@ Easily launched (and kept up-to-date) as a [CloudFormation Stack](https://aws.am
 * Bring-your-own-binaries – Lambda has a limited selection of installed software
 * 5 min max build time (strategies to split builds up)
 * 1.5GB max memory
+* Event size limit bug (see below)
 
+Most GitHub events are relatively small – except in the case of branch pushes
+that involve hundreds of files (pull request events are not affected). GitHub
+keeps events it sends under the *SNS limit of 256kb* by splitting up larger
+events, but because *Lambda events are currently limited to 128kb*
+([which will hopefully be fixed soon!](https://twitter.com/timallenwagner/status/747950793555247104)),
+SNS will fail to deliver them to the Lambda function (and you'll receive an error in
+your CloudWatch SNS failure logs).
 
-GitHub webhook limitations (https://developer.github.com/webhooks/):
+If this happens, and LambCI isn't triggered by a push, then you can just create
+a dummy commit and push that, which will result in a much smaller event:
 
-Payloads are capped at 5 MB. If your event generates a larger payload, a webhook will not be fired. 
-
+    git commit --allow-empty -m 'Trigger LambCI'
+    git push
 
 ## What does the Lambda function do?
 

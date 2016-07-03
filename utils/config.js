@@ -92,11 +92,12 @@ exports.initSync = function(config) {
 
 exports.initConfig = function(configs, build) {
   var allConfigs = [Object.create(null), exports.DEFAULT_CONFIG].concat(configs || [])
-  return resolveBranchConfig(utils.merge.apply(null, allConfigs), build)
+  build.config = utils.merge.apply(null, allConfigs)
+  return resolveBranchConfig(build)
 }
 
 // Add build-specific env vars and resolve file configs
-exports.prepareBuildConfig = function(config, build) {
+exports.prepareBuildConfig = function(build) {
   var buildConfig = {
     env: {
       CI: true,
@@ -110,11 +111,12 @@ exports.prepareBuildConfig = function(config, build) {
       AWS_REQUEST_ID: build.requestId,
     },
   }
-  return utils.merge(exports.resolveFileConfigs(config, build), buildConfig)
+  return utils.merge(exports.resolveFileConfigs(build), buildConfig)
 }
 
-exports.resolveFileConfigs = function(config, build) {
-  return resolveBranchConfig(resolveFileConfig(config, build.cloneDir), build)
+exports.resolveFileConfigs = function(build) {
+  build.config = resolveFileConfig(build)
+  return resolveBranchConfig(build)
 }
 
 exports.resolveEnv = function(config) {
@@ -137,11 +139,11 @@ exports.checkVersion = function(cb) {
   })
 }
 
-function resolveBranchConfig(config, build) {
+function resolveBranchConfig(build) {
   var configObj, key
 
   if (build.eventType == 'pull_request') {
-    var pullRequests = config.pullRequests
+    var pullRequests = build.config.pullRequests
 
     if (typeof pullRequests == 'boolean') {
       configObj = pullRequests
@@ -153,7 +155,7 @@ function resolveBranchConfig(config, build) {
       configObj = pullRequests[key]
     }
   } else { // eventType == 'push'
-    var branches = config.branches
+    var branches = build.config.branches
 
     if (typeof branches == 'boolean') {
       configObj = branches
@@ -175,18 +177,18 @@ function resolveBranchConfig(config, build) {
     configObj = {build: configObj}
   }
   if (typeof configObj == 'object' && configObj) {
-    config = utils.merge(Object.create(null), config, configObj)
+    build.config = utils.merge(Object.create(null), build.config, configObj)
   }
-  return config
+  return build.config
 }
 
-function resolveFileConfig(config, cloneDir) {
+function resolveFileConfig(build) {
   var packageConfig, dotConfig
 
-  if (!config.allowConfigOverrides) return config
+  if (!build.config.allowConfigOverrides) return build.config
 
   try {
-    var packageJson = JSON.parse(fs.readFileSync(path.join(cloneDir, 'package.json'), 'utf8'))
+    var packageJson = JSON.parse(fs.readFileSync(path.join(build.cloneDir, 'package.json'), 'utf8'))
     packageConfig = packageJson.lambci
   } catch (e) {
     packageConfig = undefined
@@ -195,21 +197,21 @@ function resolveFileConfig(config, cloneDir) {
   try {
     // Only use `require` if we're in a safe environment
     // It will look for .lambci.js and .lambci.json
-    dotConfig = config.inheritSecrets ? require(path.join(cloneDir, '.lambci')) :
-      JSON.parse(fs.readFileSync(path.join(cloneDir, '.lambci.json'), 'utf8'))
+    dotConfig = build.config.inheritSecrets ? require(path.join(build.cloneDir, '.lambci')) :
+      JSON.parse(fs.readFileSync(path.join(build.cloneDir, '.lambci.json'), 'utf8'))
   } catch (e) {
     dotConfig = undefined
   }
 
   var fileConfig = utils.merge(Object.create(null), packageConfig, dotConfig)
 
-  if (Array.isArray(config.allowConfigOverrides)) {
-    fileConfig = config.allowConfigOverrides.reduce((obj, key) => {
+  if (Array.isArray(build.config.allowConfigOverrides)) {
+    fileConfig = build.config.allowConfigOverrides.reduce((obj, key) => {
       obj[key] = fileConfig[key]
       return obj
     }, {})
   }
 
-  return utils.merge(Object.create(null), config, fileConfig)
+  return utils.merge(Object.create(null), build.config, fileConfig)
 }
 

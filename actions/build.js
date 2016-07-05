@@ -245,7 +245,8 @@ function dockerBuild(build, cb) {
 // For when executing under Lambda (but not ECS/Docker)
 function prepareLambdaConfig(buildConfig) {
 
-  var pythonDir = path.join(__dirname, '../python')
+  var vendorDir = path.join(__dirname, '../vendor')
+  var pythonDir = path.join(vendorDir, 'python')
   var usrDir = path.join(config.HOME_DIR, 'usr')
   var defaultLambdaConfig = {
     env: {

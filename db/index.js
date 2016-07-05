@@ -6,8 +6,8 @@ var utils = require('../utils')
 var config = require('../utils/config')
 var log = require('../utils/log')
 
-var CONFIG_TABLE = config.STACK + '-config'
-var BUILDS_TABLE = config.STACK + '-builds'
+var CONFIG_TABLE = `${config.STACK}-config`
+var BUILDS_TABLE = `${config.STACK}-builds`
 
 // https://github.com/aws/aws-sdk-js/issues/862
 var rawClient = new AWS.DynamoDB({

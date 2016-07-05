@@ -10,6 +10,7 @@ function rebuild(event, context, cb) {
   db.getBuild(event.project, event.buildNum, function(err, buildData) {
     if (err) return cb(err)
     if (!buildData) return cb(new Error(`No build #${event.buildNum} found for project ${event.project}`))
+    buildData.isRebuild = true
     build(buildData, context, cb)
   })
 }

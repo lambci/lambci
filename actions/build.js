@@ -143,15 +143,15 @@ function clone(build, cb) {
     maskCmd = cmd => cmd.replace(new RegExp(build.token, 'g'), 'XXXX')
   }
 
-  var depth = build.config.git.depth
-  var cloneCmd = `git clone --depth ${depth} ${cloneUrl} -b ${build.checkoutBranch} ${build.cloneDir}`
+  var depth = build.isRebuild ? '' : `--depth ${build.config.git.depth}`
+  var cloneCmd = `git clone ${depth} ${cloneUrl} -b ${build.checkoutBranch} ${build.cloneDir}`
   var checkoutCmd = `cd ${build.cloneDir} && git checkout -qf ${build.commit}`
 
   // Bit awkward, but we don't want the token written to disk anywhere
   if (build.isPrivate && build.token && !build.config.inheritSecrets) {
     cloneCmd = [
       `mkdir -p ${build.cloneDir}`,
-      `cd ${build.cloneDir} && git init && git pull --depth ${depth} ${cloneUrl} ${build.checkoutBranch}`,
+      `cd ${build.cloneDir} && git init && git pull ${depth} ${cloneUrl} ${build.checkoutBranch}`,
     ]
   }
 
@@ -335,6 +335,7 @@ function BuildInfo(buildData, context) {
 
   this.event = buildData.event
   this.isPrivate = buildData.isPrivate
+  this.isRebuild = buildData.isRebuild
 
   this.branch = buildData.branch
   this.cloneRepo = buildData.cloneRepo || this.repo
@@ -348,7 +349,7 @@ function BuildInfo(buildData, context) {
 
   this.committers = buildData.committers
 
-  this.config = buildData.config
+  this.config = null
   this.cloneDir = path.join(config.BASE_BUILD_DIR, this.repo)
 
   this.requestId = context.awsRequestId

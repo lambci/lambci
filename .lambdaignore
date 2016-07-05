@@ -1,3 +1,4 @@
+Dockerfile
 *README*
 *CHANGELOG*
 *CHANGES*
@@ -6,14 +7,13 @@
 *CONTRIBUTING*
 .git/*
 test/*
-Dockerfile
-node_modules/*/test/*
-node_modules/*/tests/*
-node_modules/*/docs/*
-node_modules/*/examples/*
+npm-debug.log
+node_modules/ansi_up/examples/*
+node_modules/ansi_up/test/*
+node_modules/async/dist/*
+node_modules/aws-sdk/*
+node_modules/chai/*
+node_modules/docker-lambda/*
 node_modules/mocha/*
 node_modules/.bin/mocha
 node_modules/.bin/_mocha
-node_modules/chai/*
-node_modules/docker-lambda/*
-node_modules/aws-sdk/*

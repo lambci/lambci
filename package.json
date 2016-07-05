@@ -6,6 +6,9 @@
   "author": "Michael Hart <michael@soothbooth.com>",
   "license": "MIT",
   "main": "index.js",
+  "engines": {
+    "node": ">=4.0.0"
+  },
   "scripts": {
     "test": "mocha",
     "integration": "node test/integration.js",

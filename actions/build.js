@@ -212,9 +212,9 @@ function runInBash(cmd, opts, cb) {
 }
 
 function dockerBuild(build, cb) {
-  var ECS_CLUSTER = config.STACK
-  var ECS_TASK_DEFINITION = `${config.STACK}-build`
-  var ECS_CONTAINER = 'build'
+  var ECS_CLUSTER = build.config.docker.cluster || config.STACK
+  var ECS_TASK_DEFINITION = build.config.docker.task || `${config.STACK}-BuildTask`
+  var ECS_CONTAINER = build.config.docker.container || 'build'
 
   build.config = prepareDockerConfig(build.config)
 
@@ -296,6 +296,7 @@ function prepareLambdaConfig(buildConfig) {
 // For when executing under ECS/Docker (but not Lambda)
 function prepareDockerConfig(buildConfig) {
   var dockerConfig = buildConfig.docker
+  var slackConfig = buildConfig.notifications.slack || {}
   var defaultDockerConfig = {
     env: {
       LAMBCI_DOCKER_CMD: dockerConfig.cmd,
@@ -303,6 +304,10 @@ function prepareDockerConfig(buildConfig) {
       LAMBCI_DOCKER_TAG: dockerConfig.tag,
       LAMBCI_DOCKER_BUILD_ARGS: dockerConfig.buildArgs,
       LAMBCI_DOCKER_RUN_ARGS: dockerConfig.runArgs,
+      SLACK_CHANNEL: slackConfig.channel,
+      SLACK_USERNAME: slackConfig.username,
+      SLACK_ICON_URL: slackConfig.iconUrl,
+      SLACK_AS_USER: slackConfig.asUser || '',
     },
   }
   return utils.merge(defaultDockerConfig, buildConfig)

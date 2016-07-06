@@ -55,7 +55,7 @@ future, depending on the API they settle on)
 * Node.js (multiple versions via [nave](https://github.com/isaacs/nave))
 * Python 2.7
 * Go (any version – can manually bootstrap)
-* No native compilation as yet
+* No native compilation as yet ([but it's in the works!](https://github.com/lambci/lambci/issues/8))
 * Java 7/8 JREs are installed, but no SDKs, so... tricky... needs research
 * Check the [Recipes](#language-recipes) list below for the status of other languages/tools
 

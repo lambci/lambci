@@ -45,7 +45,7 @@
         "Timeout": "300",
         "Role": {"Fn::GetAtt": ["LambdaExecution", "Arn"]},
         "Code": {
-          "S3Bucket": "lambci",
+          "S3Bucket": {"Fn::Join": ["", ["lambci-", {"Ref": "AWS::Region"}]]},
           "S3Key": {"Fn::Join": ["", ["fn/lambci-build-", {"Ref": "Version"}, ".zip"]]}
         },
         "Runtime": "nodejs4.3"

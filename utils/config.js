@@ -133,7 +133,7 @@ exports.checkVersion = function(cb) {
     }
     var latestVersion = body.trim()
     if (utils.semverCmp(exports.VERSION, latestVersion) < 0) {
-      log.info(`Your LambCI version is out of date. Latest is: v${latestVersion}`)
+      log.info(`Your LambCI version is out of date. Latest is: v${latestVersion}\n`)
     }
     cb(null, latestVersion)
   })

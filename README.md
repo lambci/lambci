@@ -55,6 +55,7 @@ future, depending on the API they settle on)
 * Node.js (multiple versions via [nave](https://github.com/isaacs/nave))
 * Python 2.7
 * Go (any version – can manually bootstrap)
+* Ruby (2.3.1, 2.2.5, 2.1.9, 2.0.0-p648 using rbenv)
 * No native compilation as yet ([but it's in the works!](https://github.com/lambci/lambci/issues/8))
 * Java 7/8 JREs are installed, but no SDKs, so... tricky... needs research
 * Check the [Recipes](#language-recipes) list below for the status of other languages/tools
@@ -426,10 +427,12 @@ LambCI comes with [pip](https://pip.pypa.io) installed and available on the `PAT
 }
 ```
 
-
 ### Go
 
-The go toolchain is not installed on Lambda already and is too big to include in the LambCI package, but it's very easy (and quick) to install as part of your build – and if your Lambda process stays warm, then you won't need to install it again. Just add something like this before your build/test commands:
+The go toolchain is not installed on Lambda already and is too big to include
+in the LambCI package, but it's very easy (and quick) to install as part of
+your build – and if your Lambda process stays warm, then you won't need to
+install it again. Just add something like this before your build/test commands:
 
 ```bash
 #!/bin/bash -ex
@@ -445,7 +448,57 @@ export PATH=$PATH:$GOROOT/bin
 ```
 (then be sure to set `GOPATH` correctly)
 
-You can see examples of this working [here](https://github.com/mhart/test-ci-project/blob/master/build-go.sh) and [here](https://github.com/mhart/test-ci-project/blob/master/build-go-make.sh) (obviously you can leave out the git clone steps for your own projects)
+You can see examples of this working
+[here](https://github.com/mhart/test-ci-project/blob/master/build-go.sh) and
+[here](https://github.com/mhart/test-ci-project/blob/master/build-go-make.sh).
+
+### Ruby
+
+Ruby is a little more complicated due to a lack of easily-installed Ruby binaries in the Lambda environment.
+However, with a relatively short bootstrapping script, you can get one of the following versions running:
+
+* 2.3.1
+* 2.2.5
+* 2.1.9
+* 2.0.0-p648
+
+We can compile more versions if there's sufficient demand for it, and we'll
+probably look at adding `rbenv` before running your scripts (in the same way we do with `pip`),
+so you won't need to bootstrap to this extent in the future:
+
+```bash
+#!/bin/bash -ex
+
+VERSION=2.3.1
+
+# First grab libyaml and put it in our ~/usr/lib64 directory
+curl -sSL https://lambci.s3.amazonaws.com/binaries/libyaml-2.0.4.tgz | tar -C ~ -xz
+
+# Now install rbenv
+if ! [ -d ~/.rbenv ]; then
+  git clone --depth 1 https://github.com/rbenv/rbenv.git ~/.rbenv
+fi
+export PATH="$HOME/.rbenv/bin:$PATH"
+eval "$(rbenv init -)"
+
+# We don't need to install documentation with gems
+echo "gem: --no-document" > ~/.gemrc
+
+# Grab the Ruby version we want and install bundler
+if ! [ -d ~/.rbenv/versions/$VERSION ]; then
+  curl -sSL https://lambci.s3.amazonaws.com/binaries/ruby-${VERSION}.tgz | tar -C ~/.rbenv/versions -xz
+  rbenv rehash
+  rbenv local $VERSION
+  gem install bundler
+else
+  rbenv local $VERSION
+fi
+```
+
+You can then run `bundle install`, etc to install and test your project
+
+You can see an example of this working
+[here](https://github.com/mhart/test-ci-project/commit/58d21c56fb9a9675ab5d62f7ac4ffa5a537ecd15).
 
 ### Rust
 
@@ -483,10 +536,6 @@ clang --version
 ### Java
 
 [TODO](https://github.com/lambci/lambci/issues/14)
-
-### Ruby
-
-[TODO](https://github.com/lambci/lambci/issues/11)
 
 ### PHP
 

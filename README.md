@@ -484,6 +484,9 @@ eval "$(rbenv init -)"
 # We don't need to install documentation with gems
 echo "gem: --no-document" > ~/.gemrc
 
+# We want pretty colors in our output
+echo "--color --tty" > ~/.rspec
+
 # Grab the Ruby version we want and install bundler
 if ! [ -d ~/.rbenv/versions/$VERSION ]; then
   curl -sSL https://lambci.s3.amazonaws.com/binaries/ruby-${VERSION}.tgz | tar -C ~/.rbenv/versions -xz

@@ -3,8 +3,8 @@ FROM lambci/lambda
 WORKDIR /tmp/lambci/build
 
 ENV HOME /tmp/lambci/home
-ENV PATH $HOME/.local/bin:$HOME/usr/bin:/var/task/python/bin:$PATH
-ENV PYTHONPATH /var/task/python/lib/python2.7/site-packages
+ENV PATH $HOME/.local/bin:$HOME/usr/bin:/var/task/vendor/python/bin:$PATH
+ENV PYTHONPATH /var/task/vendor/python/lib/python2.7/site-packages
 ENV LD_LIBRARY_PATH $HOME/usr/lib64:$LD_LIBRARY_PATH
 ENV GIT_TEMPLATE_DIR $HOME/usr/share/git-core/templates
 ENV GIT_EXEC_PATH $HOME/usr/libexec/git-core

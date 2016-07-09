@@ -498,7 +498,7 @@ fi
 You can then run `bundle install`, etc to install and test your project
 
 You can see an example of this working
-[here](https://github.com/mhart/test-ci-project/commit/58d21c56fb9a9675ab5d62f7ac4ffa5a537ecd15).
+[here](https://github.com/mhart/test-ci-project/commit/f44d1bcad1964ce116651090c1dbe2710a953640).
 
 ### Rust
 

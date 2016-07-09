@@ -13,7 +13,7 @@ exports.VERSION = require('../package.json').version
 // This is used to check latest pkg version – feel free to remove if you don't want this
 exports.CHECK_VERSION_URL = `https://lambci.s3.amazonaws.com/fn/latest.txt?x-lambci-version=${exports.VERSION}`
 
-exports.BASE_DIR = path.join('/tmp', exports.STACK) // eg: /tmp/lambci
+exports.BASE_DIR = '/tmp/lambci'
 exports.HOME_DIR = path.join(exports.BASE_DIR, 'home') // eg: /tmp/lambci/home
 exports.BASE_BUILD_DIR = path.join(exports.BASE_DIR, 'build') // eg: /tmp/lambci/build
 

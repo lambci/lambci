@@ -507,7 +507,7 @@ You can see an example of this working
 
 Lambda also has no native compiler, so you need to download one as part of your build process.
 We have a precompiled gcc 4.8.5 that works in the Lambda environment with a full set of linux headers.
-Native compilation is finciky at best, especially when installed in a non-default location,
+Native compilation is finicky at best, especially when installed in a non-default location,
 so it may not work out-of-the-box for complicated libraries that depend on other headers/libraries.
 Use a script like this to get started:
 

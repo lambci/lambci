@@ -62,6 +62,9 @@ describe('parsers', function() {
         assert(!err)
         assert(build.event)
         delete build.event
+        assert.instanceOf(build.committers, Set)
+        assert.deepEqual(Array.from(build.committers), ['mhart'])
+        delete build.committers
         assert.deepEqual(build, {
           project: 'gh/mhart/test-ci-project',
           eventType: 'push',
@@ -74,7 +77,6 @@ describe('parsers', function() {
           user: 'mhart',
           comment: 'Add failing test',
           baseCommit: 'f5c50fa625e096c82a2defd99d9860497f1ec20d',
-          committers: new Set(['mhart']),
         })
       })
     })
@@ -92,6 +94,37 @@ describe('parsers', function() {
       sns.parseEvent(snsEvent, (err, build) => {
         assert(!err)
         assert.equal(build.ignore, 'Ref does not match any branches: refs/tags/whatever')
+      })
+    })
+
+    it('should parse events if committers have no username', function() {
+      var snsEvent = require('./fixtures/push.force.json').Records[0].Sns
+      var gitEvent = JSON.parse(snsEvent.Message)
+      gitEvent.commits.concat(gitEvent.head_commit).forEach(commit => {
+        delete commit.author.username
+        delete commit.committer.username
+      })
+      snsEvent.Message = JSON.stringify(gitEvent)
+      sns.parseEvent(snsEvent, (err, build) => {
+        assert(!err)
+        assert(build.event)
+        delete build.event
+        assert.instanceOf(build.committers, Set)
+        assert.deepEqual(Array.from(build.committers), [])
+        delete build.committers
+        assert.deepEqual(build, {
+          project: 'gh/mhart/test-ci-project',
+          eventType: 'push',
+          repo: 'mhart/test-ci-project',
+          isPrivate: false,
+          branch: 'mhart-patch-1',
+          cloneRepo: 'mhart/test-ci-project',
+          checkoutBranch: 'mhart-patch-1',
+          commit: 'a0c794a979e29d44b7ef889c12d1703089f3e474',
+          user: 'mhart',
+          comment: 'Add failing test',
+          baseCommit: 'f5c50fa625e096c82a2defd99d9860497f1ec20d',
+        })
       })
     })
 

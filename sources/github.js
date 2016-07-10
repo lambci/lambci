@@ -244,8 +244,8 @@ exports.parseEvent = function(event, eventType) {
     build.user = (event.pusher || {}).name
 
     build.committers = new Set((event.commits || []).concat(event.head_commit || {}).reduce((committers, commit) => {
-      if (commit.author) committers.push(commit.author.username)
-      if (commit.committer) committers.push(commit.committer.username)
+      if ((commit.author || {}).username) committers.push(commit.author.username)
+      if ((commit.committer || {}).username) committers.push(commit.committer.username)
       return committers
     }, []))
   }

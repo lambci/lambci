@@ -54,9 +54,9 @@ future, depending on the API they settle on)
 
 * Node.js (multiple versions via [nave](https://github.com/isaacs/nave))
 * Python 2.7
-* Go (any version – can manually bootstrap)
-* Ruby (2.3.1, 2.2.5, 2.1.9, 2.0.0-p648 using rbenv)
-* No native compilation as yet ([but it's in the works!](https://github.com/lambci/lambci/issues/8))
+* Go (any version – [can manually bootstrap](#go))
+* Ruby (2.3.1, 2.2.5, 2.1.9, 2.0.0-p648 [using rbenv](#ruby))
+* Native compilation with a [pre-built gcc 4.8.5](#native-gcc-compilation)
 * Java 7/8 JREs are installed, but no SDKs, so... tricky... needs research
 * Check the [Recipes](#language-recipes) list below for the status of other languages/tools
 
@@ -503,38 +503,29 @@ You can then run `bundle install`, etc to install and test your project
 You can see an example of this working
 [here](https://github.com/mhart/test-ci-project/commit/f44d1bcad1964ce116651090c1dbe2710a953640).
 
-### Rust
+### Native (gcc) compilation
 
-[This is a work in progress](https://github.com/lambci/lambci/issues/9) – the commands below will install rustc, cargo and rustup, which work up to a point – but rust relies on a working `cc` installation, which is still a TODO (see Clang below)
+Lambda also has no native compiler, so you need to download one as part of your build process.
+We have a precompiled gcc 4.8.5 that works in the Lambda environment with a full set of linux headers.
+Native compilation is finciky at best, especially when installed in a non-default location,
+so it may not work out-of-the-box for complicated libraries that depend on other headers/libraries.
+Use a script like this to get started:
 
 ```bash
 #!/bin/bash -ex
 
-export CARGO_HOME=$HOME/.cargo
-export MULTIRUST_HOME=$HOME/.multirust
-export RUSTUP_HOME=$HOME/.multirust/rustup
+curl -sSL https://lambci.s3.amazonaws.com/binaries/gcc-4.8.5.tgz | tar -C /tmp -xz
 
-curl https://sh.rustup.rs -sSf | sh -s -- -y
-
-export PATH=$HOME/.cargo/bin:$PATH
-rustc --version
-cargo --version
+export PATH=/tmp/bin:/tmp/sbin:$PATH
+export LD_LIBRARY_PATH=/usr/local/lib64/node-v4.3.x/lib:/tmp/lib:/tmp/lib64:/lib64:/usr/lib64:/var/runtime:/var/task:/var/task/lib
+export CXX=/tmp/bin/g++
+export CC=/tmp/bin/gcc
+export CPATH=/tmp/include
+export LIBRARY_PATH=/tmp/lib
 ```
-(`cargo build --verbose` works, but `cargo test --verbose` won't because there's no `cc`)
 
-### Clang
-
-The CentOS 6 version of clang seems to install fine – but getting the various development headers and libraries (stdio.h, etc) is [still a work in progress](https://github.com/lambci/lambci/issues/8). It *should* be easier than getting a full gcc installation working though.
-
-```
-#!/bin/bash -ex
-
-curl -sSL http://llvm.org/releases/3.8.0/clang+llvm-3.8.0-linux-x86_64-centos6.tar.xz | tar -C $HOME -xJ
-export CC=$HOME/clang+llvm-3.8.0-linux-x86_64-centos6/bin/clang
-export CXX=$HOME/clang+llvm-3.8.0-linux-x86_64-centos6/bin/clang++
-export PATH=$HOME/clang+llvm-3.8.0-linux-x86_64-centos6/bin:$PATH
-clang --version
-```
+You can see an example of this working
+[here](https://github.com/mhart/test-ci-project/commit/c29bfda8685910e6626a382fdc09662cc5d91359).
 
 ### Java
 

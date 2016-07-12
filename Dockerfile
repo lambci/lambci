@@ -8,6 +8,7 @@ ENV PATH=$HOME/.local/bin:$HOME/usr/bin:/var/task/vendor/python/bin:/var/task/no
   PYTHONPATH=/var/task/vendor/python/lib/python2.7/site-packages \
   GIT_TEMPLATE_DIR=$HOME/usr/share/git-core/templates \
   GIT_EXEC_PATH=$HOME/usr/libexec/git-core \
+  SHELL=/bin/bash \
   TERM=xterm-256color \
   FORCE_COLOR=true \
   NPM_CONFIG_COLOR=always \

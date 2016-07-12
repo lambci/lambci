@@ -24,7 +24,8 @@
     "ansi_up": "1.3.0",
     "async": "1.5.2",
     "aws-sdk": "2.4.2",
-    "nave": "1.0.1"
+    "nave": "1.0.1",
+    "npm": "lambci/npm#v2.15.10-lambci"
   },
   "devDependencies": {
     "chai": "^3.5.0",

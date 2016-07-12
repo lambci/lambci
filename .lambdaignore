@@ -17,3 +17,7 @@ node_modules/docker-lambda/*
 node_modules/mocha/*
 node_modules/.bin/mocha
 node_modules/.bin/_mocha
+node_modules/npm/doc/*
+node_modules/npm/html/*
+node_modules/npm/test/*
+node_modules/npm/node_modules/*/test/*

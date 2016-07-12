@@ -54,7 +54,7 @@ future, depending on the API they settle on)
 
 * Node.js (multiple versions via [nave](https://github.com/isaacs/nave))
 * Python 2.7
-* Java (OpenJDK 1.8 – [1.7 coming soon](https://github.com/lambci/lambci/issues/14))
+* Java (OpenJDK 1.8 and 1.7)
 * Go (any version – [can manually bootstrap](#go))
 * Ruby (2.3.1, 2.2.5, 2.1.9, 2.0.0-p648 [using rbenv](#ruby))
 * Native compilation with a [pre-built gcc 4.8.5](#native-gcc-compilation)
@@ -471,18 +471,22 @@ shows you how to set that up:
 ```bash
 #!/bin/bash -ex
 
-export JAVA_HOME=/tmp/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.77-0.b03.9.amzn1.x86_64
-export PATH=$JAVA_HOME/bin:$PATH
-export _JAVA_OPTIONS=-Duser.home=$HOME
+VERSION=1.8
+# VERSION=1.7
+
+export JAVA_HOME=$(echo /tmp/usr/lib/jvm/java-${VERSION}.0-openjdk-${VERSION}*)
 
 if ! [ -d $JAVA_HOME ]; then
-  curl -sSL https://lambci.s3.amazonaws.com/binaries/java-1.8.0-openjdk-devel.tgz | tar -C /tmp -xz
+  curl -sSL https://lambci.s3.amazonaws.com/binaries/java-${VERSION}.0-openjdk-devel.tgz | tar -C /tmp -xz
 
   # Symlink the JRE in, and physically copy libjvm.so
-  cp -as /usr/lib/jvm/java-1.8*/jre $JAVA_HOME/
+  export JAVA_HOME=$(echo /tmp/usr/lib/jvm/java-${VERSION}.0-openjdk-${VERSION}*)
+  cp -as /usr/lib/jvm/java-${VERSION}*/jre $JAVA_HOME/
   rm $JAVA_HOME/jre/lib/amd64/server/libjvm.so
-  cp /usr/lib/jvm/java-1.8*/jre/lib/amd64/server/libjvm.so $JAVA_HOME/jre/lib/amd64/server/
+  cp /usr/lib/jvm/java-${VERSION}*/jre/lib/amd64/server/libjvm.so $JAVA_HOME/jre/lib/amd64/server/
 fi
+export PATH=$JAVA_HOME/bin:$PATH
+export _JAVA_OPTIONS=-Duser.home=$HOME
 
 # If you want Maven
 if ! [ -d ~/apache-maven-3.3.9 ]; then
@@ -494,7 +498,7 @@ export PATH=~/apache-maven-3.3.9/bin:$PATH
 Then you can run your `mvn` install and test steps.
 
 You can see examples of this working
-[here](https://github.com/mhart/test-ci-project/commit/a5dbc8078d191d4155af81da0d6aa7dd56ade840).
+[here](https://github.com/mhart/test-ci-project/blob/799019304f69c6b0392b8bb7b52750a7e089e7b2/build-java-1.8.sh).
 
 ### Go
 

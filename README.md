@@ -371,6 +371,21 @@ And then add the following to the `LambdaExecution.Properties.Policies` array to
 }
 ```
 
+### Build status badges
+
+Each branch has a build status image showing whether the last build was successful or not.
+For example, here is LambCI's latest `master` status (yes, LambCI dogfoods!):
+
+[![LambCI Build Status](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/lambci/lambci/branches/master/2c03c00899d9b188a928a910320eacdc.svg)](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/lambci/lambci/branches/master/8f82e6f4df48d23dead65035f625f5c0.html)
+
+You can see the URLs for the branch log and badge image near the start of the
+output of your build logs (so you'll need to run at least one build on your
+branch to get these):
+
+```
+Branch log: https://<bucket>/<project>/branches/master/<somehash>.html
+Branch status img: https://<bucket>/<project>/branches/master/<somehash>.svg
+```
 
 ## Updating
 

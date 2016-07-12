@@ -202,6 +202,99 @@ describe('config', function() {
       })
     })
 
+    it('should load normally if non-existing allowed overrides and no inherits', function() {
+      var configDir = `${__dirname}/fixtures/config2`
+      var build = {
+        eventType: 'push',
+        branch: 'test-something',
+        cloneDir: configDir,
+        config: {
+          allowConfigOverrides: ['cmd', 'env'],
+        },
+      }
+      var config = configUtils.resolveFileConfigs(build)
+      assert.deepEqual(config, {
+        cmd: 'from package.json',
+        allowConfigOverrides: ['cmd', 'env'],
+      })
+    })
+
+    it('should load normally if non-existing allowed overrides and inherits', function() {
+      var configDir = `${__dirname}/fixtures/config2`
+      var build = {
+        eventType: 'push',
+        branch: 'test-something',
+        cloneDir: configDir,
+        config: {
+          allowConfigOverrides: ['cmd', 'env'],
+          inheritSecrets: true,
+        },
+      }
+      var config = configUtils.resolveFileConfigs(build)
+      assert.deepEqual(config, {
+        cmd: 'from .lambci.js',
+        env: {
+          SOURCE: '.lambci.js',
+        },
+        allowConfigOverrides: ['cmd', 'env'],
+        inheritSecrets: true,
+      })
+    })
+
+    it('should load normally if existing allowed overrides and no inherits', function() {
+      var configDir = `${__dirname}/fixtures/config2`
+      var build = {
+        eventType: 'push',
+        branch: 'test-something',
+        cloneDir: configDir,
+        config: {
+          cmd: 'from orig',
+          env: {
+            SOURCE: 'orig',
+            OTHER: 'val',
+          },
+          allowConfigOverrides: ['cmd', 'env'],
+        },
+      }
+      var config = configUtils.resolveFileConfigs(build)
+      assert.deepEqual(config, {
+        cmd: 'from package.json',
+        env: {
+          SOURCE: 'orig',
+          OTHER: 'val',
+        },
+        allowConfigOverrides: ['cmd', 'env'],
+      })
+    })
+
+    it('should load normally if existing allowed overrides and inherits', function() {
+      var configDir = `${__dirname}/fixtures/config2`
+      var build = {
+        eventType: 'push',
+        branch: 'test-something',
+        cloneDir: configDir,
+        config: {
+          cmd: 'from orig',
+          env: {
+            SOURCE: 'orig',
+            OTHER: 'val',
+          },
+          allowConfigOverrides: ['cmd', 'env'],
+          inheritSecrets: true,
+        },
+      }
+      var config = configUtils.resolveFileConfigs(build)
+      assert.deepEqual(config, {
+        cmd: 'from .lambci.js',
+        env: {
+          SOURCE: '.lambci.js',
+          OTHER: 'val',
+        },
+        allowConfigOverrides: ['cmd', 'env'],
+        inheritSecrets: true,
+      })
+    })
+
   })
 
   describe('secret env', function() {

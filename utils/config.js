@@ -207,7 +207,7 @@ function resolveFileConfig(build) {
 
   if (Array.isArray(build.config.allowConfigOverrides)) {
     fileConfig = build.config.allowConfigOverrides.reduce((obj, key) => {
-      obj[key] = fileConfig[key]
+      if ({}.hasOwnProperty.call(fileConfig, key)) obj[key] = fileConfig[key]
       return obj
     }, {})
   }

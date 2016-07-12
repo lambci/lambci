@@ -101,6 +101,26 @@ describe('config', function() {
       assert.equal(config.build, true)
     })
 
+    it('should match mixed regexes', function() {
+      var customConfig = {
+        build: false,
+        branches: {
+          '/^dev/': false,
+          '!/^test-/': true,
+          'gh-pages': false,
+        },
+      }
+      var config = configUtils.initConfig([customConfig], {eventType: 'push', branch: 'gh-pages'})
+      assert.equal(config.build, false)
+      config = configUtils.initConfig([customConfig], {eventType: 'push', branch: 'develop'})
+      assert.equal(config.build, false)
+      config = configUtils.initConfig([customConfig], {eventType: 'push', branch: 'test-something'})
+      assert.equal(config.build, false)
+      config = configUtils.initConfig([customConfig], {eventType: 'push', branch: 'testsomething'})
+      assert.equal(config.build, true)
+      config = configUtils.initConfig([customConfig], {eventType: 'push', branch: 'master'})
+      assert.equal(config.build, true)
+    })
   })
 
   describe('files', function() {

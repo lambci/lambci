@@ -267,6 +267,24 @@ So if you wanted Slack notifications to go to a different channel to the default
 }
 ```
 
+You can also use regular expression syntax to specify config for branches that
+match, or don't match (if there is a leading `!`). Exact branch names are
+checked first, then the first matching regex (or negative regex) will be used:
+
+```js
+// 1. Don't build gh-pages branch
+// 2. Don't build branches starting with 'dev'
+// 3. Build any branch that doesn't start with 'test-'
+{
+  build: false,
+  branches: {
+    '/^dev/': false,
+    '!/^test-/': true,
+    'gh-pages': false,
+  }
+}
+```
+
 ### Default configuration
 
 This configuration is hardcoded in `utils/config.js` and overridden by any config from the DB (and config files)

@@ -267,6 +267,20 @@ So if you wanted Slack notifications to go to a different channel to the default
 }
 ```
 
+#### Branch partial matches
+
+Regular expression notation may be used to modify behaviour for a range of branches. For example:
+
+```js
+{
+  build: false,
+  branches: {
+    "/^dev-/": true
+    "!/^test-/": true
+  }
+}
+```
+
 ### Default configuration
 
 This configuration is hardcoded in `utils/config.js` and overridden by any config from the DB (and config files)

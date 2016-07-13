@@ -58,6 +58,7 @@ future, depending on the API they settle on)
 * Go (any version – [can manually bootstrap](#go))
 * Ruby (2.3.1, 2.2.5, 2.1.9, 2.0.0-p648 [using rbenv](#ruby))
 * Native compilation with a [pre-built gcc 4.8.5](#native-gcc-compilation)
+* Rust (any version, but [v1.10 has better support](#rust))
 * Check the [Recipes](#language-recipes) list below for the status of other languages/tools
 
 ## Prerequisites
@@ -477,7 +478,7 @@ VERSION=1.8
 export JAVA_HOME=$(echo /tmp/usr/lib/jvm/java-${VERSION}.0-openjdk-${VERSION}*)
 
 if ! [ -d $JAVA_HOME ]; then
-  curl -sSL https://lambci.s3.amazonaws.com/binaries/java-${VERSION}.0-openjdk-devel.tgz | tar -C /tmp -xz
+  curl -sSL https://lambci.s3.amazonaws.com/binaries/java-${VERSION}.0-openjdk-devel.tgz | tar -xz -C /tmp
 
   # Symlink the JRE in, and physically copy libjvm.so
   export JAVA_HOME=$(echo /tmp/usr/lib/jvm/java-${VERSION}.0-openjdk-${VERSION}*)
@@ -513,7 +514,7 @@ install it again. Just add something like this before your build/test commands:
 VERSION=1.6.2
 
 if ! [ -d $HOME/go ]; then
-  curl -sSL https://storage.googleapis.com/golang/go${VERSION}.linux-amd64.tar.gz | tar -C $HOME -xz
+  curl -sSL https://storage.googleapis.com/golang/go${VERSION}.linux-amd64.tar.gz | tar -xz -C ~
 fi
 
 export GOROOT=$HOME/go
@@ -545,7 +546,7 @@ so you won't need to bootstrap to this extent in the future:
 VERSION=2.3.1
 
 # First grab libyaml and put it in our ~/usr/lib64 directory
-curl -sSL https://lambci.s3.amazonaws.com/binaries/libyaml-2.0.4.tgz | tar -C ~ -xz
+curl -sSL https://lambci.s3.amazonaws.com/binaries/libyaml-2.0.4.tgz | tar -xz -C ~
 
 # Now install rbenv
 if ! [ -d ~/.rbenv ]; then
@@ -587,7 +588,7 @@ Use a script like this to get started:
 ```bash
 #!/bin/bash -ex
 
-curl -sSL https://lambci.s3.amazonaws.com/binaries/gcc-4.8.5.tgz | tar -C /tmp -xz
+curl -sSL https://lambci.s3.amazonaws.com/binaries/gcc-4.8.5.tgz | tar -C -xz /tmp
 
 export PATH=/tmp/bin:/tmp/sbin:$PATH
 export LD_LIBRARY_PATH=/usr/local/lib64/node-v4.3.x/lib:/tmp/lib:/tmp/lib64:/lib64:/usr/lib64:/var/runtime:/var/task:/var/task/lib
@@ -597,6 +598,33 @@ export LIBRARY_PATH=/tmp/lib
 
 You can see an example of this working
 [here](https://github.com/mhart/test-ci-project/commit/c29bfda8685910e6626a382fdc09662cc5d91359).
+
+### Rust
+
+Rust actually requires a linker, so you need to install `gcc` as well. It's also relatively large
+and you may run out of space trying to build and test your project, however we've created
+a slightly slimmed down version that should work just as well:
+
+```bash
+#!/bin/bash -ex
+
+curl -sSL https://lambci.s3.amazonaws.com/binaries/rust-1.10.0-rustup.tgz | tar -xz -C ~
+
+export CARGO_HOME=~/.cargo
+export MULTIRUST_HOME=~/.multirust
+export RUSTUP_HOME=~/.multirust/rustup
+export PATH=$CARGO_HOME/bin:$PATH
+
+curl -sSL https://lambci.s3.amazonaws.com/binaries/gcc-4.8.5.tgz | tar -xz -C /tmp
+
+export PATH=/tmp/bin:/tmp/sbin:$PATH
+export LD_LIBRARY_PATH=/usr/local/lib64/node-v4.3.x/lib:/tmp/lib:/tmp/lib64:/lib64:/usr/lib64:/var/runtime:/var/task:/var/task/lib
+export CPATH=/tmp/include
+export LIBRARY_PATH=/tmp/lib
+```
+
+Now you can run `cargo`, or `rustup`. You can see an example of this working
+[here](https://github.com/mhart/test-ci-project/blob/master/build-rust.sh).
 
 ### PHP
 

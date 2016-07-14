@@ -483,7 +483,7 @@ your build – but the JRE *does* exist on Lambda, so the overall impact is smal
 
 LambCI includes a script you can source before running your build commands
 that will install and setup the SDK correctly, as well as Maven (v3.3.9). Call
-it with the OpenJDK version you want (`1.7` or `1.8`) – ommitting it defaults to `1.8`:
+it with the OpenJDK version you want (`1.7` or `1.8`) – omitting it defaults to `1.8`:
 
 ```json
 {
@@ -503,7 +503,7 @@ your build, but Go is quite small and well suited to running anywhere.
 LambCI includes a script you can source before running your build commands
 that will install Go and set your `GOROOT` and `GOPATH` with the correct
 directory structure. Call it with the Go version you want (any of the versions
-[on the Go site](https://golang.org/dl/)) – ommitting it defaults to `1.6.2`:
+[on the Go site](https://golang.org/dl/)) – omitting it defaults to `1.6.2`:
 
 ```json
 {
@@ -523,7 +523,7 @@ your build.
 LambCI includes a script you can source before running your build commands
 that will install Ruby, rbenv, gem and bundler. Call it with the Ruby version
 you want (currently: `2.3.1`, `2.2.5`, `2.1.9` and `2.0.0-p648`) –
-ommitting it defaults to `2.3.1`:
+omitting it defaults to `2.3.1`:
 
 ```json
 {

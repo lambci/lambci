@@ -1,0 +1,23 @@
+#!/bin/bash
+set -e
+
+VERSION=${1:-1.10.0}
+
+echo "Installing Rust ${VERSION}..."
+
+export CARGO_HOME=~/.cargo
+export MULTIRUST_HOME=~/.multirust
+export RUSTUP_HOME=~/.multirust/rustup
+export PATH=$CARGO_HOME/bin:$PATH
+
+if ! [ -d $CARGO_HOME ]; then
+  set -x
+  curl -sSL https://lambci.s3.amazonaws.com/binaries/rust-${VERSION}-rustup.tgz | tar -xz -C ~
+  set +x
+fi
+
+echo "Rust setup complete"
+echo ""
+
+source ~/init/gcc
+

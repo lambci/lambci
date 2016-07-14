@@ -1,0 +1,29 @@
+#!/bin/bash
+set -e
+
+VERSION=${1:-1.6.2}
+
+echo "Installing Go ${VERSION}..."
+
+if ! [ -d ~/go ]; then
+  set -x
+  curl -sSL https://storage.googleapis.com/golang/go${VERSION}.linux-amd64.tar.gz | tar -xz -C ~
+  set +x
+fi
+
+export GOROOT=~/go
+export PATH=$GOROOT/bin:$PATH
+
+export GOPATH=~/gopath
+export PATH=$GOPATH/bin:$PATH
+
+# Setup GOPATH directories
+DIR=(${LAMBCI_REPO//\// })
+mkdir -p $GOPATH/src/github.com/${DIR[0]}
+cd $GOPATH/src/github.com/${DIR[0]}
+mv $OLDPWD ./${DIR[1]}
+cd ./${DIR[1]}
+
+echo "Go setup complete"
+echo ""
+

@@ -1,0 +1,21 @@
+#!/bin/bash
+set -e
+
+VERSION=${1:-4.8.5}
+
+echo "Installing GCC ${VERSION}..."
+
+if ! [ -f /tmp/bin/gcc ]; then
+  set -x
+  curl -sSL https://lambci.s3.amazonaws.com/binaries/gcc-${VERSION}.tgz | tar -xz -C /tmp
+  set +x
+fi
+
+export PATH=/tmp/bin:/tmp/sbin:$PATH
+export LD_LIBRARY_PATH=/usr/local/lib64/node-v4.3.x/lib:/tmp/lib:/tmp/lib64:$LD_LIBRARY_PATH
+export CPATH=/tmp/include
+export LIBRARY_PATH=/tmp/lib
+
+echo "GCC setup complete"
+echo ""
+

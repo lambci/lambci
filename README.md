@@ -408,13 +408,23 @@ If you discover any security issues with LambCI please email [security@lambci.or
 
 ## Language Recipes
 
-LambCI doesn't currently have any language-specific settings. The default command is `npm install && npm test` which will use the default Lambda version of Node.js (4.3.x) and npm (2.x).
+LambCI doesn't currently have any language-specific settings. The default
+command is `npm install && npm test` which will use the default Lambda version
+of Node.js (4.3.x) and npm (2.x).
 
-The way to build with different Node.js versions, or other languages entirely, is just to override the `cmd` config property (specifying a `test` property in a `package.json` file would work too).
+The way to build with different Node.js versions, or other languages entirely,
+is just to override the `cmd` config property (specifying a `test` property in
+a `package.json` file would work too).
+
+LambCI comes with a collection of helper scripts to setup your environment
+for languages not supported out of the box on AWS Lambda – that is,
+every language except Node.js and Python 2.7
 
 ### Node.js
 
-LambCI comes with [nave](https://github.com/isaacs/nave) installed and available on the `PATH`, so if you wanted to run your npm install and tests using the latest Node.js v6.x and npm v3.x, you could do specify:
+LambCI comes with [nave](https://github.com/isaacs/nave) installed and
+available on the `PATH`, so if you wanted to run your npm install and tests
+using the latest Node.js v6.x and npm v3.x, you could do specify:
 
 ```json
 {
@@ -430,7 +440,10 @@ If you're happy using the built-in npm to install, you could simplify this a lit
 }
 ```
 
-There's [currently no way to run multiple builds in parallel]() but you could have processes run in parallel using a tool like [npm-run-all](https://github.com/mysticatea/npm-run-all) – the logs will be a little messy though!
+There's [currently no way to run multiple builds in parallel]() but you could
+have processes run in parallel using a tool like
+[npm-run-all](https://github.com/mysticatea/npm-run-all) – the logs will be a
+little messy though!
 
 Here's an example package.json for running your tests in Node.js v4, v5 and v6 simultaneously:
 
@@ -453,7 +466,9 @@ Here's an example package.json for running your tests in Node.js v4, v5 and v6 s
 
 ### Python 2.7
 
-LambCI comes with [pip](https://pip.pypa.io) installed and available on the `PATH`, and Lambda has Python 2.7 already installed. `$HOME/.local/bin` is also added to `PATH`, so local pip installs should work:
+LambCI comes with [pip](https://pip.pypa.io) installed and available on the
+`PATH`, and Lambda has Python 2.7 already installed. `$HOME/.local/bin` is also
+added to `PATH`, so local pip installs should work:
 
 ```json
 {
@@ -463,168 +478,99 @@ LambCI comes with [pip](https://pip.pypa.io) installed and available on the `PAT
 
 ### Java
 
-The Java SDK is not installed on Lambda, so needs to be downloaded as part of
-your build – but the JRE *does* exist on Lambda, so the overall impact isn't big
-– bootstrapping takes seconds. You just need to make sure the correct
-environment variables are set before installing and building – the script below
-shows you how to set that up:
+The Java SDK is not installed on AWS Lambda, so needs to be downloaded as part of
+your build – but the JRE *does* exist on Lambda, so the overall impact is small.
 
-```bash
-#!/bin/bash -ex
+LambCI includes a script you can source before running your build commands
+that will install and setup the SDK correctly, as well as Maven (v3.3.9). Call
+it with the OpenJDK version you want (`1.7` or `1.8`) – ommitting it defaults to `1.8`:
 
-VERSION=1.8
-# VERSION=1.7
-
-export JAVA_HOME=$(echo /tmp/usr/lib/jvm/java-${VERSION}.0-openjdk-${VERSION}*)
-
-if ! [ -d $JAVA_HOME ]; then
-  curl -sSL https://lambci.s3.amazonaws.com/binaries/java-${VERSION}.0-openjdk-devel.tgz | tar -xz -C /tmp
-
-  # Symlink the JRE in, and physically copy libjvm.so
-  export JAVA_HOME=$(echo /tmp/usr/lib/jvm/java-${VERSION}.0-openjdk-${VERSION}*)
-  cp -as /usr/lib/jvm/java-${VERSION}*/jre $JAVA_HOME/
-  rm $JAVA_HOME/jre/lib/amd64/server/libjvm.so
-  cp /usr/lib/jvm/java-${VERSION}*/jre/lib/amd64/server/libjvm.so $JAVA_HOME/jre/lib/amd64/server/
-fi
-export PATH=$JAVA_HOME/bin:$PATH
-export _JAVA_OPTIONS=-Duser.home=$HOME
-
-# If you want Maven
-if ! [ -d ~/apache-maven-3.3.9 ]; then
-  curl -sSL http://www-us.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz | tar -xz -C ~
-fi
-export PATH=~/apache-maven-3.3.9/bin:$PATH
+```json
+{
+  "cmd": ". ~/init/java 1.7 && mvn install -B -V && mvn test"
+}
 ```
 
-Then you can run your `mvn` install and test steps.
-
-You can see examples of this working
-[here](https://github.com/mhart/test-ci-project/blob/799019304f69c6b0392b8bb7b52750a7e089e7b2/build-java-1.8.sh).
+You can see an example of this working
+[here](https://github.com/mhart/test-ci-project/blob/71815a5e74d45f7ebb4682468587cfa352eae925/build-java-1.7.sh) –
+and the resulting [build log](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/mhart/test-ci-project/builds/126/c03f86b6841738f6816a6146910b2435.html).
 
 ### Go
 
-The go toolchain is not installed on Lambda already and is too big to include
-in the LambCI package, but it's very easy (and quick) to install as part of
-your build – and if your Lambda process stays warm, then you won't need to
-install it again. Just add something like this before your build/test commands:
+Go is not installed on AWS Lambda, so needs to be downloaded as part of
+your build, but Go is quite small and well suited to running anywhere.
 
-```bash
-#!/bin/bash -ex
+LambCI includes a script you can source before running your build commands
+that will install Go and set your `GOROOT` and `GOPATH` with the correct
+directory structure. Call it with the Go version you want (any of the versions
+[on the Go site](https://golang.org/dl/)) – ommitting it defaults to `1.6.2`:
 
-VERSION=1.6.2
-
-if ! [ -d $HOME/go ]; then
-  curl -sSL https://storage.googleapis.com/golang/go${VERSION}.linux-amd64.tar.gz | tar -xz -C ~
-fi
-
-export GOROOT=$HOME/go
-export PATH=$PATH:$GOROOT/bin
+```json
+{
+  "cmd": ". ~/init/go 1.5.4 && make test"
+}
 ```
-(then be sure to set `GOPATH` correctly)
 
 You can see examples of this working
-[here](https://github.com/mhart/test-ci-project/blob/master/build-go.sh) and
-[here](https://github.com/mhart/test-ci-project/blob/master/build-go-make.sh).
+[here](https://github.com/mhart/test-ci-project/blob/71815a5e74d45f7ebb4682468587cfa352eae925/build-go.sh) –
+and the resulting [build log](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/mhart/test-ci-project/builds/124/f8ddb3de3e00ea0faffdf59ddf7e8658.html).
 
 ### Ruby
 
-Ruby is a little more complicated due to a lack of easily-installed Ruby binaries in the Lambda environment.
-However, with a relatively short bootstrapping script, you can get one of the following versions running:
+Ruby is not installed on AWS Lambda, so needs to be downloaded as part of
+your build.
 
-* 2.3.1
-* 2.2.5
-* 2.1.9
-* 2.0.0-p648
+LambCI includes a script you can source before running your build commands
+that will install Ruby, rbenv, gem and bundler. Call it with the Ruby version
+you want (currently: `2.3.1`, `2.2.5`, `2.1.9` and `2.0.0-p648`) –
+ommitting it defaults to `2.3.1`:
 
-We can compile more versions if there's sufficient demand for it, and we'll
-probably look at adding `rbenv` before running your scripts (in the same way we do with `pip`),
-so you won't need to bootstrap to this extent in the future:
-
-```bash
-#!/bin/bash -ex
-
-VERSION=2.3.1
-
-# First grab libyaml and put it in our ~/usr/lib64 directory
-curl -sSL https://lambci.s3.amazonaws.com/binaries/libyaml-2.0.4.tgz | tar -xz -C ~
-
-# Now install rbenv
-if ! [ -d ~/.rbenv ]; then
-  git clone --depth 1 https://github.com/rbenv/rbenv.git ~/.rbenv
-fi
-export PATH="$HOME/.rbenv/bin:$PATH"
-eval "$(rbenv init -)"
-
-# We don't need to install documentation with gems
-echo "gem: --no-document" > ~/.gemrc
-
-# We want pretty colors in our output
-echo "--color --tty" > ~/.rspec
-
-# Grab the Ruby version we want and install bundler
-if ! [ -d ~/.rbenv/versions/$VERSION ]; then
-  curl -sSL https://lambci.s3.amazonaws.com/binaries/ruby-${VERSION}.tgz | tar -C ~/.rbenv/versions -xz
-  rbenv rehash
-  rbenv local $VERSION
-  gem install bundler
-else
-  rbenv local $VERSION
-fi
+```json
+{
+  "cmd": ". ~/init/ruby 2.2.5 && bundle install && bundle exec rake"
+}
 ```
 
-You can then run `bundle install`, etc to install and test your project
-
 You can see an example of this working
-[here](https://github.com/mhart/test-ci-project/commit/f44d1bcad1964ce116651090c1dbe2710a953640).
+[here](https://github.com/mhart/test-ci-project/blob/71815a5e74d45f7ebb4682468587cfa352eae925/build-ruby.sh) –
+and the resulting [build log](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/mhart/test-ci-project/builds/123/05b9f81a9ca8599dc7fbea67ce2a62ad.html).
 
 ### Native (gcc) compilation
 
-Lambda also has no native compiler, so you need to download one as part of your build process.
-We have a precompiled gcc 4.8.5 that works in the Lambda environment with a full set of linux headers.
-Native compilation is finicky at best, especially when installed in a non-default location,
-so it may not work out-of-the-box for complicated libraries that depend on other headers/libraries.
-Use a script like this to get started:
+AWS Lambda also has no native compiler, so you need to download one as part of your build process.
+We have a precompiled gcc 4.8.5 that works in the Lambda environment with a full set of linux headers:
 
-```bash
-#!/bin/bash -ex
-
-curl -sSL https://lambci.s3.amazonaws.com/binaries/gcc-4.8.5.tgz | tar -C -xz /tmp
-
-export PATH=/tmp/bin:/tmp/sbin:$PATH
-export LD_LIBRARY_PATH=/usr/local/lib64/node-v4.3.x/lib:/tmp/lib:/tmp/lib64:/lib64:/usr/lib64:/var/runtime:/var/task:/var/task/lib
-export CPATH=/tmp/include
-export LIBRARY_PATH=/tmp/lib
+```json
+{
+  "cmd": ". ~/init/gcc && npm install && npm test"
+}
 ```
 
-You can see an example of this working
-[here](https://github.com/mhart/test-ci-project/commit/c29bfda8685910e6626a382fdc09662cc5d91359).
+Keep in mind that native compilation is finicky at best, especially when
+installed in a non-default location, so it may not work out-of-the-box for
+complicated libraries that depend on other headers/libraries.
+
+You can see examples of this working
+[here](https://github.com/mhart/test-ci-project/blob/71815a5e74d45f7ebb4682468587cfa352eae925/build-native-node.sh) –
+and the resulting [build log](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/mhart/test-ci-project/builds/125/2f5b18c9c55d1683a641d4d9ae8c2139.html).
 
 ### Rust
 
-Rust actually requires a linker, so you need to install `gcc` as well. It's also relatively large
-and you may run out of space trying to build and test your project, however we've created
-a slightly slimmed down version that should work just as well:
+Rust is not installed on AWS Lambda, so needs to be downloaded as part of
+your build.
 
-```bash
-#!/bin/bash -ex
+LambCI includes a script you can source before running your build commands
+that will install Rust, cargo and gcc. Currently `1.10.0` is the only version:
 
-curl -sSL https://lambci.s3.amazonaws.com/binaries/rust-1.10.0-rustup.tgz | tar -xz -C ~
-
-export CARGO_HOME=~/.cargo
-export MULTIRUST_HOME=~/.multirust
-export RUSTUP_HOME=~/.multirust/rustup
-export PATH=$CARGO_HOME/bin:$PATH
-
-curl -sSL https://lambci.s3.amazonaws.com/binaries/gcc-4.8.5.tgz | tar -xz -C /tmp
-
-export PATH=/tmp/bin:/tmp/sbin:$PATH
-export LD_LIBRARY_PATH=/usr/local/lib64/node-v4.3.x/lib:/tmp/lib:/tmp/lib64:/lib64:/usr/lib64:/var/runtime:/var/task:/var/task/lib
-export CPATH=/tmp/include
-export LIBRARY_PATH=/tmp/lib
+```json
+{
+  "cmd": ". ~/init/rust && cargo build && cargo test"
+}
 ```
 
-Now you can run `cargo`, or `rustup`. You can see an example of this working
-[here](https://github.com/mhart/test-ci-project/blob/master/build-rust.sh).
+You can see an example of this working
+[here](https://github.com/mhart/test-ci-project/blob/f0a6829c4c804dfad6e4f673de8fa79d1558d3cf/build-rust.sh) –
+and the resulting [build log](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/mhart/test-ci-project/builds/128/e69f562a0ce3e0435dda8366740d38ee.html).
 
 ### PHP
 

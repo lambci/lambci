@@ -1,0 +1,29 @@
+#!/bin/bash
+set -e
+
+VERSION=${1:-2.3.1}
+
+echo "Installing Ruby ${VERSION}..."
+
+# First grab libyaml and put it in our ~/usr/lib64 directory
+curl -sSL https://lambci.s3.amazonaws.com/binaries/libyaml-2.0.4.tgz | tar -xz -C ~
+
+# Init rbenv
+export PATH="~/.rbenv/bin:$PATH"
+eval "$(rbenv init -)"
+
+# Grab the Ruby version we want and install bundler
+set -x
+if ! [ -d ~/.rbenv/versions/$VERSION ]; then
+  curl -sSL https://lambci.s3.amazonaws.com/binaries/ruby-${VERSION}.tgz | tar -C ~/.rbenv/versions -xz
+  rbenv rehash
+  rbenv local $VERSION
+  gem install bundler
+else
+  rbenv local $VERSION
+fi
+set +x
+
+echo "Ruby setup complete"
+echo ""
+

@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+# Summary: Configure the shell environment for rbenv
+# Usage: eval "$(rbenv init - [--no-rehash] [<shell>])"
+
+set -e
+[ -n "$RBENV_DEBUG" ] && set -x
+
+# Provide rbenv completions
+if [ "$1" = "--complete" ]; then
+  echo -
+  echo --no-rehash
+  echo bash
+  echo fish
+  echo ksh
+  echo zsh
+  exit
+fi
+
+print=""
+no_rehash=""
+for args in "$@"
+do
+  if [ "$args" = "-" ]; then
+    print=1
+    shift
+  fi
+
+  if [ "$args" = "--no-rehash" ]; then
+    no_rehash=1
+    shift
+  fi
+done
+
+shell="$1"
+if [ -z "$shell" ]; then
+  shell="$(ps -p "$PPID" -o 'args=' 2>/dev/null || true)"
+  shell="${shell%% *}"
+  shell="${shell##-}"
+  shell="${shell:-$SHELL}"
+  shell="${shell##*/}"
+fi
+
+root="${0%/*}/.."
+
+if [ -z "$print" ]; then
+  case "$shell" in
+  bash )
+    if [ -f "${HOME}/.bashrc" ] && [ ! -f "${HOME}/.bash_profile" ]; then
+      profile='~/.bashrc'
+    else
+      profile='~/.bash_profile'
+    fi
+    ;;
+  zsh )
+    profile='~/.zshrc'
+    ;;
+  ksh )
+    profile='~/.profile'
+    ;;
+  fish )
+    profile='~/.config/fish/config.fish'
+    ;;
+  * )
+    profile='your profile'
+    ;;
+  esac
+
+  { echo "# Load rbenv automatically by appending"
+    echo "# the following to ${profile}:"
+    echo
+    case "$shell" in
+    fish )
+      echo 'status --is-interactive; and . (rbenv init -|psub)'
+      ;;
+    * )
+      echo 'eval "$(rbenv init -)"'
+      ;;
+    esac
+    echo
+  } >&2
+
+  exit 1
+fi
+
+mkdir -p "${RBENV_ROOT}/"{shims,versions}
+
+case "$shell" in
+fish )
+  echo "setenv PATH '${RBENV_ROOT}/shims' \$PATH"
+  echo "setenv RBENV_SHELL $shell"
+;;
+* )
+  echo 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
+  echo "export RBENV_SHELL=$shell"
+;;
+esac
+
+completion="${root}/completions/rbenv.${shell}"
+if [ -r "$completion" ]; then
+  case "$shell" in
+  fish ) echo ". '$completion'" ;;
+  *    ) echo "source '$completion'" ;;
+  esac
+fi
+
+if [ -z "$no_rehash" ]; then
+  echo 'command rbenv rehash 2>/dev/null'
+fi
+
+commands=(`rbenv-commands --sh`)
+case "$shell" in
+fish )
+  cat <<EOS
+function rbenv
+  set command \$argv[1]
+  set -e argv[1]
+
+  switch "\$command"
+  case ${commands[*]}
+    . (rbenv "sh-\$command" \$argv|psub)
+  case '*'
+    command rbenv "\$command" \$argv
+  end
+end
+EOS
+  ;;
+ksh )
+  cat <<EOS
+function rbenv {
+  typeset command
+EOS
+  ;;
+* )
+  cat <<EOS
+rbenv() {
+  local command
+EOS
+  ;;
+esac
+
+if [ "$shell" != "fish" ]; then
+IFS="|"
+cat <<EOS
+  command="\$1"
+  if [ "\$#" -gt 0 ]; then
+    shift
+  fi
+
+  case "\$command" in
+  ${commands[*]})
+    eval "\$(rbenv "sh-\$command" "\$@")";;
+  *)
+    command rbenv "\$command" "\$@";;
+  esac
+}
+EOS
+fi

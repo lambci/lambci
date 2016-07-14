@@ -178,6 +178,7 @@ function updateS3Branch(build, bucket, key, branchKey, branchStatusKey, makePubl
         Bucket: bucket,
         Key: branchStatusKey,
         ContentType: 'image/svg+xml; charset=utf-8',
+        CacheControl: 'no-cache',
         Body: svgBody,
         ACL: makePublic ? 'public-read' : undefined,
       }, cb)

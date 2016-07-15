@@ -580,7 +580,7 @@ and the resulting [build log](https://lambci-public-buildresults-e3xwlufrwb3i.s3
 
 LambCI can run tasks on an ECS cluster, which means you can perform all of your build tasks in a Docker container and not be subject to the same restrictions you have in the Lambda environment.
 
-This needs to be documented further – for now you'll have to go [off the source]() and check out the [lambci/ecs](https://github.com/lambci/ecs) repo.
+This needs to be documented further – for now you'll have to go [off the source](https://github.com/lambci/ecs) and check out the [lambci/ecs](https://github.com/lambci/ecs) repo.
 
 ## Questions
 

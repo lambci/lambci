@@ -8,21 +8,28 @@ echo "Installing Ruby ${VERSION}..."
 # First grab libyaml and put it in our ~/usr/lib64 directory
 curl -sSL https://lambci.s3.amazonaws.com/binaries/libyaml-2.0.4.tgz | tar -xz -C ~
 
-# Init rbenv
-export PATH="~/.rbenv/bin:$PATH"
-eval "$(rbenv init -)"
+export RBENV_ROOT=~/.rbenv
+export PATH=$RBENV_ROOT/bin:$PATH
 
-# Grab the Ruby version we want and install bundler
-set -x
-if ! [ -d ~/.rbenv/versions/$VERSION ]; then
-  curl -sSL https://lambci.s3.amazonaws.com/binaries/ruby-${VERSION}.tgz | tar -C ~/.rbenv/versions -xz
-  rbenv rehash
-  rbenv local $VERSION
-  gem install bundler
-else
-  rbenv local $VERSION
+# Grab the Ruby version we want
+if ! [ -d $RBENV_ROOT/versions/$VERSION ]; then
+  set -x
+  mkdir -p $RBENV_ROOT/versions
+  curl -sSL https://lambci.s3.amazonaws.com/binaries/ruby-${VERSION}.tgz | tar -xz -C $RBENV_ROOT/versions
+  set +x
 fi
-set +x
+
+# Init rbenv
+eval "$(rbenv init -)"
+rbenv local $VERSION
+ruby --version
+
+# Install bundler
+if ! [ -f $RBENV_ROOT/shims/bundle ]; then
+  set -x
+  gem install bundler
+  set +x
+fi
 
 echo "Ruby setup complete"
 echo ""

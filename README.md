@@ -57,6 +57,7 @@ future, depending on the API they settle on)
 * Java (OpenJDK [1.8 and 1.7](#java))
 * Go ([any version](#go))
 * Ruby ([2.3.1, 2.2.5, 2.1.9, 2.0.0-p648](#ruby))
+* PHP ([7.0.9, 5.6.23](#php))
 * Native compilation with a [pre-built gcc 4.8.5](#native-gcc-compilation)
 * Rust ([v1.10 has the best support](#rust), but any version should work)
 * Check the [Recipes](#language-recipes) list below for the status of other languages/tools
@@ -535,6 +536,30 @@ You can see an example of this working
 [here](https://github.com/mhart/test-ci-project/blob/71815a5e74d45f7ebb4682468587cfa352eae925/build-ruby.sh) –
 and the resulting [build log](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/mhart/test-ci-project/builds/123/05b9f81a9ca8599dc7fbea67ce2a62ad.html).
 
+### PHP
+
+PHP is not installed on AWS Lambda, so needs to be downloaded as part of
+your build.
+
+LambCI includes a script you can source before running your build commands
+that will install PHP, phpenv and composer. Call it with the PHP version
+you want (currently: `7.0.9` and `5.6.23`) – omitting it defaults to `7.0.9`:
+
+```json
+{
+  "cmd": ". ~/init/php 5.6.23 && composer install -n --prefer-dist && vendor/bin/phpunit"
+}
+```
+
+These versions are compiled using [php-build](https://github.com/php-build/php-build) with the
+[default config options](https://github.com/php-build/php-build/blob/7f2fe024f64793d15c82f2932dd9cf73aa3273ec/share/php-build/default_configure_options)
+and overrides of `--disable-cgi` and `--disable-fpm`.
+
+
+You can see an example of this working
+[here](https://github.com/mhart/test-ci-project/blob/3f26c1d2a6d963c54fec8b24cc439bece894e033/build-php.sh) –
+and the resulting [build log](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/mhart/test-ci-project/builds/140/3e9954f8a74dda5f4050b65bcf56cde8.html).
+
 ### Native (gcc) compilation
 
 AWS Lambda also has no native compiler, so you need to download one as part of your build process.
@@ -571,10 +596,6 @@ that will install Rust, cargo and gcc. Currently `1.10.0` is the only version:
 You can see an example of this working
 [here](https://github.com/mhart/test-ci-project/blob/f0a6829c4c804dfad6e4f673de8fa79d1558d3cf/build-rust.sh) –
 and the resulting [build log](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/mhart/test-ci-project/builds/128/e69f562a0ce3e0435dda8366740d38ee.html).
-
-### PHP
-
-[TODO](https://github.com/lambci/lambci/issues/10)
 
 ## Extending with ECS
 

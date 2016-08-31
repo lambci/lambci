@@ -197,8 +197,13 @@ function resolveFileConfig(build) {
   try {
     // Only use `require` if we're in a safe environment
     // It will look for .lambci.js and .lambci.json
-    dotConfig = build.config.inheritSecrets ? require(path.join(build.cloneDir, '.lambci')) :
-      JSON.parse(fs.readFileSync(path.join(build.cloneDir, '.lambci.json'), 'utf8'))
+    if (build.config.inheritSecrets) {
+      var resolvedPath = require.resolve(path.join(build.cloneDir, '.lambci'))
+      delete require.cache[resolvedPath] // Refresh each build
+      dotConfig = require(resolvedPath)
+    } else {
+      dotConfig = JSON.parse(fs.readFileSync(path.join(build.cloneDir, '.lambci.json'), 'utf8'))
+    }
   } catch (e) {
     dotConfig = undefined
   }

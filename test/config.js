@@ -1,4 +1,6 @@
+var fs = require('fs')
 var assert = require('chai').assert
+var utils = require('../utils')
 var configUtils = require('../utils/config')
 
 describe('config', function() {
@@ -311,6 +313,70 @@ describe('config', function() {
           OTHER: 'val',
         },
         allowConfigOverrides: ['cmd', 'env'],
+        inheritSecrets: true,
+      })
+    })
+
+    it('should ensure require cache is clean before loading from .lambci.js', function() {
+      var configDir = `${__dirname}/fixtures/config1`
+      var build = {
+        eventType: 'push',
+        branch: 'test-something',
+        cloneDir: configDir,
+        config: {
+          allowConfigOverrides: true,
+          inheritSecrets: true,
+        },
+      }
+      var config = configUtils.resolveFileConfigs(utils.merge({}, build))
+      assert.deepEqual(config, {
+        cmd: 'from .lambci.js',
+        env: {SOURCE: '.lambci.js'},
+        notifications: {slack: {channel: '#packagejson'}},
+        allowConfigOverrides: true,
+        inheritSecrets: true,
+      })
+      var configFilename = `${configDir}/.lambci.js`
+      var configOrig = fs.readFileSync(configFilename)
+      fs.writeFileSync(configFilename, 'module.exports = {}')
+      config = configUtils.resolveFileConfigs(utils.merge({}, build))
+      fs.writeFileSync(configFilename, configOrig)
+      assert.deepEqual(config, {
+        cmd: 'from package.json',
+        notifications: {slack: {channel: '#packagejson'}},
+        allowConfigOverrides: true,
+        inheritSecrets: true,
+      })
+    })
+
+    it('should ensure require cache is clean before loading from .lambci.json', function() {
+      var configDir = `${__dirname}/fixtures/config3`
+      var build = {
+        eventType: 'push',
+        branch: 'test-something',
+        cloneDir: configDir,
+        config: {
+          allowConfigOverrides: true,
+          inheritSecrets: true,
+        },
+      }
+      var config = configUtils.resolveFileConfigs(utils.merge({}, build))
+      assert.deepEqual(config, {
+        cmd: 'from .lambci.json',
+        env: {SOURCE: '.lambci.json'},
+        notifications: {slack: {channel: '#packagejson'}},
+        allowConfigOverrides: true,
+        inheritSecrets: true,
+      })
+      var configFilename = `${configDir}/.lambci.json`
+      var configOrig = fs.readFileSync(configFilename)
+      fs.writeFileSync(configFilename, '{}')
+      config = configUtils.resolveFileConfigs(utils.merge({}, build))
+      fs.writeFileSync(configFilename, configOrig)
+      assert.deepEqual(config, {
+        cmd: 'from package.json',
+        notifications: {slack: {channel: '#packagejson'}},
+        allowConfigOverrides: true,
         inheritSecrets: true,
       })
     })

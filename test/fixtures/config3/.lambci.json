@@ -1,0 +1,6 @@
+{
+  "cmd": "from .lambci.json",
+  "env": {
+    "SOURCE": ".lambci.json"
+  }
+}

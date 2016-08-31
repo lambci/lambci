@@ -55,20 +55,20 @@ function SnsClient(options, build) {
   this.commit = build.commit
   this.logUrl = build.logUrl
 
-  build.statusEmitter.on('finish', (err, buildInfo) => {
-    var subject = `LambCI Build #${buildInfo.buildNum} successful!`
-    var message = `LambCI Build #${buildInfo.buildNum}
+  build.statusEmitter.finishTasks.push((build, cb) => {
+    var subject = `LambCI Build #${build.buildNum} successful!`
+    var message = `LambCI Build #${build.buildNum}
 Repo: ${this.repo}
 ${this.prNum ? `Pull Request: ${this.prNum}` : `Branch: ${this.branch}`}
 Commit: ${this.commit}
 Log: ${this.logUrl}
 `
-    if (err) {
-      message += `Error: ${err.message}`
-      if (err.logTail) {
-        message += `\n${err.logTail}`
+    if (build.error) {
+      message += `Error: ${build.error.message}`
+      if (build.error.logTail) {
+        message += `\n${build.error.logTail}`
       }
-      subject = `LambCI Build #${buildInfo.buildNum} failed`
+      subject = `LambCI Build #${build.buildNum} failed`
     }
     sns.publish({
       TopicArn: this.topicArn,
@@ -77,10 +77,13 @@ Log: ${this.logUrl}
       MessageAttributes: {
         status: {
           DataType: 'String',
-          StringValue: err ? 'failure' : 'success',
+          StringValue: build.error ? 'failure' : 'success',
         },
       },
-    }, log.logIfErr)
+    }, function(err) {
+      log.logIfErr(err)
+      cb()
+    })
   })
 }
 

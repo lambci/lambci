@@ -27,33 +27,36 @@ function SlackClient(token, options, build) {
 
   this.statusQueue = async.queue(this.updateStatus.bind(this), 1)
 
-  build.statusEmitter.on('start', (buildInfo) => {
+  build.statusEmitter.on('start', (build) => {
     var status = {
       color: 'warning',
-      fallback: `Started: ${buildInfo.repo} #${buildInfo.buildNum}`,
-      title: `Build #${buildInfo.buildNum} started...`,
+      fallback: `Started: ${build.repo} #${build.buildNum}`,
+      title: `Build #${build.buildNum} started...`,
     }
     this.statusQueue.push(status, log.logIfErr)
   })
 
-  build.statusEmitter.on('finish', (err, buildInfo) => {
-    var status = {}, elapsedTxt = utils.elapsedTxt(buildInfo.startedAt, buildInfo.endedAt)
-    if (err) {
-      var txt = err.message
-      if (err.logTail) {
-        txt = `${err.logTail}\n${txt}`
+  build.statusEmitter.finishTasks.push((build, cb) => {
+    var status = {}, elapsedTxt = utils.elapsedTxt(build.startedAt, build.endedAt)
+    if (build.error) {
+      var txt = build.error.message
+      if (build.error.logTail) {
+        txt = `${build.error.logTail}\n${txt}`
       }
 
       status.color = 'danger'
-      status.fallback = `Failed: ${buildInfo.repo} #${buildInfo.buildNum} (${elapsedTxt})`
-      status.title = `Build #${buildInfo.buildNum} failed (${elapsedTxt})`
+      status.fallback = `Failed: ${build.repo} #${build.buildNum} (${elapsedTxt})`
+      status.title = `Build #${build.buildNum} failed (${elapsedTxt})`
       status.text = '```' + txt.replace(/```/g, "'''") + '```' // TODO: not sure best way to escape ```
     } else {
       status.color = 'good'
-      status.fallback = `Success: ${buildInfo.repo} #${buildInfo.buildNum} (${elapsedTxt})`
-      status.title = `Build #${buildInfo.buildNum} successful (${elapsedTxt})`
+      status.fallback = `Success: ${build.repo} #${build.buildNum} (${elapsedTxt})`
+      status.title = `Build #${build.buildNum} successful (${elapsedTxt})`
     }
-    this.statusQueue.push(status, log.logIfErr)
+    this.statusQueue.push(status, function(err) {
+      log.logIfErr(err)
+      cb()
+    })
   })
 }
 

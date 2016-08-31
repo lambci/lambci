@@ -1,4 +1,5 @@
 var path = require('path')
+var EventEmitter = require('events')
 var spawn = require('child_process').spawn
 var async = require('async')
 var AWS = require('aws-sdk')
@@ -103,28 +104,31 @@ function patchUncaughtHandlers(build, cb) {
   var done = utils.once(function(err) {
     process.removeListener('uncaughtException', done)
     origListeners.forEach(listener => process.on('uncaughtException', listener))
-    buildDone(err, build, cb)
+    build.error = err
+    buildDone(build, cb)
   })
   process.removeAllListeners('uncaughtException')
   process.on('uncaughtException', done)
   return done
 }
 
-function buildDone(err, build, cb) {
+function buildDone(build, cb) {
 
   // Don't update statuses if we're doing a docker build and we launched successfully
-  if (!err && build.config.docker) return cb()
+  if (!build.error && build.config.docker) return cb()
 
-  log.info(err ? `Build #${build.buildNum} failed: ${err.message}` :
+  log.info(build.error ? `Build #${build.buildNum} failed: ${build.error.message}` :
     `Build #${build.buildNum} successful!`)
 
   build.endedAt = new Date()
-  build.status = err ? 'failure' : 'success'
-  build.statusEmitter.emit('finish', err, build)
+  build.status = build.error ? 'failure' : 'success'
+  build.statusEmitter.emit('finish', build)
 
-  db.finishBuild(build, function(dbErr) {
-    log.logIfErr(dbErr)
-    cb(err)
+  var finishTasks = build.statusEmitter.finishTasks.concat(db.finishBuild)
+
+  async.forEach(finishTasks, (task, cb) => task(build, cb), function(taskErr) {
+    log.logIfErr(taskErr)
+    cb(build.error)
   })
 }
 
@@ -318,7 +322,11 @@ function BuildInfo(buildData, context) {
   this.endedAt = null
 
   this.status = 'pending'
-  this.statusEmitter = new (require('events'))()
+  this.statusEmitter = new EventEmitter()
+
+  // Any async functions to run on 'finish' should be added to this array,
+  // and be of the form: function(build, cb)
+  this.statusEmitter.finishTasks = []
 
   this.project = buildData.project
   this.buildNum = buildData.buildNum || 0
@@ -365,5 +373,6 @@ function BuildInfo(buildData, context) {
   this.logUrl = ''
   this.lambdaLogUrl = ''
   this.buildDirUrl = ''
+  this.error = null
 }
 

@@ -22,20 +22,23 @@ function GithubClient(build) {
 
   if (!build.statusEmitter) return
 
-  build.statusEmitter.on('start', (buildInfo) => {
+  build.statusEmitter.on('start', (build) => {
     var status = {
       state: 'pending',
-      description: `Build #${buildInfo.buildNum} started...`,
+      description: `Build #${build.buildNum} started...`,
     }
     this.statusQueue.push(status, log.logIfErr)
   })
 
-  build.statusEmitter.on('finish', (err, buildInfo) => {
+  build.statusEmitter.finishTasks.push((build, cb) => {
     var status = {
-      state: err ? 'failure' : 'success',
-      description: err ? err.message : `Build #${buildInfo.buildNum} successful!`,
+      state: build.error ? 'failure' : 'success',
+      description: build.error ? build.error.message : `Build #${build.buildNum} successful!`,
     }
-    this.statusQueue.push(status, log.logIfErr)
+    this.statusQueue.push(status, function(err) {
+      log.logIfErr(err)
+      cb()
+    })
   })
 }
 

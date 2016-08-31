@@ -107,10 +107,13 @@ exports.initBuildLog = function(build) {
     })
   }
 
-  build.statusEmitter.on('finish', () => {
+  build.statusEmitter.finishTasks.push((build, cb) => {
     finished = true
     clearTimeout(s3timeout)
-    uploadS3Log(build, bucket, buildKey, branchKey, branchStatusKey, makeS3Public, exports.logIfErr)
+    uploadS3Log(build, bucket, buildKey, branchKey, branchStatusKey, makeS3Public, function(err) {
+      exports.logIfErr(err)
+      cb()
+    })
   })
 
   if (build.eventType == 'push') {

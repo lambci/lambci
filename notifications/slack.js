@@ -30,6 +30,7 @@ function SlackClient(token, options, build) {
   build.statusEmitter.on('start', (buildInfo) => {
     var status = {
       color: 'warning',
+      fallback: `Started: ${buildInfo.repo} #${buildInfo.buildNum}`,
       title: `Build #${buildInfo.buildNum} started...`,
     }
     this.statusQueue.push(status, log.logIfErr)
@@ -44,10 +45,12 @@ function SlackClient(token, options, build) {
       }
 
       status.color = 'danger'
+      status.fallback = `Failed: ${buildInfo.repo} #${buildInfo.buildNum} (${elapsedTxt})`
       status.title = `Build #${buildInfo.buildNum} failed (${elapsedTxt})`
       status.text = '```' + txt.replace(/```/g, "'''") + '```' // TODO: not sure best way to escape ```
     } else {
       status.color = 'good'
+      status.fallback = `Success: ${buildInfo.repo} #${buildInfo.buildNum} (${elapsedTxt})`
       status.title = `Build #${buildInfo.buildNum} successful (${elapsedTxt})`
     }
     this.statusQueue.push(status, log.logIfErr)
@@ -59,7 +62,7 @@ SlackClient.prototype.updateStatus = function(status, cb) {
     color: status.color, // good, warning, danger
     title: status.title,
     title_link: status.url || this.logUrl,
-    fallback: status.title,
+    fallback: status.fallback || status.title,
     fields: [{
       title: 'Repository',
       value: `<https://github.com/${this.repo}|${this.repo}>`,

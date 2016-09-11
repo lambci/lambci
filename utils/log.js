@@ -140,13 +140,18 @@ exports.buildDirUrl = function(build, bucket) {
 
 var ESCAPE_REGEX = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
 function uploadS3Log(build, bucket, key, branchKey, branchStatusKey, makePublic, cb) {
-  var secretValues = Object.keys(build.config.secretEnv).map(function(key) {
-    return build.config.secretEnv[key].replace(ESCAPE_REGEX, "\\$&")
-  })
+  var secretValues = Object.keys(build.config.secretEnv)
+    .filter(function(key) {
+      return build.config.secretEnv[key].length !== 0 &&
+        build.config.logFilter.whiteList.indexOf(key) === -1
+    })
+    .map(function(key) {
+      return build.config.secretEnv[key].replace(ESCAPE_REGEX, "\\$&")
+    })
   var log = LOG_BUFFER.join('\n')
   if (secretValues.length !== 0) {
-    var secureRegex = new RegExp(secretValues.join("|"), "g")
-    log = log.replace(secureRegex, '[filtered]')
+    var secretRegex = new RegExp(secretValues.join("|"), "g")
+    log = log.replace(secretRegex, '[filtered]')
   }
 
   var params = {

@@ -32,6 +32,9 @@ exports.DEFAULT_CONFIG = {
     GITHUB_TOKEN: '',
     SLACK_TOKEN: '',
   },
+  logFilter: {
+    whiteList: []
+  },
   s3Bucket: '',
   notifications: {
     slack: {

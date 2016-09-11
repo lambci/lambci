@@ -138,9 +138,10 @@ exports.buildDirUrl = function(build, bucket) {
     `&bucket=${bucket}&prefix=${build.project}/builds`
 }
 
+var ESCAPE_REGEX = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g
 function uploadS3Log(build, bucket, key, branchKey, branchStatusKey, makePublic, cb) {
   var secretValues = Object.keys(build.config.secretEnv).map(function(key) {
-    return build.config.secretEnv[key]
+    return build.config.secretEnv[key].replace(ESCAPE_REGEX, "\\$&")
   })
   var log = LOG_BUFFER.join('\n')
   if (secretValues.length !== 0) {

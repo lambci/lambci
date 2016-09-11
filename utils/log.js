@@ -139,9 +139,18 @@ exports.buildDirUrl = function(build, bucket) {
 }
 
 function uploadS3Log(build, bucket, key, branchKey, branchStatusKey, makePublic, cb) {
+  var secretValues = Object.keys(build.config.secretEnv).map(function(key) {
+    return build.config.secretEnv[key]
+  })
+  var log = LOG_BUFFER.join('\n')
+  if (secretValues.length !== 0) {
+    var secureRegex = new RegExp(secretValues.join("|"), "g")
+    log = log.replace(secureRegex, '[filtered]')
+  }
+
   var params = {
     build: build,
-    log: ansiUp.linkify(ansiUp.ansi_to_html(ansiUp.escape_for_html(LOG_BUFFER.join('\n')))),
+    log: ansiUp.linkify(ansiUp.ansi_to_html(ansiUp.escape_for_html(log))),
   }
 
   s3.upload({

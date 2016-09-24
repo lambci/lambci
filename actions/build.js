@@ -51,7 +51,22 @@ function runBuild(buildData, context, cb) {
 function cloneAndBuild(build, cb) {
 
   clone(build, function(err) {
-    if (err) return cb(err)
+    // Setup Github here in case the git clone has failed we can attempt to notify Github of the failure
+    if (build.token) {
+      github.createClient(build)
+    }
+
+    if (err) {
+      // An error occurred in the git clone task: report the failure to GitHub
+      log.info('git clone failed - the error will be reported to Github but not saved in the build table')
+      // update some fields in the build
+      build.endedAt = new Date()
+      build.status = 'failure'
+      build.error = err
+      build.statusEmitter.emit('finish', build)
+      // now exit
+      return cb(err)
+    }
 
     // Now that we've cloned the repository we can check for config files
     build.config = config.prepareBuildConfig(build)
@@ -71,8 +86,9 @@ function cloneAndBuild(build, cb) {
 
       log.info(`Build log: ${build.logUrl}\n`)
 
+      // We've cloned the repo now: the GitHub token may be different from the one loaded before, update it
       if (build.token) {
-        github.createClient(build)
+        github.token = build.token
       }
 
       if (build.config.notifications.slack && build.config.secretEnv.SLACK_TOKEN) {
@@ -375,4 +391,3 @@ function BuildInfo(buildData, context) {
   this.buildDirUrl = ''
   this.error = null
 }
-

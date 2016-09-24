@@ -86,11 +86,6 @@ function cloneAndBuild(build, cb) {
 
       log.info(`Build log: ${build.logUrl}\n`)
 
-      // We've cloned the repo now: the GitHub token may be different from the one loaded before, update it
-      if (build.token) {
-        github.token = build.token
-      }
-
       if (build.config.notifications.slack && build.config.secretEnv.SLACK_TOKEN) {
         slack.createClient(build.config.secretEnv.SLACK_TOKEN, build.config.notifications.slack, build)
       }

@@ -58,7 +58,7 @@ function cloneAndBuild(build, cb) {
 
     if (err) {
 
-      if(!build.config.docker){
+      if (!build.config.docker) {
         // An error occurred in the git clone task: report the failure to GitHub
         log.info('git clone failed - the error will be reported to Github but not saved in the build table')
         // update some fields in the build

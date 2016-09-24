@@ -57,13 +57,16 @@ function cloneAndBuild(build, cb) {
     }
 
     if (err) {
-      // An error occurred in the git clone task: report the failure to GitHub
-      log.info('git clone failed - the error will be reported to Github but not saved in the build table')
-      // update some fields in the build
-      build.endedAt = new Date()
-      build.status = 'failure'
-      build.error = err
-      build.statusEmitter.emit('finish', build)
+
+      if(!build.config.docker){
+        // An error occurred in the git clone task: report the failure to GitHub
+        log.info('git clone failed - the error will be reported to Github but not saved in the build table')
+        // update some fields in the build
+        build.endedAt = new Date()
+        build.status = 'failure'
+        build.error = err
+        build.statusEmitter.emit('finish', build)
+      }
       // now exit
       return cb(err)
     }

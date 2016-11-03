@@ -29,7 +29,7 @@ php --version
 if ! [ -f $PHPENV_ROOT/bin/composer ]; then
   set -x
   curl -sSL https://getcomposer.org/installer -o composer-setup.php
-  echo e115a8dc7871f15d853148a7fbac7da27d6c0030b848d9b3dc09e2a0388afed865e6a3d6b3c0fad45c48e2b5fc1196ae composer-setup.php | sha384sum -c
+  echo $(curl https://composer.github.io/installer.sig) composer-setup.php | sha384sum -c
   php composer-setup.php --install-dir $PHPENV_ROOT/bin --filename composer
   rm composer-setup.php
   set +x

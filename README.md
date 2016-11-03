@@ -57,7 +57,7 @@ future, depending on the API they settle on)
 * Java (OpenJDK [1.8 and 1.7](#java))
 * Go ([any version](#go))
 * Ruby ([2.3.1, 2.2.5, 2.1.10, 2.0.0-p648](#ruby))
-* PHP ([7.0.10, 5.6.25](#php))
+* PHP ([7.0.12, 5.6.27](#php))
 * Native compilation with a [pre-built gcc 4.8.5](#native-gcc-compilation)
 * Rust ([1.11.0, 1.10.0](#rust), but any version should work)
 * Check the [Recipes](#language-recipes) list below for the status of other languages/tools
@@ -504,7 +504,7 @@ your build, but Go is quite small and well suited to running anywhere.
 LambCI includes a script you can source before running your build commands
 that will install Go and set your `GOROOT` and `GOPATH` with the correct
 directory structure. Call it with the Go version you want (any of the versions
-[on the Go site](https://golang.org/dl/)) – omitting it defaults to `1.7`:
+[on the Go site](https://golang.org/dl/)) – omitting it defaults to `1.7.3`:
 
 ```json
 {
@@ -543,11 +543,11 @@ your build.
 
 LambCI includes a script you can source before running your build commands
 that will install PHP, phpenv and composer. Call it with the PHP version
-you want (currently: `7.0.10` and `5.6.25`) – omitting it defaults to `7.0.10`:
+you want (currently: `7.0.12` and `5.6.27`) – omitting it defaults to `7.0.12`:
 
 ```json
 {
-  "cmd": ". ~/init/php 5.6.25 && composer install -n --prefer-dist && vendor/bin/phpunit"
+  "cmd": ". ~/init/php 5.6.27 && composer install -n --prefer-dist && vendor/bin/phpunit"
 }
 ```
 

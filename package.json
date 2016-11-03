@@ -1,6 +1,6 @@
 {
   "name": "lambci",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "description": "A continuous integration system built on AWS Lambda",
   "repository": "lambci/lambci",
   "author": "Michael Hart <michael@soothbooth.com>",

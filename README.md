@@ -4,7 +4,7 @@
 
 *Serverless continuous integration*
 
-[![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/lambci.template)
+[![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/lambci.yml)
 [![LambCI Build Status](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/lambci/lambci/branches/master/2c03c00899d9b188a928a910320eacdc.svg)](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/lambci/lambci/branches/master/8f82e6f4df48d23dead65035f625f5c0.html)
 [![Gitter](https://img.shields.io/gitter/room/lambci/lambci.svg)](https://gitter.im/lambci/lambci)
 
@@ -80,7 +80,7 @@ You can get around many of these limitations by [configuring LambCI to send task
 
 ## Installation
 
-The easiest way to install LambCI is to [spin up a CloudFormation stack](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/lambci.template) using [lambci.template](https://github.com/lambci/lambci/blob/master/lambci.template) – this is just a collection of related AWS resources, including the main LambCI Lambda function and DynamoDB tables, that you can update or remove together – it should take around 3-4 minutes to spin up.
+The easiest way to install LambCI is to [spin up a CloudFormation stack](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/lambci.yml) using [lambci.yml](https://github.com/lambci/lambci/blob/master/lambci.yml) – this is just a collection of related AWS resources, including the main LambCI Lambda function and DynamoDB tables, that you can update or remove together – it should take around 3-4 minutes to spin up.
 
 You can run multiple stacks with different names side-by-side too (eg, `lambci-private` and `lambci-public`).
 
@@ -112,7 +112,7 @@ Pick any name, and when you click "Add integration" Slack will generate an API t
 
 ### 3. Launch the LambCI CloudFormation stack
 
-You can either [use this direct link](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/lambci.template) or navigate in your AWS Console to `Services > CloudFormation`, choose "Create Stack" and upload `lambci.template` from the root of this repository, or use the [S3 link](https://lambci.s3.amazonaws.com/templates/lambci.template):
+You can either [use this direct link](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/lambci.yml) or navigate in your AWS Console to `Services > CloudFormation`, choose "Create Stack" and upload `lambci.yml` from the root of this repository, or use the [S3 link](https://lambci.s3.amazonaws.com/templates/lambci.yml):
 
 ![CloudFormation Step 1](https://lambci.s3.amazonaws.com/assets/cfn1.png)
 
@@ -345,7 +345,7 @@ notifications: {
 }
 ```
 
-The Lambda function needs to have permissions to publish to this topic, which you can either add manually, or by modifying the CloudFormation `lambci.template` and updating your stack.
+The Lambda function needs to have permissions to publish to this topic, which you can either add manually, or by modifying the CloudFormation `lambci.yml` and updating your stack.
 
 Add a top-level SNS topic resource:
 

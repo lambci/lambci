@@ -23,7 +23,7 @@ aws s3api copy-object --copy-source lambci/fn/lambci-build-${VERSION}.zip --buck
 
 aws s3api put-object --bucket lambci --key fn/latest.txt --body /tmp/lambci.txt --acl public-read &
 
-aws s3api put-object --bucket lambci --key templates/lambci.template --body lambci.template --acl public-read &
+aws s3api put-object --bucket lambci --key templates/lambci.yml --body lambci.yml --acl public-read &
 
 for region in $REGIONS; do
   aws s3api copy-object --region $region --copy-source lambci/fn/lambci-build-${VERSION}.zip --bucket lambci-${region} --key fn/lambci-build-${VERSION}.zip --acl public-read && \

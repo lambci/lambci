@@ -56,8 +56,8 @@ future, depending on the API they settle on)
 * Python 2.7
 * Java (OpenJDK [1.8 and 1.7](#java))
 * Go ([any version](#go))
-* PHP ([7.0.12, 5.6.27](#php))
 * Ruby ([2.4.0, 2.3.3, 2.2.6, 2.1.10, 2.0.0-p648](#ruby))
+* PHP ([7.1.1, 7.0.15, 5.6.27](#php))
 * Native compilation with a [pre-built gcc 4.8.5](#native-gcc-compilation)
 * Rust ([1.11.0, 1.10.0](#rust), but any version should work)
 * Check the [Recipes](#language-recipes) list below for the status of other languages/tools
@@ -543,7 +543,7 @@ your build.
 
 LambCI includes a script you can source before running your build commands
 that will install PHP, phpenv and composer. Call it with the PHP version
-you want (currently: `7.0.12` and `5.6.27`) – omitting it defaults to `7.0.12`:
+you want (currently: `7.1.1`, `7.0.15` and `5.6.27`) – omitting it defaults to `7.1.1`:
 
 ```json
 {

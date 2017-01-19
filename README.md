@@ -56,8 +56,8 @@ future, depending on the API they settle on)
 * Python 2.7
 * Java (OpenJDK [1.8 and 1.7](#java))
 * Go ([any version](#go))
-* Ruby ([2.3.1, 2.2.5, 2.1.10, 2.0.0-p648](#ruby))
 * PHP ([7.0.12, 5.6.27](#php))
+* Ruby ([2.4.0, 2.3.3, 2.2.6, 2.1.10, 2.0.0-p648](#ruby))
 * Native compilation with a [pre-built gcc 4.8.5](#native-gcc-compilation)
 * Rust ([1.11.0, 1.10.0](#rust), but any version should work)
 * Check the [Recipes](#language-recipes) list below for the status of other languages/tools
@@ -523,12 +523,12 @@ your build.
 
 LambCI includes a script you can source before running your build commands
 that will install Ruby, rbenv, gem and bundler. Call it with the Ruby version
-you want (currently: `2.3.1`, `2.2.5`, `2.1.10` and `2.0.0-p648`) –
-omitting it defaults to `2.3.1`:
+you want (currently: `2.4.0`, `2.3.3`, `2.2.6`, `2.1.10` and `2.0.0-p648`) –
+omitting it defaults to `2.4.0`:
 
 ```json
 {
-  "cmd": ". ~/init/ruby 2.2.5 && bundle install && bundle exec rake"
+  "cmd": ". ~/init/ruby 2.2.6 && bundle install && bundle exec rake"
 }
 ```
 

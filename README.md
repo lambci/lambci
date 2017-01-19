@@ -504,7 +504,7 @@ your build, but Go is quite small and well suited to running anywhere.
 LambCI includes a script you can source before running your build commands
 that will install Go and set your `GOROOT` and `GOPATH` with the correct
 directory structure. Call it with the Go version you want (any of the versions
-[on the Go site](https://golang.org/dl/)) – omitting it defaults to `1.7.3`:
+[on the Go site](https://golang.org/dl/)) – omitting it defaults to `1.7.4`:
 
 ```json
 {

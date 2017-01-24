@@ -1,5 +1,5 @@
 """
-A module that implments tooling to enable easy warnings about deprecations.
+A module that implements tooling to enable easy warnings about deprecations.
 """
 from __future__ import absolute_import
 
@@ -15,15 +15,15 @@ class Pending(object):
     pass
 
 
-class RemovedInPip9Warning(PipDeprecationWarning):
+class RemovedInPip10Warning(PipDeprecationWarning):
     pass
 
 
-class RemovedInPip10Warning(PipDeprecationWarning, Pending):
+class RemovedInPip11Warning(PipDeprecationWarning, Pending):
     pass
 
 
-class Python26DeprecationWarning(PipDeprecationWarning, Pending):
+class Python26DeprecationWarning(PipDeprecationWarning):
     pass
 
 

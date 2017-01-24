@@ -114,7 +114,10 @@ quiet = partial(
     dest='quiet',
     action='count',
     default=0,
-    help='Give less output.')
+    help=('Give less output. Option is additive, and can be used up to 3'
+          ' times (corresponding to WARNING, ERROR, and CRITICAL logging'
+          ' levels).')
+)
 
 log = partial(
     Option,
@@ -184,12 +187,12 @@ def exists_action():
         '--exists-action',
         dest='exists_action',
         type='choice',
-        choices=['s', 'i', 'w', 'b'],
+        choices=['s', 'i', 'w', 'b', 'a'],
         default=[],
         action='append',
         metavar='action',
         help="Default action when a path already exists: "
-        "(s)witch, (i)gnore, (w)ipe, (b)ackup.")
+        "(s)witch, (i)gnore, (w)ipe, (b)ackup, (a)bort.")
 
 
 cert = partial(
@@ -216,7 +219,10 @@ index_url = partial(
     dest='index_url',
     metavar='URL',
     default=PyPI.simple_url,
-    help='Base URL of Python Package Index (default %default).')
+    help="Base URL of Python Package Index (default %default). "
+         "This should point to a repository compliant with PEP 503 "
+         "(the simple repository API) or a local directory laid out "
+         "in the same format.")
 
 
 def extra_index_url():
@@ -226,7 +232,9 @@ def extra_index_url():
         metavar='URL',
         action='append',
         default=[],
-        help='Extra URLs of package indexes to use in addition to --index-url.'
+        help="Extra URLs of package indexes to use in addition to "
+             "--index-url. Should follow the same rules as "
+             "--index-url."
     )
 
 
@@ -468,6 +476,13 @@ build_dir = partial(
     metavar='dir',
     help='Directory to unpack packages into and build in.'
 )
+
+ignore_requires_python = partial(
+    Option,
+    '--ignore-requires-python',
+    dest='ignore_requires_python',
+    action='store_true',
+    help='Ignore the Requires-Python information.')
 
 install_options = partial(
     Option,

@@ -10,7 +10,6 @@ import sys
 
 from setuptools.command import install_scripts
 
-
 if 'egg' not in bdist.format_commands:
     bdist.format_command['egg'] = ('bdist_egg', "Python .egg file")
     bdist.format_commands.append('egg')

@@ -1,7 +1,14 @@
 from __future__ import absolute_import
 
+import json
 import logging
 import warnings
+try:
+    from itertools import zip_longest
+except ImportError:
+    from itertools import izip_longest as zip_longest
+
+from pip._vendor import six
 
 from pip.basecommand import Command
 from pip.exceptions import CommandError
@@ -10,7 +17,6 @@ from pip.utils import (
     get_installed_distributions, dist_is_editable)
 from pip.utils.deprecation import RemovedInPip10Warning
 from pip.cmdoptions import make_option_group, index_group
-
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +74,23 @@ class ListCommand(Command):
                   "pip only finds stable versions."),
         )
 
+        cmd_opts.add_option(
+            '--format',
+            action='store',
+            dest='list_format',
+            choices=('legacy', 'columns', 'freeze', 'json'),
+            help="Select the output format among: legacy (default), columns, "
+                 "freeze or json.",
+        )
+
+        cmd_opts.add_option(
+            '--not-required',
+            action='store_true',
+            dest='not_required',
+            help="List packages that are not dependencies of "
+                 "installed packages.",
+        )
+
         index_opts = make_option_group(index_group, self.parser)
 
         self.parser.insert_option_group(0, index_opts)
@@ -110,38 +133,62 @@ class ListCommand(Command):
                 "no longer has any effect.",
                 RemovedInPip10Warning,
             )
+
+        if options.list_format is None:
+            warnings.warn(
+                "The default format will switch to columns in the future. "
+                "You can use --format=(legacy|columns) (or define a "
+                "format=(legacy|columns) in your pip.conf under the [list] "
+                "section) to disable this warning.",
+                RemovedInPip10Warning,
+            )
+
         if options.outdated and options.uptodate:
             raise CommandError(
                 "Options --outdated and --uptodate cannot be combined.")
 
+        packages = get_installed_distributions(
+            local_only=options.local,
+            user_only=options.user,
+            editables_only=options.editable,
+        )
+
         if options.outdated:
-            self.run_outdated(options)
+            packages = self.get_outdated(packages, options)
         elif options.uptodate:
-            self.run_uptodate(options)
-        else:
-            self.run_listing(options)
+            packages = self.get_uptodate(packages, options)
 
-    def run_outdated(self, options):
-        for dist, latest_version, typ in sorted(
-                self.find_packages_latest_versions(options),
-                key=lambda p: p[0].project_name.lower()):
-            if latest_version > dist.parsed_version:
-                logger.info(
-                    '%s - Latest: %s [%s]',
-                    self.output_package(dist), latest_version, typ,
-                )
+        if options.not_required:
+            packages = self.get_not_required(packages, options)
 
-    def find_packages_latest_versions(self, options):
+        self.output_package_listing(packages, options)
+
+    def get_outdated(self, packages, options):
+        return [
+            dist for dist in self.iter_packages_latest_infos(packages, options)
+            if dist.latest_version > dist.parsed_version
+        ]
+
+    def get_uptodate(self, packages, options):
+        return [
+            dist for dist in self.iter_packages_latest_infos(packages, options)
+            if dist.latest_version == dist.parsed_version
+        ]
+
+    def get_not_required(self, packages, options):
+        dep_keys = set()
+        for dist in packages:
+            dep_keys.update(requirement.key for requirement in dist.requires())
+        return set(pkg for pkg in packages if pkg.key not in dep_keys)
+
+    def iter_packages_latest_infos(self, packages, options):
         index_urls = [options.index_url] + options.extra_index_urls
         if options.no_index:
-            logger.info('Ignoring indexes: %s', ','.join(index_urls))
+            logger.debug('Ignoring indexes: %s', ','.join(index_urls))
             index_urls = []
 
         dependency_links = []
-        for dist in get_installed_distributions(
-                local_only=options.local,
-                user_only=options.user,
-                editables_only=options.editable):
+        for dist in packages:
             if dist.has_metadata('dependency_links.txt'):
                 dependency_links.extend(
                     dist.get_metadata_lines('dependency_links.txt'),
@@ -151,12 +198,7 @@ class ListCommand(Command):
             finder = self._build_package_finder(options, index_urls, session)
             finder.add_dependency_links(dependency_links)
 
-            installed_packages = get_installed_distributions(
-                local_only=options.local,
-                user_only=options.user,
-                editables_only=options.editable,
-            )
-            for dist in installed_packages:
+            for dist in packages:
                 typ = 'unknown'
                 all_candidates = finder.find_all_candidates(dist.key)
                 if not options.pre:
@@ -173,17 +215,12 @@ class ListCommand(Command):
                     typ = 'wheel'
                 else:
                     typ = 'sdist'
-                yield dist, remote_version, typ
+                # This is dirty but makes the rest of the code much cleaner
+                dist.latest_version = remote_version
+                dist.latest_filetype = typ
+                yield dist
 
-    def run_listing(self, options):
-        installed_packages = get_installed_distributions(
-            local_only=options.local,
-            user_only=options.user,
-            editables_only=options.editable,
-        )
-        self.output_package_listing(installed_packages)
-
-    def output_package(self, dist):
+    def output_legacy(self, dist):
         if dist_is_editable(dist):
             return '%s (%s, %s)' % (
                 dist.project_name,
@@ -193,17 +230,108 @@ class ListCommand(Command):
         else:
             return '%s (%s)' % (dist.project_name, dist.version)
 
-    def output_package_listing(self, installed_packages):
-        installed_packages = sorted(
-            installed_packages,
+    def output_legacy_latest(self, dist):
+        return '%s - Latest: %s [%s]' % (
+            self.output_legacy(dist),
+            dist.latest_version,
+            dist.latest_filetype,
+        )
+
+    def output_package_listing(self, packages, options):
+        packages = sorted(
+            packages,
             key=lambda dist: dist.project_name.lower(),
         )
-        for dist in installed_packages:
-            logger.info(self.output_package(dist))
+        if options.list_format == 'columns' and packages:
+            data, header = format_for_columns(packages, options)
+            self.output_package_listing_columns(data, header)
+        elif options.list_format == 'freeze':
+            for dist in packages:
+                logger.info("%s==%s", dist.project_name, dist.version)
+        elif options.list_format == 'json':
+            logger.info(format_for_json(packages, options))
+        else:  # legacy
+            for dist in packages:
+                if options.outdated:
+                    logger.info(self.output_legacy_latest(dist))
+                else:
+                    logger.info(self.output_legacy(dist))
 
-    def run_uptodate(self, options):
-        uptodate = []
-        for dist, version, typ in self.find_packages_latest_versions(options):
-            if dist.parsed_version == version:
-                uptodate.append(dist)
-        self.output_package_listing(uptodate)
+    def output_package_listing_columns(self, data, header):
+        # insert the header first: we need to know the size of column names
+        if len(data) > 0:
+            data.insert(0, header)
+
+        pkg_strings, sizes = tabulate(data)
+
+        # Create and add a separator.
+        if len(data) > 0:
+            pkg_strings.insert(1, " ".join(map(lambda x: '-' * x, sizes)))
+
+        for val in pkg_strings:
+            logger.info(val)
+
+
+def tabulate(vals):
+    # From pfmoore on GitHub:
+    # https://github.com/pypa/pip/issues/3651#issuecomment-216932564
+    assert len(vals) > 0
+
+    sizes = [0] * max(len(x) for x in vals)
+    for row in vals:
+        sizes = [max(s, len(str(c))) for s, c in zip_longest(sizes, row)]
+
+    result = []
+    for row in vals:
+        display = " ".join([str(c).ljust(s) if c is not None else ''
+                            for s, c in zip_longest(sizes, row)])
+        result.append(display)
+
+    return result, sizes
+
+
+def format_for_columns(pkgs, options):
+    """
+    Convert the package data into something usable
+    by output_package_listing_columns.
+    """
+    running_outdated = options.outdated
+    # Adjust the header for the `pip list --outdated` case.
+    if running_outdated:
+        header = ["Package", "Version", "Latest", "Type"]
+    else:
+        header = ["Package", "Version"]
+
+    data = []
+    if any(dist_is_editable(x) for x in pkgs):
+        header.append("Location")
+
+    for proj in pkgs:
+        # if we're working on the 'outdated' list, separate out the
+        # latest_version and type
+        row = [proj.project_name, proj.version]
+
+        if running_outdated:
+            row.append(proj.latest_version)
+            row.append(proj.latest_filetype)
+
+        if dist_is_editable(proj):
+            row.append(proj.location)
+
+        data.append(row)
+
+    return data, header
+
+
+def format_for_json(packages, options):
+    data = []
+    for dist in packages:
+        info = {
+            'name': dist.project_name,
+            'version': six.text_type(dist.version),
+        }
+        if options.outdated:
+            info['latest_version'] = six.text_type(dist.latest_version)
+            info['latest_filetype'] = dist.latest_filetype
+        data.append(info)
+    return json.dumps(data)

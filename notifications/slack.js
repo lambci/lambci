@@ -19,6 +19,7 @@ function SlackClient(token, options, build) {
   this.asUser = options.asUser
   this.onlyOnFail = options.onlyOnFail
   this.lastTs = null // Most recent timestamp
+  this.hasFailed = false
 
   this.repo = build.repo
   this.branch = build.branch
@@ -42,6 +43,7 @@ function SlackClient(token, options, build) {
   build.statusEmitter.finishTasks.push((build, cb) => {
     var status = {}, elapsedTxt = utils.elapsedTxt(build.startedAt, build.endedAt)
     if (build.error) {
+      this.hasFailed = true
       var txt = build.error.message
       if (build.error.logTail) {
         txt = `${build.error.logTail}\n${txt}`
@@ -121,8 +123,13 @@ SlackClient.prototype.update = function(body, cb) {
   body.icon_url = body.icon_url || this.iconUrl
   body.as_user = body.as_user || this.asUser
 
+  if (this.onlyOnFail && !this.hasFailed) {
+    return;
+  }
+
   if (!body.ts) {
     return this.postMessage(body, cb)
+
   }
 
   this.request({path: '/api/chat.update', body: body}, cb)

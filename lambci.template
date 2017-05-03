@@ -11,6 +11,7 @@
       "Description": "GitHub OAuth token",
       "Type": "String",
       "Default": "",
+      "NoEcho" : "true",
       "AllowedPattern": "^$|^[0-9a-f]{40}$",
       "ConstraintDescription": "Must be empty or a 40 char GitHub token"
     },
@@ -23,6 +24,7 @@
       "Description": "(optional) Slack API token",
       "Type": "String",
       "Default": "",
+      "NoEcho" : "true",
       "AllowedPattern": "^$|^xox.-[0-9]+-.+",
       "ConstraintDescription": "Must be empty or a valid Slack token, eg: xoxb-1234"
     },

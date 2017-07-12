@@ -13,7 +13,7 @@
 
 Automate your testing and deployments with:
 
-- 100 concurrent builds out of the box (can request more)
+- 1000 concurrent builds out of the box (can request more)
 - No maintenance of web servers, build servers or databases
 - Zero cost when not in use (ie, [100% utilization](https://twitter.com/kannonboy/status/734799060440211456))
 - Easy to integrate with the rest of your AWS resources

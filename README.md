@@ -323,7 +323,7 @@ This configuration is hardcoded in `utils/config.js` and overridden by any confi
     },
     fromForkPrivateRepo: false, // Pull requests from forked private repos won't run at all
   },
-  s3PublicSecretNames: true, // Use obscured names for build HTML files and make them public
+  s3PublicSecretNames: true, // Use obscured names for build HTML files and make them public. Has no effect in public repositories
   inheritSecrets: true, // Expose secretEnv values in the build command environment by default
   allowConfigOverrides: true, // Allow files to override config values
   clearTmp: true, // Delete /tmp each time for safety
@@ -401,7 +401,7 @@ LambCI will do its best to update these parameters correctly, but if it fails or
 
 The default configuration passes secret environment variables to build commands, except when building forked repositories. This allows you to use your AWS credentials and Git/Slack tokens in your build commands to communicate with the rest of your stack. Set `inheritSecrets` to false to prevent this.
 
-HTML build logs are generated with random filenames, but are accessible to anyone who has the link. Set `s3PublicSecretNames` to false to make build logs completely private (you'll need to use the AWS console to access them), or you can remove `s3Bucket` entirely – you can still see the build logs in the Lambda function output in CloudWatch Logs.
+HTML build logs are generated with random filenames, but are accessible to anyone who has the link. Set `s3PublicSecretNames` to false (only works for private repositories) to make build logs completely private (you'll need to use the AWS console to access them), or you can remove `s3Bucket` entirely – you can still see the build logs in the Lambda function output in CloudWatch Logs.
 
 By default, the `/tmp` directory is removed each time – this is to prevent secrets from being leaked if your LambCI stack is building both private and public repositories. However, if you're only building private (trusted) repositories, then you can set the `clearTmp` config to false, and potentially cache files (eg, in `$HOME`) for use across builds (this is not guaranteed – it depends on whether the Lambda environment is kept "warm").
 

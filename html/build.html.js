@@ -38,6 +38,7 @@ function render(params) {
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="robots" content="noindex">
   <title>Build #${build.buildNum} – ${build.repo} – LambCI</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet">

@@ -300,6 +300,9 @@ This configuration is hardcoded in `utils/config.js` and overridden by any confi
     GITHUB_TOKEN: '',
     SLACK_TOKEN: '',
   },
+  logFilter: {
+    whiteList: []
+  },
   s3Bucket: '', // bucket to store build artifacts
   notifications: {
     slack: {

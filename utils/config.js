@@ -98,7 +98,7 @@ exports.initConfig = function(configs, build) {
 
 // Add build-specific env vars and resolve file configs
 exports.prepareBuildConfig = function(build) {
-  build.isTagBuild = build.event.ref.startsWith('refs/tags/')
+  build.isTagBuild = build.event.ref && build.event.ref.startsWith('refs/tags/')
   var buildConfig = {
     env: {
       CI: true,

@@ -322,6 +322,7 @@ This configuration is hardcoded in `utils/config.js` and overridden by any confi
       allowConfigOverrides: ['cmd', 'env'], // Only allow file config to override cmd and env properties
     },
     fromForkPrivateRepo: false, // Pull requests from forked private repos won't run at all
+    ignoreClosed: true, // Should closed pull requests be ignored?
   },
   s3PublicSecretNames: true, // Use obscured names for build HTML files and make them public. Has no effect in public repositories
   inheritSecrets: true, // Expose secretEnv values in the build command environment by default

@@ -346,6 +346,8 @@ function BuildInfo(buildData, context) {
     this.trigger = this.prNum ? `pr/${this.prNum}` : `push/${this.branch}`
   }
 
+  this.prState = buildData.prState
+
   this.event = buildData.event
   this.isPrivate = buildData.isPrivate
   this.isRebuild = buildData.isRebuild

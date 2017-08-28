@@ -303,6 +303,7 @@ function prepareDockerConfig(buildConfig) {
   var slackConfig = buildConfig.notifications.slack || {}
   var defaultDockerConfig = {
     env: {
+      STACK: config.STACK,
       LAMBCI_DOCKER_CMD: dockerConfig.cmd,
       LAMBCI_DOCKER_FILE: dockerConfig.file,
       LAMBCI_DOCKER_TAG: dockerConfig.tag,

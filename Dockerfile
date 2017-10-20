@@ -24,7 +24,7 @@ USER sbx_user1051
 
 RUN mkdir -p $HOME && \
   cp -r /var/task/home/. $HOME && \
-  tar -C $HOME -xf /var/task/vendor/git-2.4.3.tar
+  tar -C $HOME -xf /var/task/vendor/git-2.14.2.tar
 
 ENTRYPOINT []
 CMD bash

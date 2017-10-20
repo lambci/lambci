@@ -85,7 +85,7 @@ exports.initSync = function(config) {
     if ! [ -d ${exports.HOME_DIR} ]; then
       mkdir -p ${exports.HOME_DIR}
       cp -r ${__dirname}/../home/. ${exports.HOME_DIR}
-      tar -C ${exports.HOME_DIR} -xf ${__dirname}/../vendor/git-2.4.3.tar
+      tar -C ${exports.HOME_DIR} -xf ${__dirname}/../vendor/git-2.14.2.tar
     fi
   `)
 }

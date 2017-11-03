@@ -271,23 +271,33 @@
   "Outputs": {
     "S3Bucket": {
       "Description": "Name of the build results S3 bucket, see github.com/lambci/lambci",
-      "Value": {"Ref": "BuildResults"}
+      "Value": {"Ref": "BuildResults"},
+      "Export": {"Name": {"Fn::Sub": "${AWS::StackName}-S3Bucket"}}
     },
     "SnsTopic": {
       "Description": "Enter this for 'Sns topic' at github.com/<repo>/settings/hooks/new?service=amazonsns",
-      "Value": {"Ref": "InvokeTopic"}
+      "Value": {"Ref": "InvokeTopic"},
+      "Export": {"Name": {"Fn::Sub": "${AWS::StackName}-SnsTopic"}}
     },
     "SnsRegion": {
       "Description": "Enter this for 'Sns region' at github.com/<repo>/settings/hooks/new?service=amazonsns",
-      "Value": {"Ref": "AWS::Region"}
+      "Value": {"Ref": "AWS::Region"},
+      "Export": {"Name": {"Fn::Sub": "${AWS::StackName}-SnsRegion"}}
     },
     "SnsAccessKey": {
       "Description": "Enter this for 'Aws key' at github.com/<repo>/settings/hooks/new?service=amazonsns",
-      "Value": {"Ref": "SnsAccessKey"}
+      "Value": {"Ref": "SnsAccessKey"},
+      "Export": {"Name": {"Fn::Sub": "${AWS::StackName}-SnsAccessKey"}}
     },
     "SnsSecret": {
       "Description": "Enter this for 'Aws secret' at github.com/<repo>/settings/hooks/new?service=amazonsns",
-      "Value": {"Fn::GetAtt": ["SnsAccessKey", "SecretAccessKey"]}
+      "Value": {"Fn::GetAtt": ["SnsAccessKey", "SecretAccessKey"]},
+      "Export": {"Name": {"Fn::Sub": "${AWS::StackName}-SnsSecret"}}
+    },
+    "LambdaExecution": {
+      "Description": "Name of the Lambda Execution Role. Attach additional managed policies to give Lambda more permissions.",
+      "Value": {"Ref": "LambdaExecution"},
+      "Export": {"Name": {"Fn::Sub": "${AWS::StackName}-LambdaExecution"}}
     }
   }
 }

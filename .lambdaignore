@@ -8,6 +8,7 @@
 .git/*
 test/*
 build/*
+Dockerfile
 npm-debug.log
 template.yaml
 node_modules/*.map

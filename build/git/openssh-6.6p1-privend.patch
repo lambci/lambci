@@ -1,0 +1,13 @@
+diff -ru openssh-6.6p1/sshconnect.h openssh-6.6p2/sshconnect.h
+--- openssh-6.6p1/sshconnect.h	2017-11-03 21:22:19.136394554 +0000
++++ openssh-6.6p2/sshconnect.h	2017-11-03 21:45:14.652319846 +0000
+@@ -69,7 +69,7 @@
+ #define PRIV_END do {					\
+ 	int save_errno = errno;				\
+ 	if (seteuid(original_real_uid) != 0)		\
+-		fatal("PRIV_END: seteuid: %s",		\
+-		    strerror(errno));			\
++		/*fatal("PRIV_END: seteuid: %s",		\
++		    strerror(errno))*/;			\
+ 	errno = save_errno;				\
+ } while (0)

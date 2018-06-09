@@ -18,6 +18,7 @@ if (require.main == module) {
 
 function runBuild() {
   dockerLambda({
+    dockerImage: 'lambci/lambda:nodejs8.10',
     event: lambdaEvent,
     addEnvVars: true,
     dockerArgs: ['-e', `AWS_LAMBDA_FUNCTION_NAME=${process.env.STACK || 'lambci'}-build`],

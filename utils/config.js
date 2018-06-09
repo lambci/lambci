@@ -80,7 +80,6 @@ exports.initSync = function(config) {
   // The git executables blow up in size when zipped for some reason,
   // so we leave them tarred and untar in /tmp/...
   // TODO: figure out if there's a way around this
-  // TODO: is there anything else we want to add in home?
   execSync(`
     if ! [ -d ${exports.HOME_DIR} ]; then
       mkdir -p ${exports.HOME_DIR}

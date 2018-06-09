@@ -7,7 +7,6 @@ var ansiUp = require('ansi_up')
 var buildTemplate = require('../html/build.html.js')
 
 // We buffer all logs in-memory, including cmd output
-// TODO: make this buffer to file to ensure we don't run out of mem
 var LOG_BUFFER = []
 
 var SVGS = {
@@ -57,7 +56,7 @@ exports.getTail = function() {
 }
 
 // From https://github.com/chalk/ansi-regex
-var ANSI_REGEX = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g
+var ANSI_REGEX = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g // eslint-disable-line no-control-regex
 
 exports.stripAnsi = function(txt) {
   return txt.replace(ANSI_REGEX, '')
@@ -127,15 +126,14 @@ exports.initBuildLog = function(build) {
 }
 
 exports.lambdaLogUrl = function(build) {
-  return `https://console.aws.amazon.com/cloudwatch/home?region=${process.env.AWS_REGION}#logEvent:` +
+  return `https://console.aws.amazon.com/cloudwatch/home?region=${process.env.AWS_REGION}#logEventViewer:` +
     `group=${encodeURIComponent(build.logGroupName)};` +
     `stream=${encodeURIComponent(build.logStreamName)};` +
     `start=${encodeURIComponent(build.startedAt.toISOString().slice(0, 19))}Z`
 }
 
 exports.buildDirUrl = function(build, bucket) {
-  return `https://console.aws.amazon.com/s3/home?region=${process.env.AWS_REGION}#` +
-    `&bucket=${bucket}&prefix=${build.project}/builds`
+  return `https://console.aws.amazon.com/s3/buckets/${bucket}/${build.project}/builds/?region=${process.env.AWS_REGION}`
 }
 
 function uploadS3Log(build, bucket, key, branchKey, branchStatusKey, makePublic, cb) {

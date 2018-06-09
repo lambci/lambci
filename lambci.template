@@ -50,7 +50,7 @@
           "S3Bucket": {"Fn::Join": ["", ["lambci-", {"Ref": "AWS::Region"}]]},
           "S3Key": {"Fn::Join": ["", ["fn/lambci-build-", {"Ref": "Version"}, ".zip"]]}
         },
-        "Runtime": "nodejs4.3"
+        "Runtime": "nodejs8.10"
       }
     },
     "BuildResults": {

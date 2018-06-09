@@ -46,10 +46,6 @@ It can be easily launched and kept up-to-date as a [CloudFormation
 Stack](https://aws.amazon.com/cloudformation/), or you can manually create the
 different resources yourself.
 
-(Support for running under [Google Cloud
-Functions](https://cloud.google.com/functions/) may be added in the near
-future, depending on the API they settle on)
-
 ## Supported languages
 
 * Node.js (multiple versions via [nave](https://github.com/isaacs/nave))
@@ -73,7 +69,7 @@ future, depending on the API they settle on)
 * No root access
 * 5 min max build time
 * Bring-your-own-binaries – Lambda has a limited selection of installed software
-* 1.5GB max memory
+* 3.0GB max memory
 * Linux only
 
 You can get around many of these limitations by [configuring LambCI to send tasks to an ECS cluster](#extending-with-ecs) where you can run your builds in Docker.
@@ -411,7 +407,7 @@ If you discover any security issues with LambCI please email [security@lambci.or
 
 LambCI doesn't currently have any language-specific settings. The default
 command is `npm install && npm test` which will use the default Lambda version
-of Node.js (4.3.x) and npm (2.x).
+of Node.js (8.10.x) and npm (5.6.0).
 
 The way to build with different Node.js versions, or other languages entirely,
 is just to override the `cmd` config property (specifying a `test` property in
@@ -425,11 +421,11 @@ every language except Node.js and Python 2.7
 
 LambCI comes with [nave](https://github.com/isaacs/nave) installed and
 available on the `PATH`, so if you wanted to run your npm install and tests
-using the latest Node.js v6.x and npm v3.x, you could do specify:
+using the latest Node.js v10.x and npm, you could do specify:
 
 ```json
 {
-  "cmd": "nave use 6 bash -c 'npm install && npm test'"
+  "cmd": "nave use 10 bash -c 'npm install && npm test'"
 }
 ```
 
@@ -437,7 +433,7 @@ If you're happy using the built-in npm to install, you could simplify this a lit
 
 ```json
 {
-  "cmd": "npm install && nave use 6 npm test"
+  "cmd": "npm install && nave use 10 npm test"
 }
 ```
 
@@ -446,7 +442,7 @@ have processes run in parallel using a tool like
 [npm-run-all](https://github.com/mysticatea/npm-run-all) – the logs will be a
 little messy though!
 
-Here's an example package.json for running your tests in Node.js v4, v5 and v6 simultaneously:
+Here's an example package.json for running your tests in Node.js v6, v8 and v10 simultaneously:
 
 ```json
 {
@@ -455,9 +451,9 @@ Here's an example package.json for running your tests in Node.js v4, v5 and v6 s
   },
   "scripts": {
     "ci": "run-p ci:*",
-    "ci:node4": "nave use 4 npm test",
-    "ci:node5": "nave use 5 npm test",
-    "ci:node6": "nave use 6 npm test"
+    "ci:node4": "nave use 6 npm test",
+    "ci:node5": "nave use 8 npm test",
+    "ci:node6": "nave use 10 npm test"
   },
   "devDependencies": {
     "npm-run-all": "*"
@@ -646,5 +642,3 @@ git push
 ## License
 
 MIT
-
-

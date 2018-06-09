@@ -12,7 +12,7 @@ if ! [ -f /tmp/bin/gcc ]; then
 fi
 
 export PATH=/tmp/bin:/tmp/sbin:$PATH
-export LD_LIBRARY_PATH=/usr/local/lib64/node-v4.3.x/lib:/tmp/lib:/tmp/lib64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/tmp/lib:/tmp/lib64:$LD_LIBRARY_PATH
 export CPATH=/tmp/include
 export LIBRARY_PATH=/tmp/lib
 

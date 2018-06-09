@@ -83,7 +83,7 @@ exports.elapsedTxt = function(start, end) {
 }
 
 //              NUM            . NUM            . NUM            -beta.3.4 (optional)           +build.meta.data (ignore)
-var SEMVER = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[\da-z\-]+(?:\.[\da-z\-]+)*)?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?$/i
+var SEMVER = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[\da-z-]+(?:\.[\da-z-]+)*)?(?:\+[\da-z-]+(?:\.[\da-z-]+)*)?$/i
 var SIMPLE_NUMBER = /^(0|[1-9][0-9]*)$/
 
 exports.semverCmp = function(ver1, ver2) {
@@ -111,7 +111,7 @@ exports.semverCmp = function(ver1, ver2) {
 }
 
 exports.lineStream = function(writeLine) {
-  var lastLine = new Buffer(''), delim = new Buffer('\n')
+  var lastLine = Buffer.from(''), delim = Buffer.from('\n')
   return new stream.Transform({
     transform(chunk, encoding, cb) {
       chunk = Buffer.concat([lastLine, chunk])

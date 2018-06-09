@@ -14,22 +14,21 @@
     "integration": "node test/integration.js",
     "v": "node -p 'require(\"./package.json\").version'",
     "publish": "npm run pkg:zip && ./publish.sh",
-    "pkg:zip": "rm -rf lambda.zip node_modules && nave use 4 npm install && zip -qyr lambda.zip . -x@.lambdaignore",
+    "pkg:zip": "rm -rf lambda.zip && npm ci --prod && zip -qyr lambda.zip . -x@.lambdaignore",
     "lambda:update": "npm run pkg:zip && aws lambda update-function-code --function-name ${STACK:-lambci}-build --zip-file fileb://lambda.zip",
     "stack:update": "aws cloudformation update-stack --stack-name ${STACK:-lambci} --template-body file://lambci.template --capabilities CAPABILITY_IAM --parameters ParameterKey=Version,ParameterValue=$(npm run -s v) ParameterKey=GithubToken,UsePreviousValue=True ParameterKey=Repositories,UsePreviousValue=True ParameterKey=SlackToken,UsePreviousValue=True ParameterKey=SlackChannel,UsePreviousValue=True",
     "stack:status": "aws cloudformation describe-stacks --stack-name ${STACK:-lambci} --query 'Stacks[0].StackStatus'",
-    "docker": "docker build -t lambci/lambci ."
+    "docker": "npm ci --prod && docker build -t lambci/lambci ."
   },
   "dependencies": {
-    "ansi_up": "1.3.0",
-    "async": "1.5.2",
-    "aws-sdk": "2.7.27",
-    "nave": "1.0.1",
-    "npm": "lambci/npm#v2.15.11-lambci"
+    "ansi_up": "^3.0.0",
+    "nave": "^2.2.3",
+    "neo-async": "^2.6.0"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
-    "docker-lambda": "^0.10.1",
-    "mocha": "^3.1.2"
+    "aws-sdk": "^2.382.0",
+    "chai": "^4.2.0",
+    "docker-lambda": "^0.15.3",
+    "mocha": "^5.2.0"
   }
 }

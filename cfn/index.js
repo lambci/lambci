@@ -1,4 +1,4 @@
-var async = require('async')
+var async = require('neo-async')
 var AWS = require('aws-sdk')
 var utils = require('../utils')
 var log = require('../utils/log')

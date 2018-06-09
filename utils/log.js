@@ -1,9 +1,9 @@
 var util = require('util')
 var fs = require('fs')
 var crypto = require('crypto')
-var async = require('async')
+var async = require('neo-async')
 var AWS = require('aws-sdk')
-var ansiUp = require('ansi_up')
+var AU = require('ansi_up')
 var buildTemplate = require('../html/build.html.js')
 
 // We buffer all logs in-memory, including cmd output
@@ -16,6 +16,7 @@ var SVGS = {
 }
 
 var s3 = new AWS.S3()
+var ansiUp = new AU.default()
 
 exports.logIfErr = function(err) {
   if (err) exports.error(err.stack || err)
@@ -139,7 +140,7 @@ exports.buildDirUrl = function(build, bucket) {
 function uploadS3Log(build, bucket, key, branchKey, branchStatusKey, makePublic, cb) {
   var params = {
     build: build,
-    log: ansiUp.linkify(ansiUp.ansi_to_html(ansiUp.escape_for_html(LOG_BUFFER.join('\n')))),
+    log: ansiUp.old_linkify(ansiUp.ansi_to_html(LOG_BUFFER.join('\n'))),
   }
 
   s3.upload({

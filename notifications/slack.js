@@ -1,4 +1,4 @@
-var async = require('async')
+var async = require('neo-async')
 var utils = require('../utils')
 var config = require('../utils/config')
 var log = require('../utils/log')

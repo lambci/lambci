@@ -5,7 +5,7 @@
     "Version": {
       "Description": "LambCI version",
       "Type": "String",
-      "Default": "0.9.13"
+      "Default": "0.9.14"
     },
     "GithubToken": {
       "Description": "GitHub OAuth token",
@@ -196,8 +196,14 @@
           "PolicyDocument": {
             "Statement": {
               "Effect": "Allow",
-              "Action": "sns:SetTopicAttributes",
-              "Resource": {"Fn::Join": ["", ["arn:aws:sns:*:*:", {"Ref": "AWS::StackName"}, "-*"]]}
+              "Action": [
+                "sns:SetTopicAttributes",
+                "iam:PassRole"
+              ],
+              "Resource": [
+                {"Fn::Join": ["", ["arn:aws:sns:*:*:", {"Ref": "AWS::StackName"}, "-*"]]},
+                {"Fn::Join": ["", ["arn:aws:iam::*:role/", {"Ref": "AWS::StackName"}, "-SnsFailures-*"]]}
+              ]
             }
           }
         }]

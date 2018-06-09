@@ -250,7 +250,6 @@ function dockerBuild(build, cb) {
 function prepareLambdaConfig(buildConfig) {
 
   var vendorDir = path.join(__dirname, '../vendor')
-  var pythonDir = path.join(vendorDir, 'python')
   var usrDir = path.join(config.HOME_DIR, 'usr')
   var defaultLambdaConfig = {
     env: {
@@ -259,7 +258,7 @@ function prepareLambdaConfig(buildConfig) {
       PATH: [
         path.join(config.HOME_DIR, '.local/bin'),
         path.join(usrDir, 'bin'),
-        path.join(pythonDir, 'bin'),
+        path.join(vendorDir, 'bin'),
         path.join(__dirname, '../node_modules/.bin'),
         process.env.PATH,
       ].join(':'),
@@ -268,7 +267,7 @@ function prepareLambdaConfig(buildConfig) {
         process.env.LD_LIBRARY_PATH,
       ].join(':'),
       NODE_PATH: process.env.NODE_PATH,
-      PYTHONPATH: path.join(pythonDir, 'lib/python2.7/site-packages'),
+      PYTHONPATH: path.join(vendorDir, 'lib/python2.7/site-packages'),
       GIT_TEMPLATE_DIR: path.join(usrDir, 'share/git-core/templates'),
       GIT_EXEC_PATH: path.join(usrDir, 'libexec/git-core'),
 

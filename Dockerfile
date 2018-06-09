@@ -3,9 +3,9 @@ FROM lambci/lambda:nodejs8.10
 WORKDIR /tmp/lambci/build
 
 ENV HOME=/tmp/lambci/home
-ENV PATH=$HOME/.local/bin:$HOME/usr/bin:/var/task/vendor/python/bin:/var/task/node_modules/.bin:$PATH \
+ENV PATH=$HOME/.local/bin:$HOME/usr/bin:/var/task/vendor/bin:/var/task/node_modules/.bin:$PATH \
   LD_LIBRARY_PATH=$HOME/usr/lib64:$LD_LIBRARY_PATH \
-  PYTHONPATH=/var/task/vendor/python/lib/python2.7/site-packages \
+  PYTHONPATH=/var/task/vendor/lib/python2.7/site-packages \
   GIT_TEMPLATE_DIR=$HOME/usr/share/git-core/templates \
   GIT_EXEC_PATH=$HOME/usr/libexec/git-core \
   SHELL=/bin/bash \

@@ -13,12 +13,12 @@
     "test": "mocha",
     "integration": "node test/integration.js",
     "v": "node -p 'require(\"./package.json\").version'",
-    "publish": "npm run pkg:zip && ./publish.sh",
-    "pkg:zip": "rm -rf lambda.zip && npm ci --prod && zip -qyr lambda.zip . -x@.lambdaignore",
-    "lambda:update": "npm run pkg:zip && aws lambda update-function-code --function-name ${STACK:-lambci}-build --zip-file fileb://lambda.zip",
-    "stack:update": "aws cloudformation update-stack --stack-name ${STACK:-lambci} --template-body file://lambci.template --capabilities CAPABILITY_IAM --parameters ParameterKey=Version,ParameterValue=$(npm run -s v) ParameterKey=GithubToken,UsePreviousValue=True ParameterKey=Repositories,UsePreviousValue=True ParameterKey=SlackToken,UsePreviousValue=True ParameterKey=SlackChannel,UsePreviousValue=True",
-    "stack:status": "aws cloudformation describe-stacks --stack-name ${STACK:-lambci} --query 'Stacks[0].StackStatus'",
-    "docker": "npm ci --prod && docker build -t lambci/lambci ."
+    "template": "sed -E \"s_CodeUri:.+\\$_CodeUri: {Bucket: {'Fn::Sub': 'lambci-\\${AWS::Region}'}, Key: fn/lambci-build-$(npm run -s v).zip}_\" template.yaml > build/versioned.yaml",
+    "s3": "npm run zip && ./publish.sh",
+    "zip": "rm -rf build/lambda.zip node_modules && npm ci --prod && zip -qyr build/lambda.zip . -x@.lambdaignore",
+    "package": "npm run zip && sam package --template-file template.yaml --s3-bucket ${S3_BUCKET:-lambci} --s3-prefix ${S3_PREFIX:-package} --output-template-file build/packaged.yaml",
+    "deploy": "npm run package && sam deploy --stack-name ${STACK:-lambci} --template-file build/packaged.yaml --capabilities CAPABILITY_IAM",
+    "docker": "npm run zip && cd build && rm -rf docker && unzip lambda.zip -d docker && docker build -t lambci/lambci -f ../Dockerfile docker"
   },
   "dependencies": {
     "ansi_up": "^3.0.0",

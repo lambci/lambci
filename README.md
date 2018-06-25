@@ -4,7 +4,7 @@
 
 *Serverless continuous integration*
 
-[![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/lambci.template)
+[![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/template.yaml)
 [![LambCI Build Status](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/lambci/lambci/branches/master/2c03c00899d9b188a928a910320eacdc.svg)](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/lambci/lambci/branches/master/8f82e6f4df48d23dead65035f625f5c0.html)
 [![Gitter](https://img.shields.io/gitter/room/lambci/lambci.svg)](https://gitter.im/lambci/lambci)
 
@@ -76,11 +76,13 @@ You can get around many of these limitations by [configuring LambCI to send task
 
 ## Installation
 
-The easiest way to install LambCI is to [spin up a CloudFormation stack](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/lambci.template) using [lambci.template](https://github.com/lambci/lambci/blob/master/lambci.template) – this is just a collection of related AWS resources, including the main LambCI Lambda function and DynamoDB tables, that you can update or remove together – it should take around 3-4 minutes to spin up.
+You don't need to clone this repository – the easiest way to install LambCI is to [spin up a CloudFormation stack](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/template.yaml), which will use a transformed [template.yaml](https://github.com/lambci/lambci/blob/master/template.yaml) – this is just a collection of related AWS resources, including the main LambCI Lambda function and DynamoDB tables, that you can update or remove together – it should take around 3 minutes to spin up.
 
 You can run multiple stacks with different names side-by-side too (eg, `lambci-private` and `lambci-public`).
 
-As part of the stack setup, you can supply your GitHub and Slack API tokens, as well as a list of repositories you want to trigger LambCI, but you don't have to – you can add these later, either by [updating the CloudFormation stack](#updating), or using the AWS DynamoDB console or [lambci command line](https://github.com/lambci/cli). If you'd prefer to do that, you can skip straight to Step 3.
+As part of the stack setup, you can supply your GitHub and Slack API tokens, but you don't have to – you can add these later, either by [updating the CloudFormation stack](#updating), or using the AWS DynamoDB console or [lambci command line](https://github.com/lambci/cli). If you'd prefer to do that, you can skip straight to Step 3.
+
+If you'd prefer to run your stack after cloning this repository, you can use `npm run deploy` – this depends on [AWS SAM CLI](https://github.com/awslabs/aws-sam-cli) being installed.
 
 ### 1. Create a GitHub token
 
@@ -108,11 +110,11 @@ Pick any name, and when you click "Add integration" Slack will generate an API t
 
 ### 3. Launch the LambCI CloudFormation stack
 
-You can either [use this direct link](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/lambci.template) or navigate in your AWS Console to `Services > CloudFormation`, choose "Create Stack" and upload `lambci.template` from the root of this repository, or use the [S3 link](https://lambci.s3.amazonaws.com/templates/lambci.template):
+You can either [use this direct link](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/template.yaml) or navigate in your AWS Console to `Services > CloudFormation`, choose "Create Stack" and use the [S3 link](https://lambci.s3.amazonaws.com/templates/template.yaml):
 
 ![CloudFormation Step 1](https://lambci.s3.amazonaws.com/assets/cfn1.png)
 
-Then click Next where you can enter a stack name (`lambci` is a good default), API tokens, Slack channel and a comma-separated list of any repositories you want to add hooks to:
+Then click Next where you can enter a stack name (`lambci` is a good default), API tokens and a Slack channel:
 
 ![CloudFormation Step 2](https://lambci.s3.amazonaws.com/assets/cfn2.png)
 
@@ -341,32 +343,26 @@ notifications: {
 }
 ```
 
-The Lambda function needs to have permissions to publish to this topic, which you can either add manually, or by modifying the CloudFormation `lambci.template` and updating your stack.
+The Lambda function needs to have permissions to publish to this topic, which you can either add manually, or by modifying the CloudFormation `template.yaml` and updating your stack.
 
-Add a top-level SNS topic resource:
+Add a top-level SNS topic resource (a commented-out example of this exists in `template.yaml`):
 
+```yaml
+  StatusTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: LambCI
 ```
-"StatusTopic" : {
-  "Type": "AWS::SNS::Topic",
-  "Properties": {
-    "DisplayName": "LambCI"
-  }
-}
-```
-And then add the following to the `LambdaExecution.Properties.Policies` array to give the Lambda function the correct permissions:
-```
-{
-  "PolicyName": "PublishSNS",
-  "PolicyDocument": {
-    "Statement": {
-      "Effect": "Allow",
-      "Action": [
-        "sns:Publish"
-      ],
-      "Resource": {"Ref": "StatusTopic"}
-    }
-  }
-}
+And ensure the Lambda function has permissions to publish to it:
+```yaml
+  BuildLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      # ...
+      Policies:
+        # ...
+        - SNSPublishMessagePolicy:
+            TopicName: !Ref StatusTopic
 ```
 
 ### Build status badges
@@ -389,9 +385,13 @@ Branch status img: https://<bucket>/<project>/branches/master/<somehash>.svg
 
 You can update your CloudFormation stack at any time to change, add or remove the parameters – or even upgrade to a new version of LambCI.
 
-In the AWS Console, go to `Services > CloudFormation`, select your LambCI stack in the list and then choose `Actions > Update Stack`. You can keep the same template selected (unless you're updating LambCI and the template has different resources), and then when you click Next you can modify parameters like your GitHub token, repositories, Slack channel, LambCI version, etc.
+In the AWS Console, go to `Services > CloudFormation`, select your LambCI stack in the list and then choose `Actions > Update Stack`. You can keep the same template selected (unless you're updating LambCI and the template has different resources), and then when you click Next you can modify parameters like your GitHub token, repositories, Slack channel, etc.
 
 LambCI will do its best to update these parameters correctly, but if it fails or you run into trouble, just try setting them all to blank, updating, and then update again with the values you want.
+
+If you've (only) modified `template.yaml` locally, then you'll need to run `npm run template` and use `build/versioned.yaml` to update your stack.
+
+If you've modified LambCI code locally, you can update with `npm run deploy` – this requires [AWS SAM CLI](https://github.com/awslabs/aws-sam-cli) to be installed.
 
 ## Security
 

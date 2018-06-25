@@ -1,0 +1,230 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: LambCI function and supporting services (see github.com/lambci/lambci for documentation)
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: GitHub Configuration
+        Parameters:
+          - GithubToken
+      - Label:
+          default: Slack Configuration (optional)
+        Parameters:
+          - SlackToken
+          - SlackChannel
+Parameters:
+  GithubToken:
+    Description: GitHub OAuth token
+    Type: String
+    Default: ''
+    NoEcho : true
+    AllowedPattern: '^$|^[0-9a-f]{40}$'
+    ConstraintDescription: Must be empty or a 40 char GitHub token
+  Repositories:
+    Description: '(optional) GitHub repos to add hook to, eg: facebook/react,emberjs/ember.js'
+    Type: CommaDelimitedList
+    Default: ''
+  SlackToken:
+    Description: (optional) Slack API token
+    Type: String
+    Default: ''
+    NoEcho : true
+    AllowedPattern: '^$|^xox.-[0-9]+-.+'
+    ConstraintDescription: 'Must be empty or a valid Slack token, eg: xoxb-1234'
+  SlackChannel:
+    Description: (optional) Slack channel
+    Type: String
+    Default: '#general'
+    AllowedPattern: '^$|^#.+'
+    ConstraintDescription: 'Must be empty or a valid Slack channel, eg: #general'
+
+
+Resources:
+
+  # Uncomment this (and permissions below) to add an SNS topic to publish build statuses to:
+  # StatusTopic:
+    # Type: AWS::SNS::Topic
+    # Properties:
+      # DisplayName: LambCI
+
+  BuildLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-build
+      Description: !Sub 'LambCI build function for stack: ${AWS::StackName}'
+      Runtime: nodejs8.10
+      CodeUri: build/lambda.zip
+      Handler: index.handler
+      Timeout: 300
+      MemorySize: 3008
+      Events:
+        SnsInvoke:
+          Type: SNS
+          Properties:
+            Topic: !Ref InvokeTopic
+      Policies:
+        - S3FullAccessPolicy:
+            BucketName: !Ref BuildResults
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConfigTable
+        - Statement:
+          - Action:
+              - dynamodb:GetItem
+              - dynamodb:BatchGetItem
+              - dynamodb:Query
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:BatchWriteItem
+            Effect: Allow
+            Resource:
+              - !Sub arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${BuildsTable}
+              - !Sub arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${BuildsTable}/index/*
+        # Uncomment this if you've added an SNS topic to publish to (above)
+        # - SNSPublishMessagePolicy:
+            # TopicName: !Ref StatusTopic
+
+  BuildResults:
+    Type: AWS::S3::Bucket
+
+  ConfigTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Sub ${AWS::StackName}-config
+      PrimaryKey:
+        Name: project
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+  BuildsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${AWS::StackName}-builds
+      AttributeDefinitions:
+        - AttributeName: project
+          AttributeType: S
+        - AttributeName: buildNum
+          AttributeType: N
+        - AttributeName: trigger
+          AttributeType: S
+        - AttributeName: commit
+          AttributeType: S
+        - AttributeName: requestId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: project
+          KeyType: HASH
+        - AttributeName: buildNum
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      LocalSecondaryIndexes:
+        - IndexName: trigger
+          KeySchema:
+            - AttributeName: project
+              KeyType: HASH
+            - AttributeName: trigger
+              KeyType: RANGE
+          Projection:
+            ProjectionType: KEYS_ONLY
+        - IndexName: commit
+          KeySchema:
+            - AttributeName: project
+              KeyType: HASH
+            - AttributeName: commit
+              KeyType: RANGE
+          Projection:
+            ProjectionType: KEYS_ONLY
+        - IndexName: requestId
+          KeySchema:
+            - AttributeName: project
+              KeyType: HASH
+            - AttributeName: requestId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: KEYS_ONLY
+
+  InvokeTopic:
+    Type: AWS::SNS::Topic
+
+  SnsSender:
+    Type: AWS::IAM::User
+    Properties:
+      Policies:
+        - PolicyName: PublishOnly
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action: sns:Publish
+              Resource: !Ref InvokeTopic
+
+  SnsAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref SnsSender
+
+  SnsFailures:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: sns.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+        - PolicyName: WriteLogs
+          PolicyDocument:
+            Statement:
+              Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - logs:PutMetricFilter
+                - logs:PutRetentionPolicy
+              Resource:
+                Fn::Sub:
+                  - arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:sns/*/*/${topic}/*
+                  - topic: !GetAtt InvokeTopic.TopicName
+
+  ConfigUpdater:
+    Type: Custom::ConfigUpdater
+    DependsOn: ConfigTable
+    Properties:
+      ServiceToken: !GetAtt BuildLambda.Arn
+      GithubToken: !Ref GithubToken
+      Repositories: !Ref Repositories
+      SlackToken: !Ref SlackToken
+      SlackChannel: !Ref SlackChannel
+      S3Bucket: !Ref BuildResults
+      SnsTopic: !Ref InvokeTopic
+      SnsAccessKey: !Ref SnsAccessKey
+      SnsSecret: !GetAtt SnsAccessKey.SecretAccessKey
+      SnsFailuresRole: !GetAtt SnsFailures.Arn
+
+
+Outputs:
+
+  S3Bucket:
+    Description: Name of the build results S3 bucket, see github.com/lambci/lambci
+    Value: !Ref BuildResults
+
+  SnsTopic:
+    Description: Enter this for 'Sns topic' at github.com/<repo>/settings/hooks/new?service=amazonsns
+    Value: !Ref InvokeTopic
+
+  SnsRegion:
+    Description: Enter this for 'Sns region' at github.com/<repo>/settings/hooks/new?service=amazonsns
+    Value: !Ref AWS::Region
+
+  SnsAccessKey:
+    Description: Enter this for 'Aws key' at github.com/<repo>/settings/hooks/new?service=amazonsns
+    Value: !Ref SnsAccessKey
+
+  SnsSecret:
+    Description: Enter this for 'Aws secret' at github.com/<repo>/settings/hooks/new?service=amazonsns
+    Value: !GetAtt SnsAccessKey.SecretAccessKey

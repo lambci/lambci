@@ -1,6 +1,5 @@
 node_modules
 npm-debug.log
-lambda.zip
 build/*.zip
 build/*.yaml
 build/docker

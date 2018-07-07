@@ -14,7 +14,7 @@
     "integration": "node test/integration.js",
     "v": "node -p 'require(\"./package.json\").version'",
     "publish": "npm run pkg:zip && ./publish.sh",
-    "pkg:zip": "rm -f lambda.zip && zip -qyr lambda.zip . -x@.lambdaignore",
+    "pkg:zip": "rm -rf lambda.zip node_modules && nave use 4 npm install && zip -qyr lambda.zip . -x@.lambdaignore",
     "lambda:update": "npm run pkg:zip && aws lambda update-function-code --function-name ${STACK:-lambci}-build --zip-file fileb://lambda.zip",
     "stack:update": "aws cloudformation update-stack --stack-name ${STACK:-lambci} --template-body file://lambci.template --capabilities CAPABILITY_IAM --parameters ParameterKey=Version,ParameterValue=$(npm run -s v) ParameterKey=GithubToken,UsePreviousValue=True ParameterKey=Repositories,UsePreviousValue=True ParameterKey=SlackToken,UsePreviousValue=True ParameterKey=SlackChannel,UsePreviousValue=True",
     "stack:status": "aws cloudformation describe-stacks --stack-name ${STACK:-lambci} --query 'Stacks[0].StackStatus'",

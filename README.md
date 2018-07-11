@@ -73,7 +73,7 @@ future, depending on the API they settle on)
 * No root access
 * 5 min max build time
 * Bring-your-own-binaries – Lambda has a limited selection of installed software
-* 1.5GB max memory
+* 3GB max memory
 * Linux only
 
 You can get around many of these limitations by [configuring LambCI to send tasks to an ECS cluster](#extending-with-ecs) where you can run your builds in Docker.

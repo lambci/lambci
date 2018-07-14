@@ -41,6 +41,18 @@ describe('config', function() {
       assert.equal(config.build, false)
     })
 
+    it('should not build closed pull requests with default config', function() {
+      var build = {eventType: 'pull_request', prState: 'closed'}
+      var config = configUtils.initConfig(null, build)
+      assert.equal(config.build, false)
+    })
+
+    it('should build closed pull requests if pullRequests.ignoreClosed is false', function() {
+      var build = {eventType: 'pull_request', prState: 'closed'}
+      var config = configUtils.initConfig({pullRequests: { ignoreClosed: false }}, build)
+      assert.equal(config.build, true)
+    })
+
     it('should build pull requests from fork if public with restrictions', function() {
       var build = {eventType: 'pull_request', isFork: true, isPrivate: false}
       var config = configUtils.initConfig(null, build)

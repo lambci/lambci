@@ -58,6 +58,7 @@ exports.DEFAULT_CONFIG = {
       allowConfigOverrides: ['cmd', 'env'],
     },
     fromForkPrivateRepo: false,
+    ignoreClosed: true,
   },
   s3PublicSecretNames: true,
   inheritSecrets: true,
@@ -108,6 +109,7 @@ exports.prepareBuildConfig = function(build) {
       LAMBCI_CHECKOUT_BRANCH: build.checkoutBranch,
       LAMBCI_COMMIT: build.commit,
       LAMBCI_PULL_REQUEST: build.prNum || '',
+      LAMBCI_PULL_REQUEST_STATE: build.prState || '',
       AWS_REQUEST_ID: build.requestId,
     },
   }
@@ -144,6 +146,11 @@ function resolveBranchConfig(build) {
 
   if (build.eventType == 'pull_request') {
     var pullRequests = build.config.pullRequests
+
+    if (pullRequests.ignoreClosed && build.prState === 'closed') {
+      log.info(`Pull request #${build.prNum} is closed`)
+      pullRequests = false
+    }
 
     if (typeof pullRequests == 'boolean') {
       configObj = pullRequests

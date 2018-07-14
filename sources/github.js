@@ -196,10 +196,7 @@ exports.parseEvent = function(event, eventType) {
     if (!event.pull_request) {
       throw new Error('pull_request field is missing from GitHub event')
     }
-    if (event.pull_request.state == 'closed') {
-      return {ignore: `Pull request #${prNum} is closed`}
-    }
-    if (!~['opened', 'reopened', 'synchronize'].indexOf(event.action)) {
+    if (!~['opened', 'reopened', 'synchronize', 'closed'].indexOf(event.action)) {
       return {ignore: `Ignoring pull request #${prNum} action "${event.action}"`}
     }
     var base = event.pull_request.base || {}
@@ -222,6 +219,7 @@ exports.parseEvent = function(event, eventType) {
 
     build.isFork = build.cloneRepo != build.repo
     build.prNum = prNum
+    build.prState = event.pull_request.state
 
   } else {
     // https://developer.github.com/v3/activity/events/types/#pushevent

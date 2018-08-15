@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Summary: Explain how the current PHP version is set
+set -e
+[ -n "$PHPENV_DEBUG" ] && set -x
+
+if [ -n "$PHPENV_VERSION" ]; then
+  echo "PHPENV_VERSION environment variable"
+else
+  phpenv-version-file
+fi

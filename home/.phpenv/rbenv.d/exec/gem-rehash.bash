@@ -1,1 +1,0 @@
-export RUBYLIB="${BASH_SOURCE%.bash}:$RUBYLIB"

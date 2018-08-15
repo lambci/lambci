@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Summary: List all PHP versions available to phpenv
+# Usage: phpenv versions [--bare]
+#
+# Lists all PHP versions found in `$PHPENV_ROOT/versions/*'.
+
+set -e
+[ -n "$PHPENV_DEBUG" ] && set -x
+
+if [ "$1" = "--bare" ]; then
+  hit_prefix=""
+  miss_prefix=""
+  current_version=""
+  include_system=""
+else
+  hit_prefix="* "
+  miss_prefix="  "
+  current_version="$(phpenv-version-name || true)"
+  include_system="1"
+fi
+
+print_version() {
+  if [ "$1" == "$current_version" ]; then
+    echo "${hit_prefix}$(phpenv-version 2>/dev/null)"
+  else
+    echo "${miss_prefix}$1"
+  fi
+}
+
+# Include "system" in the non-bare output, if it exists
+if [ -n "$include_system" ] && PHPENV_VERSION=system phpenv-which php >/dev/null 2>&1; then
+  print_version system
+fi
+
+for path in "${PHPENV_ROOT}/versions/"*; do
+  if [ -d "$path" ]; then
+    print_version "${path##*/}"
+  fi
+done

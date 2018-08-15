@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Summary: Edit the current PHP's php.ini configuration file at location
+
+set -e
+[ -n "$PHPENV_DEBUG" ] && set -x
+
+if [ "$VISUAL" ]; then
+	cmd="$VISUAL"
+fi
+
+if ! [ "$cmd" ] && [ "$EDITOR" ]; then
+	cmd="$EDITOR"
+fi
+
+if ! [ "$cmd" ] && type vim >/dev/null 2>&1; then
+	cmd="vim"
+fi
+
+if ! [ "$cmd" ]; then
+	cmd="vi"
+fi
+
+"$cmd" "$(php --ini|grep Loaded|awk '{print $NF}')"

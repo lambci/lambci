@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+#
+# Summary: Set or show the shell-specific PHP version
+#
+# Usage: phpenv shell <version>
+#        phpenv shell --unset
+#
+# Sets a shell-specific PHP version by setting the `PHPENV_VERSION'
+# environment variable in your shell. This version overrides local
+# application-specific versions and the global version.
+#
+# <version> should be a string matching a PHP version known to phpenv.
+# The special version string `system' will use your default system PHP.
+# Run `phpenv versions' for a list of available PHP versions.
+
+set -e
+[ -n "$PHPENV_DEBUG" ] && set -x
+
+# Provide phpenv completions
+if [ "$1" = "--complete" ]; then
+  echo --unset
+  echo system
+  exec phpenv-versions --bare
+fi
+
+version="$1"
+
+if [ "$version" = "--unset" ]; then
+  echo "unset PHPENV_VERSION" 2>/dev/null
+  PHPENV_VERSION=""; version=""
+fi
+
+
+if [ -z "$version" ]; then
+  if [ -z "$PHPENV_VERSION" ]; then
+    echo "phpenv: no shell-specific version configured" >&2
+    exit 1
+  else
+    echo "echo \"\$PHPENV_VERSION\""
+    exit
+  fi
+fi
+
+# Make sure the specified version is installed.
+if phpenv-prefix "$version" >/dev/null; then
+  echo "export PHPENV_VERSION=\"${version}\""
+  echo "$version" >&2
+else
+  echo "return 1"
+  exit 1
+fi

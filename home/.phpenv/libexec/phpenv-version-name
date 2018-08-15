@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Summary: Show the current PHP version
+set -e
+[ -n "$PHPENV_DEBUG" ] && set -x
+
+if [ -z "$PHPENV_VERSION" ]; then
+  PHPENV_VERSION_FILE="$(phpenv-version-file)"
+  PHPENV_VERSION="$(phpenv-version-file-read "$PHPENV_VERSION_FILE" || true)"
+fi
+
+if [ -z "$PHPENV_VERSION" ] || [ "$PHPENV_VERSION" = "system" ]; then
+  echo "system"
+  exit
+fi
+
+version_exists() {
+  local version="$1"
+  [ -d "${PHPENV_ROOT}/versions/${version}" ]
+}
+
+if version_exists "$PHPENV_VERSION"; then
+  echo "$PHPENV_VERSION"
+elif version_exists "${PHPENV_VERSION#php-}"; then
+  { echo "warning: ignoring extraneous \`php-' prefix in version \`${PHPENV_VERSION}'"
+    echo "         (set by $(phpenv-version-origin))"
+  } >&2
+  echo "${PHPENV_VERSION#php-}"
+else
+  echo "phpenv: version \`$PHPENV_VERSION' is not installed" >&2
+  exit 1
+fi

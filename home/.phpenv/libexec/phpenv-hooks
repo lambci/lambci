@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Summary: List hook scripts for a given phpenv command
+# Usage: phpenv hooks <command>
+
+set -e
+[ -n "$PHPENV_DEBUG" ] && set -x
+
+# Provide phpenv completions
+if [ "$1" = "--complete" ]; then
+  echo exec
+  echo rehash
+  echo which
+  exit
+fi
+
+PHPENV_COMMAND="$1"
+if [ -z "$PHPENV_COMMAND" ]; then
+  phpenv-help --usage hooks >&2
+  exit 1
+fi
+
+#PHPENV_COMMAND_HOOK="$2"
+#if [ -z "$PHPENV_COMMAND_HOOK" ]; then
+#  PHPENV_COMMAND_HOOK="*"
+#fi
+
+resolve_link() {
+  $(type -p greadlink readlink | head -1) $1
+}
+
+realpath() {
+  local cwd="$(pwd)"
+  local base="$(basename $1)"
+  local path="$1"
+
+  while [ -n "$path" ]; do
+    cd "${path%/*}"
+    local name="${path##*/}"
+    path="$(resolve_link "$name" || true)"
+  done
+
+  echo "$(pwd)/$base"
+  cd "$cwd"
+}
+
+shopt -s nullglob
+for path in ${PHPENV_HOOK_PATH//:/$'\n'}; do
+  for script in $path/"$PHPENV_COMMAND"/*.bash; do
+    echo $(realpath $script)
+  done
+done
+#
+#for path in ${PHPENV_HOOK_PATH//:/$'\n'}; do
+#  files="${path}/${PHPENV_COMMAND}/${PHPENV_COMMAND_HOOK}.bash"
+#  for script in $files; do
+#    if [ "$PHPENV_COMMAND_HOOK" != "*" ] && [ -x $script ]; then
+#      exec "$script"
+#    elif [ -f $script ]; then
+#      echo $(realpath $script)
+#    fi
+#  done
+#done
+shopt -u nullglob

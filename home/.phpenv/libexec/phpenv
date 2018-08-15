@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+set -e
+export -n CDPATH
+
+if [ "$1" = "--debug" ]; then
+  export PHPENV_DEBUG=1
+  shift
+fi
+
+if [ -n "$PHPENV_DEBUG" ]; then
+  export PS4='+ [${BASH_SOURCE##*/}:${LINENO}] '
+  set -x
+fi
+
+resolve_link() {
+  $(type -p greadlink readlink | head -1) "$1"
+}
+
+abs_dirname() {
+  local cwd="$(pwd)"
+  local path="$1"
+
+  while [ -n "$path" ]; do
+    cd "${path%/*}"
+    local name="${path##*/}"
+    path="$(resolve_link "$name" || true)"
+  done
+
+  pwd
+  cd "$cwd"
+}
+
+if [ -z "${PHPENV_ROOT}" ]; then
+  PHPENV_ROOT="${HOME}/.phpenv"
+else
+  PHPENV_ROOT="${PHPENV_ROOT%/}"
+fi
+export PHPENV_ROOT
+
+if [ -z "${PHPENV_DIR}" ]; then
+  PHPENV_DIR="$(pwd)"
+else
+  cd "$PHPENV_DIR" 2>/dev/null || {
+    echo "phpenv: cannot change working directory to \`$PHPENV_DIR'"
+    exit 1
+  } >&2
+  PHPENV_DIR="$(pwd)"
+  cd "$OLDPWD"
+fi
+export PHPENV_DIR
+
+
+shopt -s nullglob
+
+bin_path="$(abs_dirname "$0")"
+for plugin_bin in "${PHPENV_ROOT}/plugins/"*/bin; do
+  bin_path="${bin_path}:${plugin_bin}"
+done
+export PATH="${bin_path}:${PATH}"
+
+hook_path="${PHPENV_HOOK_PATH}:${PHPENV_ROOT}/phpenv.d:/usr/local/etc/phpenv.d:/etc/phpenv.d:/usr/lib/phpenv/hooks"
+for plugin_hook in "${PHPENV_ROOT}/plugins/"*/etc/phpenv.d; do
+  hook_path="${hook_path}:${plugin_hook}"
+done
+export PHPENV_HOOK_PATH="$hook_path"
+
+shopt -u nullglob
+
+command="$1"
+if [[ "$2" = "--help"  || "$2" = "-h"  ]]; then
+  phpenv-help "$command" >&2
+  exit 1
+fi
+
+case "$command" in
+"" | "-h" | "--help" )
+  echo -e "$(phpenv-help)" >&2
+  ;;
+"-v" )
+  exec phpenv---version
+  ;;
+* )
+  command_path="$(command -v "phpenv-$command" || true)"
+  if [ -z "$command_path" ]; then
+    echo "phpenv: no such command \`$command'" >&2
+    exit 1
+  fi
+
+  shift 1
+  exec "$command_path" "$@"
+  ;;
+esac

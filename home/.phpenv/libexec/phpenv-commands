@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Summary: List all available rbenv commands
-# Usage: rbenv commands [--sh|--no-sh]
+# Summary: List all available phpenv commands
+# Usage: phpenv commands [--sh|--no-sh]
 
 set -e
-[ -n "$RBENV_DEBUG" ] && set -x
+[ -n "$PHPENV_DEBUG" ] && set -x
 
-# Provide rbenv completions
+# Provide phpenv completions
 if [ "$1" = "--complete" ]; then
   echo --sh
   echo --no-sh
@@ -20,13 +20,11 @@ elif [ "$1" = "--no-sh" ]; then
   shift
 fi
 
-IFS=: paths=($PATH)
-
 shopt -s nullglob
 
-{ for path in "${paths[@]}"; do
-    for command in "${path}/rbenv-"*; do
-      command="${command##*rbenv-}"
+{ for path in ${PATH//:/$'\n'}; do
+    for command in "${path}/phpenv-"*; do
+      command="${command##*phpenv-}"
       if [ -n "$sh" ]; then
         if [ ${command:0:3} = "sh-" ]; then
           echo ${command##sh-}

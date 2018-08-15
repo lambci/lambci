@@ -2,7 +2,7 @@
 #
 # Summary: Display help for a command
 #
-# Usage: rbenv help [--usage] COMMAND
+# Usage: phpenv help [--usage] COMMAND
 #
 # Parses and displays help contents from a command's source file.
 #
@@ -13,17 +13,11 @@
 # documentation.
 
 set -e
-[ -n "$RBENV_DEBUG" ] && set -x
-
-# Provide rbenv completions
-if [ "$1" = "--complete" ]; then
-  echo --usage
-  exec rbenv-commands
-fi
+[ -n "$PHPENV_DEBUG" ] && set -x
 
 command_path() {
   local command="$1"
-  command -v rbenv-"$command" || command -v rbenv-sh-"$command" || true
+  command -v phpenv-"$command" || command -v phpenv-sh-"$command" || true
 }
 
 extract_initial_comment_block() {
@@ -42,7 +36,7 @@ extract_initial_comment_block() {
 }
 
 collect_documentation() {
-  $(type -p gawk awk | head -1) '
+  awk '
     /^Summary:/ {
       summary = substr($0, 10)
       next
@@ -115,16 +109,13 @@ print_help() {
   [ -n "$help" ] || help="$summary"
 
   if [ -n "$usage" -o -n "$summary" ]; then
-    if [ -n "$usage" ]; then
-      echo "$usage"
-    else
-      echo "Usage: rbenv ${command}"
-    fi
-    if [ -n "$help" ]; then
-      echo
-      echo "$help"
-      echo
-    fi
+    local buffer="$(
+      print_usage $command;
+      if [ -n "$help" ]; then \
+        echo -e "\n$help\n";
+      fi
+    )"
+    echo "${buffer}"|$([[ $(tput lines) -lt $(echo "${buffer}"| wc -l ) ]] && echo less || echo cat)
   else
     echo "Sorry, this command isn't documented yet." >&2
     return 1
@@ -135,7 +126,10 @@ print_usage() {
   local command="$1"
   local summary usage help
   eval "$(documentation_for "$command")"
-  [ -z "$usage" ] || echo "$usage"
+  echo "${command}:"
+  echo ${command//?/=}=
+  [[ -n "$summary" ]] && printf "   %s\n\n" "$summary"
+  [[ -z "$usage" ]] || echo "$usage"
 }
 
 unset usage
@@ -144,15 +138,18 @@ if [ "$1" = "--usage" ]; then
   shift
 fi
 
-if [ -z "$1" ] || [ "$1" == "rbenv" ]; then
-  echo "Usage: rbenv <command> [<args>]"
+if [ -z "$1" ] || [ "$1" == "phpenv" ]; then
+  echo "phpenv:"
+  printf "%0.1s" "="{1..7}
+  echo -e "\n   PHP multi-version installation and management utility.\n"
+  echo "Usage: phpenv <command> [<args>]"
   [ -z "$usage" ] || exit
   echo
-  echo "Some useful rbenv commands are:"
-  print_summaries commands local global shell install uninstall rehash version versions which whence
+  echo "Some useful phpenv commands are:"
+  print_summaries commands configure local global shell install uninstall rehash version versions which whence
   echo
-  echo "See \`rbenv help <command>' for information on a specific command."
-  echo "For full documentation, see: https://github.com/rbenv/rbenv#readme"
+  echo "See \`phpenv help <command>' for information on a specific command."
+  echo "For full documentation, see: https://github.com/madumlao/phpenv#readme"
 else
   command="$1"
   if [ -n "$(command_path "$command")" ]; then
@@ -162,7 +159,7 @@ else
       print_help "$command"
     fi
   else
-    echo "rbenv: no such command \`$command'" >&2
+    echo "phpenv: no such command \`$command'" >&2
     exit 1
   fi
 fi

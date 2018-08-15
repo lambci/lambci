@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+#
+# Summary: Display the full path to an executable
+#
+# Usage: phpenv which <command>
+#
+# Displays the full path to the executable that phpenv will invoke when
+# you run the given command.
+
+set -e
+[ -n "$PHPENV_DEBUG" ] && set -x
+
+# Provide phpenv completions
+if [ "$1" = "--complete" ]; then
+  exec phpenv shims --short
+fi
+
+expand_path() {
+  if [ ! -d "$1" ]; then
+    return 1
+  fi
+
+  local cwd="$(pwd)"
+  cd "$1"
+  pwd
+  cd "$cwd"
+}
+
+remove_from_path() {
+  local path_to_remove="$(expand_path "$1")"
+  local result=""
+
+  if [ -z "$path_to_remove" ]; then
+    echo "${PATH}"
+    return
+  fi
+
+  local paths
+  IFS=: paths=($PATH)
+
+  for path in "${paths[@]}"; do
+    path="$(expand_path "$path" || true)"
+    if [ -n "$path" ] && [ "$path" != "$path_to_remove" ]; then
+      result="${result}${path}:"
+    fi
+  done
+
+  echo "${result%:}"
+}
+
+PHPENV_VERSION="$(phpenv-version-name)"
+PHPENV_COMMAND="$1"
+
+if [ -z "$PHPENV_COMMAND" ]; then
+  phpenv-help --usage which >&2
+  exit 1
+fi
+
+if [ "$PHPENV_VERSION" = "system" ]; then
+  PATH="$(remove_from_path "${PHPENV_ROOT}/shims")"
+  PHPENV_COMMAND_PATH="$(command -v "$PHPENV_COMMAND" || true)"
+else
+  PHPENV_COMMAND_PATH="${PHPENV_ROOT}/versions/${PHPENV_VERSION}/bin/${PHPENV_COMMAND}"
+  if ! [ -x "$PHPENV_COMMAND_PATH" ]; then
+    PHPENV_COMMAND_PATH="${PHPENV_ROOT}/versions/${PHPENV_VERSION}/sbin/${PHPENV_COMMAND}"
+  fi
+fi
+
+for script in $(phpenv-hooks which); do
+  source "$script"
+done
+
+if [ -x "$PHPENV_COMMAND_PATH" ]; then
+  echo "$PHPENV_COMMAND_PATH"
+else
+  echo "phpenv: $PHPENV_COMMAND: command not found" >&2
+
+  versions="$(phpenv-whence "$PHPENV_COMMAND" || true)"
+  if [ -n "$versions" ]; then
+    { echo
+      echo "The \`$1' command exists in these PHP versions:"
+      echo "$versions" | sed 's/^/  /g'
+      echo
+    } >&2
+  fi
+
+  exit 127
+fi

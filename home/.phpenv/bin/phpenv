@@ -1,4 +1,1 @@
-#!/usr/bin/env bash
-export PHPENV_ROOT=${PHPENV_ROOT:-'/tmp/lambci/home/.phpenv'}
-export RBENV_ROOT="$PHPENV_ROOT"
-exec "$RBENV_ROOT/libexec/rbenv" "$@"
+../libexec/phpenv

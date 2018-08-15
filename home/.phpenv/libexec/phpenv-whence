@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Summary: List all PHP versions that contain the given executable
+# Usage: phpenv whence [--path] <command>
+
+set -e
+[ -n "$PHPENV_DEBUG" ] && set -x
+
+# Provide phpenv completions
+if [ "$1" = "--complete" ]; then
+  echo --path
+  exec phpenv shims --short
+fi
+
+if [ "$1" = "--path" ]; then
+  print_paths="1"
+  shift
+else
+  print_paths=""
+fi
+
+whence() {
+  local command="$1"
+  phpenv-versions --bare | while read version; do
+    path="$(phpenv-prefix "$version")/bin/${command}"
+    if [ -x "$path" ]; then
+      [ "$print_paths" ] && echo "$path" || echo "$version"
+    fi
+  done
+}
+
+PHPENV_COMMAND="$1"
+if [ -z "$PHPENV_COMMAND" ]; then
+  phpenv-help --usage whence >&2
+  exit 1
+fi
+
+result="$(whence "$PHPENV_COMMAND")"
+[ -n "$result" ] && echo "$result"

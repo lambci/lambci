@@ -3,18 +3,7 @@
 # Usage: eval "$(phpenv init - [--no-rehash] [<shell>])"
 
 set -e
-[ -n "$RBENV_DEBUG" ] && set -x
-
-# Provide phpenv completions
-if [ "$1" = "--complete" ]; then
-  echo -
-  echo --no-rehash
-  echo bash
-  echo fish
-  echo ksh
-  echo zsh
-  exit
-fi
+[ -n "$PHPENV_DEBUG" ] && set -x
 
 print=""
 no_rehash=""
@@ -22,7 +11,7 @@ for args in "$@"
 do
   if [ "$args" = "-" ]; then
     print=1
-    shift
+		shift
   fi
 
   if [ "$args" = "--no-rehash" ]; then
@@ -33,23 +22,33 @@ done
 
 shell="$1"
 if [ -z "$shell" ]; then
-  shell="$(ps -p "$PPID" -o 'args=' 2>/dev/null || true)"
-  shell="${shell%% *}"
-  shell="${shell##-}"
-  shell="${shell:-$SHELL}"
-  shell="${shell##*/}"
+  shell="$(basename "$SHELL")"
 fi
 
-root="${0%/*}/.."
+resolve_link() {
+  $(type -p greadlink readlink | head -1) $1
+}
+
+abs_dirname() {
+  local cwd="$(pwd)"
+  local path="$1"
+
+  while [ -n "$path" ]; do
+    cd "${path%/*}"
+    local name="${path##*/}"
+    path="$(resolve_link "$name" || true)"
+  done
+
+  pwd
+  cd "$cwd"
+}
+
+root="$(abs_dirname "$0")/.."
 
 if [ -z "$print" ]; then
   case "$shell" in
   bash )
-    if [ -f "${HOME}/.bashrc" ] && [ ! -f "${HOME}/.bash_profile" ]; then
-      profile='~/.bashrc'
-    else
-      profile='~/.bash_profile'
-    fi
+    profile='~/.bash_profile'
     ;;
   zsh )
     profile='~/.zshrc'
@@ -65,12 +64,12 @@ if [ -z "$print" ]; then
     ;;
   esac
 
-  { echo "# Load phpenv automatically by appending"
+  { echo "# Load phpenv automatically by adding"
     echo "# the following to ${profile}:"
     echo
     case "$shell" in
     fish )
-      echo 'status --is-interactive; and . (phpenv init -|psub)'
+      echo 'status --is-interactive; and source (phpenv init -|psub)'
       ;;
     * )
       echo 'eval "$(phpenv init -)"'
@@ -82,42 +81,37 @@ if [ -z "$print" ]; then
   exit 1
 fi
 
-mkdir -p "${RBENV_ROOT}/"{shims,versions}
+mkdir -p "${PHPENV_ROOT}/"{shims,versions}
 
 case "$shell" in
 fish )
-  echo "setenv PATH '${RBENV_ROOT}/shims' \$PATH"
-  echo "setenv RBENV_SHELL $shell"
-;;
+  echo "set -gx PATH '${PHPENV_ROOT}/shims' \$PATH"
+  ;;
 * )
-  echo 'export PATH="'${RBENV_ROOT}'/shims:${PATH}"'
-  echo "export RBENV_SHELL=$shell"
-;;
+  echo 'export PATH="'${PHPENV_ROOT}'/shims:${PATH}"'
+  ;;
 esac
 
-completion="${root}/completions/rbenv.${shell}"
-if [ -r "$completion" ]; then
-  case "$shell" in
-  fish ) echo ". '$completion'" ;;
-  *    ) echo "source '$completion'" ;;
-  esac
-fi
+case "$shell" in
+bash | zsh | fish )
+  echo "source \"$root/completions/phpenv.${shell}\""
+  ;;
+esac
 
 if [ -z "$no_rehash" ]; then
-  echo 'command phpenv rehash 2>/dev/null'
+  echo 'phpenv rehash 2>/dev/null'
 fi
 
-commands=(`rbenv-commands --sh`)
+commands=(`phpenv-commands --sh`)
 case "$shell" in
 fish )
   cat <<EOS
 function phpenv
   set command \$argv[1]
   set -e argv[1]
-
   switch "\$command"
   case ${commands[*]}
-    . (phpenv "sh-\$command" \$argv|psub)
+    source (phpenv "sh-\$command" \$argv|psub)
   case '*'
     command phpenv "\$command" \$argv
   end
@@ -148,7 +142,7 @@ cat <<EOS
 
   case "\$command" in
   ${commands[*]})
-    eval "\$(phpenv "sh-\$command" "\$@")";;
+    eval \`phpenv "sh-\$command" "\$@"\`;;
   *)
     command phpenv "\$command" "\$@";;
   esac

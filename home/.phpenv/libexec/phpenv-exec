@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+#
+# Summary: Run an executable with the selected PHP version
+#
+# Usage: phpenv exec <command> [arg1 arg2...]
+#
+# Runs an executable by first preparing PATH so that the selected PHP
+# version's `bin' directory is at the front.
+#
+# For example, if the currently selected PHP version is 1.9.3-p327:
+#   phpenv exec bundle install
+#
+# is equivalent to:
+#   PATH="$PHPENV_ROOT/versions/1.9.3-p327/bin:$PATH" bundle install
+
+set -e
+[ -n "$PHPENV_DEBUG" ] && set -x
+
+# Provide phpenv completions
+if [ "$1" = "--complete" ]; then
+  exec phpenv shims --short
+fi
+
+export PHPENV_VERSION="$(phpenv-version-name)"
+PHPENV_COMMAND="$1"
+
+if [ -z "$PHPENV_COMMAND" ]; then
+  phpenv-help --usage exec >&2
+  exit 1
+fi
+
+PHPENV_COMMAND_PATH="$(phpenv-which "$PHPENV_COMMAND")"
+PHPENV_BIN_PATH="${PHPENV_COMMAND_PATH%/*}"
+
+for script in $(phpenv-hooks exec); do
+  source "$script"
+done
+
+shift 1
+if [ "$PHPENV_VERSION" != "system" ]; then
+  export PATH="${PHPENV_BIN_PATH}:${PATH}"
+fi
+exec -a "$PHPENV_COMMAND" "$PHPENV_COMMAND_PATH" "$@"

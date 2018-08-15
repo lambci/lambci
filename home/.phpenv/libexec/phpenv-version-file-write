@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Usage: phpenv version-file-write <file> <version>
+
+set -e
+[ -n "$PHPENV_DEBUG" ] && set -x
+
+PHPENV_VERSION_FILE="$1"
+PHPENV_VERSION="$2"
+
+if [ -z "$PHPENV_VERSION" ] || [ -z "$PHPENV_VERSION_FILE" ]; then
+  phpenv-help --usage version-file-write >&2
+  exit 1
+fi
+
+# Make sure the specified version is installed.
+phpenv-prefix "$PHPENV_VERSION" >/dev/null
+
+# Write the version out to disk.
+echo "$PHPENV_VERSION" > "$PHPENV_VERSION_FILE"

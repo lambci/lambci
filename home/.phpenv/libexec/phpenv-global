@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+#
+# Summary: Set or show the global PHP version and update the Apache apxs
+# library link
+#
+# Usage: phpenv global <version>
+#        phpenv global --unset
+#
+# Sets the global PHP version. You can override the global version at
+# any time by setting a directory-specific version with `phpenv local'
+# or by setting the `PHPENV_VERSION' environment variable.
+#
+# <version> should be a string matching a PHP version known to phpenv.
+# The special version string `system' will use your default system PHP.
+# Run `phpenv versions' for a list of available PHP versions.
+
+set -e
+[ -n "$PHPENV_DEBUG" ] && set -x
+
+# Provide phpenv completions
+if [ "$1" = "--complete" ]; then
+  echo system --unset
+  exec phpenv-versions --bare
+fi
+
+PHPENV_VERSION="$1"
+PHPENV_VERSION_FILE="${PHPENV_ROOT}/version"
+
+if [ "$1" == "--unset" ]; then
+  rm -f "$PHPENV_VERSION_FILE"
+  PHPENV_VERSION=""
+fi
+
+if [ -n "$PHPENV_VERSION" ]; then
+  phpenv-version-file-write "$PHPENV_VERSION_FILE" "$PHPENV_VERSION"
+else
+  PHPENV_VERSION=$(phpenv-version-file-read "$PHPENV_VERSION_FILE") ||
+  PHPENV_VERSION=$(phpenv-version-file-read "${PHPENV_ROOT}/global") ||
+  PHPENV_VERSION=$(phpenv-version-file-read "${PHPENV_ROOT}/default") ||
+  PHPENV_VERSION=system
+fi
+
+echo ${PHPENV_VERSION}
+
+# Link Apache apxs lib
+rm -f "${PHPENV_ROOT}"/lib/libphp*.so
+LIBPHP_SO_FILE="libphp$(php-config --version | cut -c1).so"
+APXS=""
+if [ "${PHPENV_VERSION}" == "system" ]; then
+    DEFAULT_APXS="$(which apxs 2>/dev/null)"
+    if [ -n "${DEFAULT_APXS}" -a -f "$(${DEFAULT_APXS} -q LIBEXECDIR)/${LIBPHP_SO_FILE}" ]; then
+	APXS="${DEFAULT_APXS}"
+    fi
+fi
+php-config --configure-options 2>/dev/null | grep -q apxs  && \
+    APXS="$(php-config --configure-options| sed 's/.*=\(.*apxs[^ ]*\) .*/\1/')"
+
+[[ -d "${PHPENV_ROOT}/lib" ]] || mkdir "${PHPENV_ROOT}/lib"
+if [ -n "${APXS}" ]; then
+    [[ "${PHPENV_VERSION}" == "system" ]] && \
+        ln -fs "$(${APXS} -q LIBEXECDIR)/${LIBPHP_SO_FILE}" "${PHPENV_ROOT}/lib/${LIBPHP_SO_FILE}" || \
+        ln -fs "${PHPENV_ROOT}/versions/${PHPENV_VERSION}/libexec/${LIBPHP_SO_FILE}" "${PHPENV_ROOT}/lib/${LIBPHP_SO_FILE}";
+fi

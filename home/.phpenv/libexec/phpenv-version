@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Summary: Show the current PHP version and its origin
+#
+# Shows the currently selected PHP version and how it was
+# selected. To obtain only the version string, use `phpenv
+# version-name'.
+
+set -e
+[ -n "$PHPENV_DEBUG" ] && set -x
+
+echo "$(phpenv-version-name) (set by $(phpenv-version-origin))"

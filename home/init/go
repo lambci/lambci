@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
-VERSION=${1:-1.7.4}
+VERSION=${1:-1.10.3}
 
 echo "Installing Go ${VERSION}..."
 
@@ -27,3 +27,4 @@ cd ./${DIR[1]}
 echo "Go setup complete"
 echo ""
 
+set +e

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 VERSION=${1:-1.8}
@@ -23,13 +23,14 @@ export PATH=$JAVA_HOME/bin:$PATH
 export _JAVA_OPTIONS="-Duser.home=$HOME"
 
 # Also get Maven
-if ! [ -d ~/apache-maven-3.3.9 ]; then
+if ! [ -d ~/apache-maven-3.5.4 ]; then
   set -x
-  curl -sSL http://www-us.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz | tar -xz -C ~
+  curl -sSL https://www-us.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz | tar -xz -C ~
   set +x
 fi
-export PATH=~/apache-maven-3.3.9/bin:$PATH
+export PATH=~/apache-maven-3.5.4/bin:$PATH
 
 echo "OpenJDK setup complete"
 echo ""
 
+set +e

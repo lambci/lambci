@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
-VERSION=${1:-7.1.2}
+VERSION=${1:-7.2.12}
 
 echo "Installing PHP ${VERSION}..."
 
@@ -38,3 +38,4 @@ fi
 echo "PHP setup complete"
 echo ""
 
+set +e

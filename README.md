@@ -52,8 +52,8 @@ different resources yourself.
 * Python 2.7
 * Java (OpenJDK [1.8 and 1.7](#java))
 * Go ([any version](#go))
-* Ruby ([2.4.1, 2.3.4, 2.2.7, 2.1.10, 2.0.0-p648](#ruby))
-* PHP ([7.1.2, 7.0.17, 5.6.29](#php))
+* Ruby ([2.5.3, 2.4.5, 2.3.8, 2.2.10, 2.1.10, 2.0.0-p648](#ruby))
+* PHP ([7.2.12, 7.1.24, 7.0.32, 5.6.38](#php))
 * Native compilation with a [pre-built gcc 4.8.5](#native-gcc-compilation)
 * Rust ([1.11.0, 1.10.0](#rust), but any version should work)
 * Check the [Recipes](#language-recipes) list below for the status of other languages/tools
@@ -500,7 +500,7 @@ your build, but Go is quite small and well suited to running anywhere.
 LambCI includes a script you can source before running your build commands
 that will install Go and set your `GOROOT` and `GOPATH` with the correct
 directory structure. Call it with the Go version you want (any of the versions
-[on the Go site](https://golang.org/dl/)) – omitting it defaults to `1.7.4`:
+[on the Go site](https://golang.org/dl/)) – omitting it defaults to `1.10.3`:
 
 ```json
 {
@@ -519,12 +519,12 @@ your build.
 
 LambCI includes a script you can source before running your build commands
 that will install Ruby, rbenv, gem and bundler. Call it with the Ruby version
-you want (currently: `2.4.1`, `2.3.4`, `2.2.7`, `2.1.10` and `2.0.0-p648`) –
-omitting it defaults to `2.4.1`:
+you want (currently: `2.5.1`, `2.4.4`, `2.3.7`, `2.2.10`, `2.1.10` and `2.0.0-p648`) –
+omitting it defaults to `2.5.1`:
 
 ```json
 {
-  "cmd": ". ~/init/ruby 2.3.4 && bundle install && bundle exec rake"
+  "cmd": ". ~/init/ruby 2.4.4 && bundle install && bundle exec rake"
 }
 ```
 
@@ -539,11 +539,11 @@ your build.
 
 LambCI includes a script you can source before running your build commands
 that will install PHP, phpenv and composer. Call it with the PHP version
-you want (currently: `7.1.2`, `7.0.17` and `5.6.29`) – omitting it defaults to `7.1.2`:
+you want (currently: `7.2.10`, `7.1.22`, `7.0.32` and `5.6.38`) – omitting it defaults to `7.2.10`:
 
 ```json
 {
-  "cmd": ". ~/init/php 5.6.29 && composer install -n --prefer-dist && vendor/bin/phpunit"
+  "cmd": ". ~/init/php 5.6.38 && composer install -n --prefer-dist && vendor/bin/phpunit"
 }
 ```
 

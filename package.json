@@ -18,7 +18,7 @@
     "zip": "rm -rf build/lambda.zip node_modules && npm ci --prod && zip -qyr build/lambda.zip . -x@.lambdaignore",
     "package": "npm run zip && sam package --template-file template.yaml --s3-bucket ${S3_BUCKET:-lambci} --s3-prefix ${S3_PREFIX:-package} --output-template-file build/packaged.yaml",
     "deploy": "npm run package && sam deploy --stack-name ${STACK:-lambci} --template-file build/packaged.yaml --capabilities CAPABILITY_IAM",
-    "docker": "npm run zip && cd build && rm -rf docker && unzip lambda.zip -d docker && docker build -t lambci/lambci -f ../Dockerfile docker"
+    "docker": "npm run zip && rm -rf build/docker && unzip build/lambda.zip -d build/docker && docker-compose build"
   },
   "dependencies": {
     "ansi_up": "^3.0.0",

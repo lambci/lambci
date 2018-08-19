@@ -1,0 +1,28 @@
+version: '2.4'
+services:
+  lambci:
+    build:
+      context: ./build/docker
+      dockerfile: ../../Dockerfile
+    image: lambci/lambci
+    # Lambda only has these files/links in /dev:
+    # /dev/full
+    # /dev/null
+    # /dev/random
+    # /dev/stderr
+    # /dev/stdin
+    # /dev/stdout
+    # /dev/urandom
+    # /dev/zero
+    volumes:
+      - /var/empty:/dev/fd
+      - /var/empty:/dev/shm
+      - /var/empty:/dev/mqueue
+      # - /var/empty:/dev/pts
+      - /dev/null:/dev/core
+      - /dev/null:/dev/tty
+      # - type: tmpfs
+        # target: /tmp
+        # tmpfs:
+          # size: 500M
+    mem_limit: 3G

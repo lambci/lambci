@@ -200,7 +200,7 @@ function runInBash(cmd, opts, cb) {
 
   log.info(`$ ${logCmd}`)
 
-  var proc = spawn('/bin/bash', ['-c', cmd], opts)
+  var proc = spawn(path.join(__dirname, '../vendor/bin/bash'), ['-c', cmd], opts)
   proc.stdout.pipe(utils.lineStream(log.info))
   proc.stderr.pipe(utils.lineStream(log.error))
   proc.on('error', cb)
@@ -254,7 +254,7 @@ function prepareLambdaConfig(buildConfig) {
   var defaultLambdaConfig = {
     env: {
       HOME: config.HOME_DIR,
-      SHELL: '/bin/bash',
+      SHELL: path.join(vendorDir, '/bin/bash'),
       PATH: [
         path.join(config.HOME_DIR, '.local/bin'),
         path.join(usrDir, 'bin'),

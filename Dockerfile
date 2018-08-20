@@ -8,7 +8,7 @@ ENV PATH=$HOME/.local/bin:$HOME/usr/bin:/var/task/vendor/bin:/var/task/node_modu
   PYTHONPATH=/var/task/vendor/lib/python2.7/site-packages \
   GIT_TEMPLATE_DIR=$HOME/usr/share/git-core/templates \
   GIT_EXEC_PATH=$HOME/usr/libexec/git-core \
-  SHELL=/bin/bash \
+  SHELL=/var/task/vendor/bin/bash \
   TERM=xterm-256color \
   FORCE_COLOR=true \
   NPM_CONFIG_COLOR=always \
@@ -27,4 +27,4 @@ RUN mkdir -p $HOME && \
   tar -C $HOME -xf /var/task/vendor/git-2.13.5.tar
 
 ENTRYPOINT []
-CMD bash
+CMD /var/task/vendor/bin/bash

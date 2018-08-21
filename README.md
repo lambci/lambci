@@ -49,7 +49,7 @@ different resources yourself.
 ## Supported languages
 
 * Node.js (multiple versions via [nave](https://github.com/isaacs/nave))
-* Python 2.7
+* Python (multiple versions via [pyenv](https://github.com/pyenv/pyenv))
 * Java (OpenJDK [1.8 and 1.7](#java))
 * Go ([any version](#go))
 * Ruby ([2.5.3, 2.4.5, 2.3.8, 2.2.10, 2.1.10, 2.0.0-p648](#ruby))
@@ -470,6 +470,22 @@ added to `PATH`, so local pip installs should work:
 ```json
 {
   "cmd": "pip install --user tox && tox"
+}
+```
+
+### Other Python versions with pyenv
+
+LambCI comes with [pyenv](https://github.com/pyenv/pyenv) installed and a
+script you can source to setup the pyenv root and download prebuilt
+versions for you.
+
+Call it with the Python version you want (currently: `3.7.2`, `3.6.8` or
+`system`, which will use the 2.7 version already installed on Lambda) –
+omitting it defaults to `3.7.2`:
+
+```json
+{
+  "cmd": ". ~/init/python 3.6.8 && pip install --user tox && tox"
 }
 ```
 

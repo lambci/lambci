@@ -18,6 +18,9 @@ module.exports = runBuild
 function runBuild(buildData, context, cb) {
   // TODO: figure out whether to use mergeable flags on GH events or not
 
+  // Prevent function from timing out
+  context.callbackWaitsForEmptyEventLoop = false
+
   var build = new BuildInfo(buildData, context)
 
   // Sometimes errors will occur that we don't catch, and Lambda will retry those requests,

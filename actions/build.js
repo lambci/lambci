@@ -137,6 +137,10 @@ function buildDone(build, cb) {
 
 function clone(build, cb) {
 
+  if (build.config.noClone) {
+    return cb()
+  }
+
   // Just double check we're in tmp!
   if (build.cloneDir.indexOf(config.BASE_BUILD_DIR) !== 0) {
     return cb(new Error(`clone directory ${build.cloneDir} not in base directory ${config.BASE_BUILD_DIR}`))

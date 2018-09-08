@@ -33,6 +33,7 @@ exports.DEFAULT_CONFIG = {
     SLACK_TOKEN: '',
   },
   s3Bucket: '',
+  noClone: false,
   notifications: {
     slack: {
       channel: '#general',

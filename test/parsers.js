@@ -1,16 +1,16 @@
 var assert = require('chai').assert
 var log = require('../utils/log')
-var sns = require('../sources/sns')
+var webhook = require('../sources/webhook')
 
 log.raw = () => {}
 
 describe('parsers', function() {
 
-  describe('sns', function() {
+  describe('webhook', function() {
 
     it('should parse pull request opened events', function() {
-      var snsEvent = require('./fixtures/pullRequest.opened.json').Records[0].Sns
-      sns.parseEvent(snsEvent, (err, build) => {
+      var webhookEvent = require('./fixtures/pullRequest.opened.json')
+      webhook.parseEvent(webhookEvent, (err, build) => {
         assert(!err)
         assert(build.event)
         delete build.event
@@ -33,8 +33,8 @@ describe('parsers', function() {
     })
 
     it('should parse pull request synchronize events', function() {
-      var snsEvent = require('./fixtures/pullRequest.synchronize.json').Records[0].Sns
-      sns.parseEvent(snsEvent, (err, build) => {
+      var webhookEvent = require('./fixtures/pullRequest.synchronize.json')
+      webhook.parseEvent(webhookEvent, (err, build) => {
         assert(!err)
         assert(build.event)
         delete build.event
@@ -57,8 +57,8 @@ describe('parsers', function() {
     })
 
     it('should parse push events', function() {
-      var snsEvent = require('./fixtures/push.force.json').Records[0].Sns
-      sns.parseEvent(snsEvent, (err, build) => {
+      var webhookEvent = require('./fixtures/push.force.json')
+      webhook.parseEvent(webhookEvent, (err, build) => {
         assert(!err)
         assert(build.event)
         delete build.event
@@ -82,30 +82,30 @@ describe('parsers', function() {
     })
 
     it('should parse delete events', function() {
-      var snsEvent = require('./fixtures/push.deleted.json').Records[0].Sns
-      sns.parseEvent(snsEvent, (err, build) => {
+      var webhookEvent = require('./fixtures/push.deleted.json')
+      webhook.parseEvent(webhookEvent, (err, build) => {
         assert(!err)
         assert.equal(build.ignore, 'Branch some-new-branch was deleted')
       })
     })
 
     it('should parse tag events', function() {
-      var snsEvent = require('./fixtures/push.tag.json').Records[0].Sns
-      sns.parseEvent(snsEvent, (err, build) => {
+      var webhookEvent = require('./fixtures/push.tag.json')
+      webhook.parseEvent(webhookEvent, (err, build) => {
         assert(!err)
         assert.equal(build.ignore, 'Ref does not match any branches: refs/tags/whatever')
       })
     })
 
     it('should parse events if committers have no username', function() {
-      var snsEvent = require('./fixtures/push.force.json').Records[0].Sns
-      var gitEvent = JSON.parse(snsEvent.Message)
+      var webhookEvent = require('./fixtures/push.force.json')
+      var gitEvent = JSON.parse(webhookEvent.body)
       gitEvent.commits.concat(gitEvent.head_commit).forEach(commit => {
         delete commit.author.username
         delete commit.committer.username
       })
-      snsEvent.Message = JSON.stringify(gitEvent)
-      sns.parseEvent(snsEvent, (err, build) => {
+      webhookEvent.body = JSON.stringify(gitEvent)
+      webhook.parseEvent(webhookEvent, (err, build) => {
         assert(!err)
         assert(build.event)
         delete build.event

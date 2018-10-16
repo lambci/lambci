@@ -51,65 +51,21 @@ GithubClient.prototype.updateStatus = function(status, cb) {
   this.request({path: `/repos/${this.repo}/statuses/${this.commit}`, body: status}, cb)
 }
 
-// By default this will just ensure that the SNS hook listens for push & pull_request
-GithubClient.prototype.updateSnsHook = function(options, cb) {
-  options = options || {events: ['push', 'pull_request']}
-  var getHookId = cb => options.id ? cb(null, options.id) : this.getSnsHook((err, hook) => cb(err, hook && hook.id))
-  getHookId((err, id) => {
-    if (err) return cb(err)
-    this.updateHook(id, options, cb)
-  })
-}
-
 GithubClient.prototype.deleteSnsHook = function(id, cb) {
-  var getHookId = cb => id ? cb(null, id) : this.getSnsHook((err, hook) => cb(err, hook && hook.id))
-
   log.info(`Deleting SNS hook for ${this.repo}`)
 
-  getHookId((err, id) => {
+  this.listHooks((err, hooks) => {
     if (err) return cb(err)
-    if (!id) return cb()
-    this.deleteHook(id, cb)
+
+    var hook = hooks.find(hook => hook.name == 'amazonsns')
+    if (!hook) return cb()
+
+    this.deleteHook(hook.id, cb)
   })
-}
-
-GithubClient.prototype.getSnsHook = function(cb) {
-  this.listHooks((err, data) => cb(err, data && data.find(hook => hook.name == 'amazonsns')))
-}
-
-GithubClient.prototype.createOrUpdateSnsHook = function(awsKey, awsSecret, snsTopic, cb) {
-  var hook = {
-    name: 'amazonsns',
-    active: true,
-    events: ['push', 'pull_request'],
-    // https://github.com/github/github-services/blob/master/lib/services/amazon_sns.rb
-    config: {
-      aws_key: awsKey,
-      aws_secret: awsSecret,
-      sns_topic: snsTopic,
-      sns_region: process.env.AWS_REGION,
-    },
-  }
-
-  log.info(`Updating SNS hook for ${this.repo}`)
-
-  this.createHook(hook, cb)
 }
 
 GithubClient.prototype.listHooks = function(cb) {
   this.request({path: `/repos/${this.repo}/hooks`}, cb)
-}
-
-// See: https://developer.github.com/v3/repos/hooks/#create-a-hook
-// hook can be: {name: '', config: {}, events: [], active: true}
-GithubClient.prototype.createHook = function(hook, cb) {
-  this.request({path: `/repos/${this.repo}/hooks`, body: hook}, cb)
-}
-
-// See: https://developer.github.com/v3/repos/hooks/#edit-a-hook
-// updates can be: {config: {}, events: [], add_events: [], remove_events: [], active: true}
-GithubClient.prototype.updateHook = function(id, updates, cb) {
-  this.request({method: 'PATCH', path: `/repos/${this.repo}/hooks/${id}`, body: updates}, cb)
 }
 
 // See: https://developer.github.com/v3/repos/hooks/#delete-a-hook

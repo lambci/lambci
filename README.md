@@ -126,7 +126,7 @@ Check the acknowledgment checkbox and click Create to start the resource creatio
 
 ![CloudFormation Step 4](https://lambci.s3.amazonaws.com/assets/cfn4.png)
 
-Once your stack is created (should be done in a few minutes) you're ready to start building!
+Once your stack is created (should be done in a few minutes) you're ready to add the webhook to any repository you like!
 
 By default LambCI only responds to pushes on the master branch and pull requests ([you can configure this](#configuration)), so try either of those – if nothing happens, then check `Services > CloudWatch > Logs` in the AWS Console and see the [Questions](#questions) section below.
 
@@ -620,7 +620,7 @@ This needs to be documented further – for now you'll have to go [off the sourc
 
 ### What does the Lambda function do?
 
-  1. Receives notification from GitHub (via SNS)
+  1. Receives notification from GitHub (via a webhook)
   1. Looks up config in DynamoDB
   1. Clones git repo using a bundled git binary
   1. Looks up config files in repo
@@ -633,27 +633,6 @@ This needs to be documented further – for now you'll have to go [off the sourc
 Something like this:
 
 ![Architecture diagram](https://lambci.s3.amazonaws.com/assets/arch.png)
-
-### Why isn't my build triggering on large pushes?
-
-Most GitHub events are relatively small – except in the case of branch pushes
-that involve hundreds of files (pull request events are not affected). GitHub
-keeps events it sends under the
-[SNS limit of 256kb](http://docs.aws.amazon.com/sns/latest/dg/large-payload-raw-message.html)
-by splitting up larger events, but because
-[Lambda events are currently limited to 128kb](http://docs.aws.amazon.com/lambda/latest/dg/limits.html#limits-list)
-([which will hopefully be fixed soon!](https://twitter.com/timallenwagner/status/747950793555247104)),
-SNS will fail to deliver them to the Lambda function (and you'll receive an error in
-your CloudWatch SNS failure logs).
-
-If this happens, and LambCI isn't triggered by a push, then you can just create
-a dummy commit and push that, which will result in a much smaller event:
-
-```console
-git commit --allow-empty -m 'Trigger LambCI'
-git push
-```
-
 
 ## License
 

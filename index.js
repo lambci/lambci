@@ -1,9 +1,8 @@
-var utils = require('./utils')
 var config = require('./utils/config')
 var log = require('./utils/log')
 var cfn = require('./cfn')
 var actions = require('./actions')
-var sns = require('./sources/sns')
+var webhook = require('./sources/webhook')
 
 exports.handler = function(event, context, cb) {
 
@@ -19,35 +18,13 @@ exports.handler = function(event, context, cb) {
 
     return actions[event.action](event, context, cb)
 
-  // Otherwise it should be SNS
-  } else if (event.Records && event.Records[0] && event.Records[0].Sns) {
+  // Otherwise it should be a GitHub webhook
+  } else if (event.httpMethod == 'POST') {
 
-    return snsBuild(event.Records[0].Sns, context, cb)
+    return webhook.build(event, context, cb)
   }
 
   log.error('Unknown event, ignoring:\n%j', event)
   return cb(new Error('Unknown event'))
-}
-
-function snsBuild(snsEvent, context, cb) {
-
-  // Lambda/SNS currently has no setting to determine whether errors should be retried
-  // By default they are, which we don't want, so always try to callback successfully
-  var done = utils.once(function snsDone(err, data) {
-    log.logIfErr(err)
-    cb(null, data)
-  })
-
-  sns.parseEvent(snsEvent, function(err, buildData) {
-    if (err) return done(err)
-
-    if (buildData.ignore) {
-      log.info(buildData.ignore)
-      log.info('Not running build')
-      return done()
-    }
-
-    actions.build(buildData, context, done)
-  })
 }
 

@@ -8,6 +8,7 @@ Metadata:
           default: GitHub Configuration
         Parameters:
           - GithubToken
+          - GithubSecret
       - Label:
           default: Slack Configuration (optional)
         Parameters:
@@ -21,6 +22,11 @@ Parameters:
     NoEcho : true
     AllowedPattern: '^$|^[0-9a-f]{40}$'
     ConstraintDescription: Must be empty or a 40 char GitHub token
+  GithubSecret:
+    Description: GitHub webhook secret
+    Type: String
+    Default: ''
+    NoEcho : true
   SlackToken:
     Description: (optional) Slack API token
     Type: String
@@ -152,6 +158,7 @@ Resources:
     Properties:
       ServiceToken: !GetAtt BuildLambda.Arn
       GithubToken: !Ref GithubToken
+      GithubSecret: !Ref GithubSecret
       SlackToken: !Ref SlackToken
       SlackChannel: !Ref SlackChannel
       S3Bucket: !Ref BuildResults

@@ -35,12 +35,27 @@ exports.updateGlobalConfig = function(config, cb) {
   })
 }
 
+exports.getGlobalConfigValue = function(projectionExpression, cb) {
+  var table = CONFIG_TABLE
+
+  log.info(`Looking up ${CONFIG_TABLE} for project: global, expression: ${projectionExpression}\n`)
+
+  client.get({
+    TableName: table,
+    Key: {project: 'global'},
+    ProjectionExpression: projectionExpression,
+  }, function(err, data) {
+    if (err) return cb(friendlyErr(table, err))
+    cb(null, (data || {}).Item)
+  })
+}
+
 exports.getConfigs = function(projects, cb) {
   var table = CONFIG_TABLE
   var req = {RequestItems: {}}
   req.RequestItems[table] = {Keys: projects.map(project => { return {project} })}
 
-  log.info(`Looking up keys in ${CONFIG_TABLE}: ${projects.join(', ')}\n`)
+  log.info(`Looking up ${CONFIG_TABLE} for projects: ${projects.join(', ')}\n`)
 
   client.batchGet(req, function(err, data) {
     if (err) return cb(friendlyErr(table, err))

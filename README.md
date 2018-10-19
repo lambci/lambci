@@ -296,6 +296,7 @@ This configuration is hardcoded in `utils/config.js` and overridden by any confi
   },
   secretEnv: { // secret env values, exposure depends on inheritSecrets config below
     GITHUB_TOKEN: '',
+    GITHUB_SECRET: '',
     SLACK_TOKEN: '',
   },
   s3Bucket: '', // bucket to store build artifacts

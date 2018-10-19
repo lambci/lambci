@@ -30,6 +30,7 @@ exports.DEFAULT_CONFIG = {
   },
   secretEnv: {
     GITHUB_TOKEN: '',
+    GITHUB_SECRET: '',
     SLACK_TOKEN: '',
   },
   s3Bucket: '',

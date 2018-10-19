@@ -74,6 +74,9 @@ function performUpdates(event, cb) {
   if (props.GithubToken && props.GithubToken != oldProps.GithubToken) {
     configUpdates.push({secretEnv: {GITHUB_TOKEN: props.GithubToken}})
   }
+  if (props.GithubSecret && props.GithubSecret != oldProps.GithubSecret) {
+    configUpdates.push({secretEnv: {GITHUB_SECRET: props.GithubSecret}})
+  }
   if (props.SlackToken && props.SlackToken != oldProps.SlackToken) {
     configUpdates.push({secretEnv: {SLACK_TOKEN: props.SlackToken}})
   }

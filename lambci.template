@@ -34,6 +34,20 @@
       "Default": "#general",
       "AllowedPattern": "^$|^#.+",
       "ConstraintDescription": "Must be empty or a valid Slack channel, eg: #general"
+    },
+    "LambdaMemory": {
+      "Description": "Lambda (MB increments of 128) [128, 256, ... 3008]",
+      "Type": "String",
+      "Default": "3008",
+      "AllowedPattern": "^[0-9]*$",
+      "ConstraintDescription": "Must be a number starting at 128 in increments of 128 to a max of 3008, eg: 1536"
+    },
+    "LambdaTimeout": {
+      "Description": "Lambda Timeout (Seconds) [1 ... 900]",
+      "Type": "String",
+      "Default": "900",
+      "AllowedPattern": "^[0-9]*$",
+      "ConstraintDescription": "Must be a number from 1 to 900, eg: 900"
     }
   },
   "Resources": {
@@ -43,8 +57,8 @@
         "FunctionName": {"Fn::Join": ["", [{"Ref": "AWS::StackName"}, "-build"]]},
         "Description": {"Fn::Join": ["", ["LambCI build function for stack: ", {"Ref": "AWS::StackName"}]]},
         "Handler": "index.handler",
-        "MemorySize": "1536",
-        "Timeout": "300",
+        "MemorySize": {"Ref": "LambdaMemory"},
+        "Timeout": {"Ref": "LambdaTimeout"},
         "Role": {"Fn::GetAtt": ["LambdaExecution", "Arn"]},
         "Code": {
           "S3Bucket": {"Fn::Join": ["", ["lambci-", {"Ref": "AWS::Region"}]]},

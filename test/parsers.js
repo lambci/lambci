@@ -93,7 +93,15 @@ describe('parsers', function() {
       var snsEvent = require('./fixtures/push.tag.json').Records[0].Sns
       sns.parseEvent(snsEvent, (err, build) => {
         assert(!err)
-        assert.equal(build.ignore, 'Ref does not match any branches: refs/tags/whatever')
+        assert.isUndefined(build.ignore)
+      })
+    })
+
+    it('should parse whatever events ignoring build', function() {
+      var snsEvent = require('./fixtures/push.whatever.json').Records[0].Sns
+      sns.parseEvent(snsEvent, (err, build) => {
+        assert(!err)
+        assert.equal(build.ignore, 'Ref does not match any branches: refs/whatever/whatever')
       })
     })
 

@@ -226,13 +226,13 @@ exports.parseEvent = function(event, eventType) {
   } else {
     // https://developer.github.com/v3/activity/events/types/#pushevent
 
-    var branchMatch = (event.ref || '').match(/^refs\/heads\/(.+)$/)
+    var branchMatch = (event.ref || '').match(/^refs\/(heads|tags)\/(.+)$/)
 
     if (!branchMatch) {
       return {ignore: `Ref does not match any branches: ${event.ref}`}
     }
 
-    var branch = branchMatch[1]
+    var branch = branchMatch[2]
 
     if (event.deleted) {
       return {ignore: `Branch ${branch} was deleted`}

@@ -71,7 +71,7 @@ future, depending on the API they settle on)
 ## Current Limitations (due to the Lambda environment itself)
 
 * No root access
-* 5 min max build time
+* 15 min max build time
 * Bring-your-own-binaries – Lambda has a limited selection of installed software
 * 1.5GB max memory
 * Linux only

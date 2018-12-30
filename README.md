@@ -49,7 +49,7 @@ different resources yourself.
 ## Supported languages
 
 * Node.js (multiple versions via [nave](https://github.com/isaacs/nave))
-* Python (multiple versions via [pyenv](https://github.com/pyenv/pyenv))
+* Python ([2.7, 3.6.8, 3.7.2](#python))
 * Java (OpenJDK [1.8 and 1.7](#java))
 * Go ([any version](#go))
 * Ruby ([2.5.3, 2.4.5, 2.3.8, 2.2.10, 2.1.10, 2.0.0-p648](#ruby))
@@ -67,6 +67,7 @@ different resources yourself.
 ## Current Limitations (due to the Lambda environment itself)
 
 * No root access
+* 500MB disk space
 * 15 min max build time
 * Bring-your-own-binaries – Lambda has a limited selection of installed software
 * 3.0GB max memory
@@ -78,9 +79,7 @@ You can get around many of these limitations by [configuring LambCI to send task
 
 You don't need to clone this repository – the easiest way to install LambCI is to [spin up a CloudFormation stack](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/template.yaml), which will use a transformed [template.yaml](https://github.com/lambci/lambci/blob/master/template.yaml) – this is just a collection of related AWS resources, including the main LambCI Lambda function and DynamoDB tables, that you can update or remove together – it should take around 3 minutes to spin up.
 
-You can run multiple stacks with different names side-by-side too (eg, `lambci-private` and `lambci-public`).
-
-As part of the stack setup, you can supply your GitHub and Slack API tokens, but you don't have to – you can add these later, either by [updating the CloudFormation stack](#updating), or using the AWS DynamoDB console or [lambci command line](https://github.com/lambci/cli). If you'd prefer to do that, you can skip straight to Step 3.
+You can use multiple repositories from the one stack, and you can run multiple stacks with different names side-by-side too (eg, `lambci-private` and `lambci-public`).
 
 If you'd prefer to run your stack after cloning this repository, you can use `npm run deploy` – this depends on [AWS SAM CLI](https://github.com/awslabs/aws-sam-cli) being installed.
 
@@ -90,15 +89,15 @@ You can create a token in the [Personal access tokens](https://github.com/settin
 
 Click the [Generate new token](https://github.com/settings/tokens/new) button and then select the appropriate access levels.
 
-LambCI only needs read access to your code, but unfortunately GitHub has rather crude access mechanisms and doesn't have a readonly scope for private repositories – the only options is to choose `repo` ("Full control"). [Other CI systems have the same frustrations](https://docs.travis-ci.com/user/github-oauth-scopes/#Travis-CI-for-Private-Projects).
+LambCI only needs read access to your code, but unfortunately GitHub webhooks have rather crude access mechanisms and don't have a readonly scope for private repositories – the only options is to choose `repo` ("Full control").
 
-![Private GitHub access](https://lambci.s3.amazonaws.com/assets/private_github.png)
+<img alt="Private GitHub access" src="https://lambci.s3.amazonaws.com/assets/private_github_2.png" width="555" height="318">
 
-If you're only using LambCI for public repositories, then you just need access to commit statuses and repository hooks (even the latter you can do away with if you're adding/removing the hooks manually):
+If you're only using LambCI for public repositories, then you just need access to commit statuses:
 
-![Public GitHub access](https://lambci.s3.amazonaws.com/assets/public_github.png)
+<img alt="Public GitHub access" src="https://lambci.s3.amazonaws.com/assets/public_github_2.png" width="538" height="216">
 
-Then click the "Generate token" button and GitHub will generate a 40 character hex API token.
+Then click the "Generate token" button and GitHub will generate a 40 character hex OAuth token.
 
 ### 2. Create a Slack token (optional)
 
@@ -106,31 +105,54 @@ You can obtain a Slack API token by creating a bot user (or you can use the toke
 
 Pick any name, and when you click "Add integration" Slack will generate an API token that looks something like `xoxb-<numbers>-<letters>`
 
-![Add Slack bot](https://lambci.s3.amazonaws.com/assets/slack_bot.png)
+<img alt="Add Slack bot" src="https://lambci.s3.amazonaws.com/assets/slack_bot_2.png" width="622" height="528">
 
 ### 3. Launch the LambCI CloudFormation stack
 
 You can either [use this direct link](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/template.yaml) or navigate in your AWS Console to `Services > CloudFormation`, choose "Create Stack" and use the [S3 link](https://lambci.s3.amazonaws.com/templates/template.yaml):
 
-![CloudFormation Step 1](https://lambci.s3.amazonaws.com/assets/cfn1.png)
+<img alt="CloudFormation Step 1" src="https://lambci.s3.amazonaws.com/assets/cfn1_2.png" width="404" height="63">
 
-Then click Next where you can enter a stack name (`lambci` is a good default), API tokens and a Slack channel:
+Then click Next where you can enter a stack name (`lambci` is a good default),
+API tokens and a Slack channel – you'll also need to
+[make up a secret to secure your webhook](https://developer.github.com/webhooks/securing/) and enter it as the
+`GithubSecret` – any randomly generated value is good here, but make sure you
+still have it handy to enter when you setup your webhooks in GitHub later on.
 
-![CloudFormation Step 2](https://lambci.s3.amazonaws.com/assets/cfn2.png)
+<img alt="CloudFormation Step 2" src="https://lambci.s3.amazonaws.com/assets/cfn2_3.png" width="689" height="558">
 
 Click Next, and then Next again on the Options step (leaving the default options selected), to get to the final Review step:
 
-![CloudFormation Step 3](https://lambci.s3.amazonaws.com/assets/cfn3.png)
+<img alt="CloudFormation Step 3" src="https://lambci.s3.amazonaws.com/assets/cfn3_2.png" width="689" height="538">
 
-Check the acknowledgment checkbox and click Create to start the resource creation process:
+Check the acknowledgments, click Create Change Set and then Execute to start the resource creation process:
 
-![CloudFormation Step 4](https://lambci.s3.amazonaws.com/assets/cfn4.png)
+<img alt="CloudFormation Step 4" src="https://lambci.s3.amazonaws.com/assets/cfn4.png">
 
 Once your stack is created (should be done in a few minutes) you're ready to add the webhook to any repository you like!
 
-By default LambCI only responds to pushes on the master branch and pull requests ([you can configure this](#configuration)), so try either of those – if nothing happens, then check `Services > CloudWatch > Logs` in the AWS Console and see the [Questions](#questions) section below.
+You can get the WebhookUrl from the Outputs of the CloudFormation stack:
 
-You can check that the hooks have been installed in a repository correctly by going to `Settings > Webhooks and services` on the GitHub repository page (ie, `https://github.com/<user>/<repo>/settings/hooks`). There should be a Service listed as `Amazon SNS` – if you click the edit (pencil) button then you can choose to "Test Service" (it should send a push event).
+<img alt="CloudFormation Step 5" src="https://lambci.s3.amazonaws.com/assets/cfn5.png" width="758" height="177">
+
+Then create a new Webhook in any GitHub repo you want to trigger under
+`Settings > Webhooks` (`https://github.com/<user>/<repo>/settings/hooks/new`)
+and enter the `WebhookUrl` from above as the Payload URL, ensure Content type
+is `application/json` and enter the `GithubSecret` you generated in the first step as the Secret:
+
+<img alt="GitHub Webhook Step 1" src="https://lambci.s3.amazonaws.com/assets/webhook1.png" width="498" height="652">
+
+Assuming you want to respond to Pull Requests as well as Pushes, you'll need to choose
+"Let me select individual events", and check Pushes and Pull requests.
+
+<img alt="GitHub Webhook Step 2" src="https://lambci.s3.amazonaws.com/assets/webhook2.png" width="772" height="261">
+
+Then "Add webhook" and you're good to go!
+
+By default LambCI only responds to pushes on the master branch and pull
+requests ([you can configure this](#configuration)), so try either of those –
+if nothing happens, then check `Services > CloudWatch > Logs` in the AWS
+Console and see the [Questions](#questions) section below.
 
 ## Configuration
 
@@ -386,13 +408,22 @@ Branch status img: https://<bucket>/<project>/branches/master/<somehash>.svg
 
 You can update your CloudFormation stack at any time to change, add or remove the parameters – or even upgrade to a new version of LambCI.
 
-In the AWS Console, go to `Services > CloudFormation`, select your LambCI stack in the list and then choose `Actions > Update Stack`. You can keep the same template selected (unless you're updating LambCI and the template has different resources), and then when you click Next you can modify parameters like your GitHub token, repositories, Slack channel, etc.
+In the AWS Console, go to `Services > CloudFormation`, select your LambCI stack in the list and then choose `Actions > Update Stack`. You can keep the same template selected (unless you're updating LambCI), and then when you click Next you can modify parameters like your GitHub token, Slack channel, etc.
 
 LambCI will do its best to update these parameters correctly, but if it fails or you run into trouble, just try setting them all to blank, updating, and then update again with the values you want.
 
 If you've (only) modified `template.yaml` locally, then you'll need to run `npm run template` and use `build/versioned.yaml` to update your stack.
 
-If you've modified LambCI code locally, you can update with `npm run deploy` – this requires [AWS SAM CLI](https://github.com/awslabs/aws-sam-cli) to be installed.
+If you've modified other LambCI code locally, you can update with `npm run deploy` – this requires [AWS SAM CLI](https://github.com/awslabs/aws-sam-cli) to be installed.
+
+### Updating to 0.10.0 from earlier versions
+
+Updating to 0.10.0 should Just Work™ using the new template – however GitHub
+[shut down the use of SNS hooks](https://developer.github.com/changes/2018-04-25-github-services-deprecation/),
+which is how LambCI was previously triggered, so you'll need to go through any
+repositories on GitHub that you had setup with previous LambCI versions, remove
+the SNS hook if it wasn't removed already (in `Settings`), and add the new webhook as laid out
+in [Installation](#installation).
 
 ## Security
 
@@ -411,8 +442,7 @@ command is `npm install && npm test` which will use the default Lambda version
 of Node.js (8.10.x) and npm (5.6.0).
 
 The way to build with different Node.js versions, or other languages entirely,
-is just to override the `cmd` config property (specifying a `test` property in
-a `package.json` file would work too).
+is just to override the `cmd` config property.
 
 LambCI comes with a collection of helper scripts to setup your environment
 for languages not supported out of the box on AWS Lambda – that is,
@@ -438,7 +468,7 @@ If you're happy using the built-in npm to install, you could simplify this a lit
 }
 ```
 
-There's [currently no way to run multiple builds in parallel]() but you could
+There's currently no way to run multiple builds in parallel but you could
 have processes run in parallel using a tool like
 [npm-run-all](https://github.com/mysticatea/npm-run-all) – the logs will be a
 little messy though!
@@ -462,7 +492,7 @@ Here's an example package.json for running your tests in Node.js v6, v8 and v10 
 }
 ```
 
-### Python 2.7
+### Python
 
 LambCI comes with [pip](https://pip.pypa.io) installed and available on the
 `PATH`, and Lambda has Python 2.7 already installed. `$HOME/.local/bin` is also
@@ -481,8 +511,7 @@ script you can source to setup the pyenv root and download prebuilt
 versions for you.
 
 Call it with the Python version you want (currently: `3.7.2`, `3.6.8` or
-`system`, which will use the 2.7 version already installed on Lambda) –
-omitting it defaults to `3.7.2`:
+`system`, which will use the 2.7 version already installed on Lambda):
 
 ```json
 {
@@ -497,7 +526,7 @@ your build – but the JRE *does* exist on Lambda, so the overall impact is smal
 
 LambCI includes a script you can source before running your build commands
 that will install and setup the SDK correctly, as well as Maven (v3.3.9). Call
-it with the OpenJDK version you want (`1.7` or `1.8`) – omitting it defaults to `1.8`:
+it with the OpenJDK version you want (`1.7` or `1.8`):
 
 ```json
 {
@@ -517,11 +546,11 @@ your build, but Go is quite small and well suited to running anywhere.
 LambCI includes a script you can source before running your build commands
 that will install Go and set your `GOROOT` and `GOPATH` with the correct
 directory structure. Call it with the Go version you want (any of the versions
-[on the Go site](https://golang.org/dl/)) – omitting it defaults to `1.10.3`:
+[on the Go site](https://golang.org/dl/)):
 
 ```json
 {
-  "cmd": ". ~/init/go 1.6.3 && make test"
+  "cmd": ". ~/init/go 1.11.4 && make test"
 }
 ```
 
@@ -536,8 +565,7 @@ your build.
 
 LambCI includes a script you can source before running your build commands
 that will install Ruby, rbenv, gem and bundler. Call it with the Ruby version
-you want (currently: `2.5.1`, `2.4.4`, `2.3.7`, `2.2.10`, `2.1.10` and `2.0.0-p648`) –
-omitting it defaults to `2.5.1`:
+you want (currently: `2.5.1`, `2.4.4`, `2.3.7`, `2.2.10`, `2.1.10` or `2.0.0-p648`):
 
 ```json
 {
@@ -556,7 +584,7 @@ your build.
 
 LambCI includes a script you can source before running your build commands
 that will install PHP, phpenv and composer. Call it with the PHP version
-you want (currently: `7.2.10`, `7.1.22`, `7.0.32` and `5.6.38`) – omitting it defaults to `7.2.10`:
+you want (currently: `7.2.10`, `7.1.22`, `7.0.32` or `5.6.38`):
 
 ```json
 {
@@ -599,7 +627,7 @@ your build.
 
 LambCI includes a script you can source before running your build commands
 that will install Rust, cargo and gcc. Call it with the Rust version
-you want (currently: `1.11.0` and `1.10.0`) – omitting it defaults to `1.11.0`:
+you want (currently: `1.11.0` or `1.10.0`):
 
 ```json
 {
@@ -615,7 +643,7 @@ and the resulting [build log](https://lambci-public-buildresults-e3xwlufrwb3i.s3
 
 LambCI can run tasks on an ECS cluster, which means you can perform all of your build tasks in a Docker container and not be subject to the same restrictions you have in the Lambda environment.
 
-This needs to be documented further – for now you'll have to go [off the source]() and check out the [lambci/ecs](https://github.com/lambci/ecs) repo.
+This needs to be documented further – for now you'll have to go off the source and check out the [lambci/ecs](https://github.com/lambci/ecs) repo.
 
 ## Questions
 
@@ -628,12 +656,6 @@ This needs to be documented further – for now you'll have to go [off the sourc
   1. Runs install and build cmds on Lambda (or starts ECS task)
   1. Updates Slack and GitHub statuses along the way (optionally SNS for email, etc)
   1. Uploads build logs/statuses to S3
-
-### How do all the pieces fit together?
-
-Something like this:
-
-![Architecture diagram](https://lambci.s3.amazonaws.com/assets/arch.png)
 
 ## License
 

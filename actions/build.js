@@ -250,26 +250,24 @@ function dockerBuild(build, cb) {
 function prepareLambdaConfig(buildConfig) {
 
   var vendorDir = path.join(__dirname, '../vendor')
-  var usrDir = path.join(config.HOME_DIR, 'usr')
   var defaultLambdaConfig = {
     env: {
       HOME: config.HOME_DIR,
-      SHELL: path.join(vendorDir, '/bin/bash'),
+      SHELL: path.join(vendorDir, 'bin/bash'),
       PATH: [
         path.join(config.HOME_DIR, '.local/bin'),
-        path.join(usrDir, 'bin'),
+        path.join(config.HOME_DIR, 'usr/bin'),
         path.join(vendorDir, 'bin'),
         path.join(__dirname, '../node_modules/.bin'),
         process.env.PATH,
       ].join(':'),
       LD_LIBRARY_PATH: [
-        path.join(usrDir, 'lib64'),
+        path.join(config.HOME_DIR, 'usr/lib64'),
+        path.join(vendorDir, 'lib'),
         process.env.LD_LIBRARY_PATH,
       ].join(':'),
       NODE_PATH: process.env.NODE_PATH,
       PYTHONPATH: path.join(vendorDir, 'lib/python2.7/site-packages'),
-      GIT_TEMPLATE_DIR: path.join(usrDir, 'share/git-core/templates'),
-      GIT_EXEC_PATH: path.join(usrDir, 'libexec/git-core'),
 
       // To try to get colored output
       TERM: 'xterm-256color',

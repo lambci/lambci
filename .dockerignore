@@ -6,6 +6,7 @@
 *CONTRIBUTING*
 .git
 test
+build
 npm-debug.log
 lambda.zip
 node_modules/ansi_up/examples

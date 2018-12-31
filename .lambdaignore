@@ -7,6 +7,7 @@ Dockerfile
 *CONTRIBUTING*
 .git/*
 test/*
+build/*
 npm-debug.log
 node_modules/ansi_up/examples/*
 node_modules/ansi_up/test/*

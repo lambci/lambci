@@ -52,7 +52,7 @@ different resources yourself.
 * Python ([2.7, 3.6.8, 3.7.2](#python))
 * Java (OpenJDK [1.8 and 1.7](#java))
 * Go ([any version](#go))
-* Ruby ([2.5.3, 2.4.5, 2.3.8, 2.2.10, 2.1.10, 2.0.0-p648](#ruby))
+* Ruby ([2.6.0, 2.5.3, 2.4.5, 2.3.8, 2.2.10, 2.1.10, 2.0.0-p648](#ruby))
 * PHP ([7.2.12, 7.1.24, 7.0.32, 5.6.38](#php))
 * Native compilation with a [pre-built gcc 4.8.5](#native-gcc-compilation)
 * Rust ([1.11.0, 1.10.0](#rust), but any version should work)
@@ -565,11 +565,11 @@ your build.
 
 LambCI includes a script you can source before running your build commands
 that will install Ruby, rbenv, gem and bundler. Call it with the Ruby version
-you want (currently: `2.5.1`, `2.4.4`, `2.3.7`, `2.2.10`, `2.1.10` or `2.0.0-p648`):
+you want (currently: `2.6.0`, `2.5.3`, `2.4.5`, `2.3.8`, `2.2.10`, `2.1.10` or `2.0.0-p648`):
 
 ```json
 {
-  "cmd": ". ~/init/ruby 2.4.4 && bundle install && bundle exec rake"
+  "cmd": ". ~/init/ruby 2.4.5 && bundle install && bundle exec rake"
 }
 ```
 
@@ -584,11 +584,11 @@ your build.
 
 LambCI includes a script you can source before running your build commands
 that will install PHP, phpenv and composer. Call it with the PHP version
-you want (currently: `7.2.10`, `7.1.22`, `7.0.32` or `5.6.38`):
+you want (currently: `7.2.12`, `7.1.24`, `7.0.32` or `5.6.38`):
 
 ```json
 {
-  "cmd": ". ~/init/php 5.6.38 && composer install -n --prefer-dist && vendor/bin/phpunit"
+  "cmd": ". ~/init/php 7.1.24 && composer install -n --prefer-dist && vendor/bin/phpunit"
 }
 ```
 

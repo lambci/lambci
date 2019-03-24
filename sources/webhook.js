@@ -47,6 +47,23 @@ exports.build = function(event, context, cb) {
       return done(null, {msg: 'pong'})
     }
 
+    if (eventType == 'status') {
+      var innerEvent
+
+      try {
+        innerEvent = JSON.parse(event.body)
+      } catch (e) {
+        throw new Error(`Could not parse webhook body as JSON: ${e.message}`)
+      }
+
+      lambda.invoke({
+        InvocationType: 'Event',
+        FunctionName: process.env.AWS_LAMBDA_FUNCTION_NAME,
+        Payload: JSON.stringify(Object.assign({action: 'updateStatus'}, innerEvent)),
+      }, done)
+      return
+    }
+
     var buildData
 
     try {

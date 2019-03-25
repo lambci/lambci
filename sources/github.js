@@ -31,6 +31,9 @@ function GithubClient(build) {
   })
 
   build.statusEmitter.finishTasks.push((build, cb) => {
+    // Don't update statuses if we're doing a docker build and we launched successfully
+    if (!build.error && build.config.docker) return cb()
+
     var status = {
       state: build.error ? 'failure' : 'success',
       description: build.error ? build.error.message : `Build #${build.buildNum} successful!`,

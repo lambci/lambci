@@ -37,6 +37,9 @@ function SlackClient(token, options, build) {
   })
 
   build.statusEmitter.finishTasks.push((build, cb) => {
+    // Don't update statuses if we're doing a docker build and we launched successfully
+    if (!build.error && build.config.docker) return cb()
+
     var status = {}, elapsedTxt = utils.elapsedTxt(build.startedAt, build.endedAt)
     if (build.error) {
       var txt = build.error.message

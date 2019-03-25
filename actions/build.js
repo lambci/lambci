@@ -113,18 +113,22 @@ function patchUncaughtHandlers(build, cb) {
 }
 
 function buildDone(build, cb) {
+  var finishTasks = build.statusEmitter.finishTasks
 
-  // Don't update statuses if we're doing a docker build and we launched successfully
-  if (!build.error && build.config.docker) return cb()
+  // Don't update statuses if we're doing a docker build and we launched successfully.
+  // We still need to properly call finish tasks handlers for docker builds
+  // to end the log uploader etc. and to properly shutdown the lambda.
+  // Otherwise the lamdbda will keep uploading the log until the function times out.
+  if (build.error || !build.config.docker) {
+      log.info(build.error ? `Build #${build.buildNum} failed: ${build.error.message}` :
+        `Build #${build.buildNum} successful!`)
 
-  log.info(build.error ? `Build #${build.buildNum} failed: ${build.error.message}` :
-    `Build #${build.buildNum} successful!`)
+      build.endedAt = new Date()
+      build.status = build.error ? 'failure' : 'success'
+      build.statusEmitter.emit('finish', build)
 
-  build.endedAt = new Date()
-  build.status = build.error ? 'failure' : 'success'
-  build.statusEmitter.emit('finish', build)
-
-  var finishTasks = build.statusEmitter.finishTasks.concat(db.finishBuild)
+      finishTasks = finishTasks.concat(db.finishBuild)
+  }
 
   async.forEach(finishTasks, (task, cb) => task(build, cb), function(taskErr) {
     log.logIfErr(taskErr)

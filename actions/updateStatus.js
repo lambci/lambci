@@ -12,27 +12,11 @@ module.exports = updateStatus
 // won't get updated.
 // To fix this we subscribe to the status-event in github to get notified when
 // the build has finished.
-function updateStatus(event, context, cb) {
-  var build
-
-  // ignore status events for pending
-  if (event.state == "pending") return cb()
-
-  if (!event.repository) {
-    throw new Error('repository field is missing from GitHub event')
-  }
-  var project = `gh/${event.repository.full_name}`
-
-  var matches = (event.description || "").match(/#([0-9]+)/)
-  if ((matches == null) || (matches.length < 2)) {
-    throw new Error('failed to extract build number from description')
-  }
-  var buildNum = parseInt(matches[1])
-
+function updateStatus(buildData, context, cb) {
   // get the lambci config and build info from dynamodb
   async.parallel({
-    configs: (cb) => db.getConfigs(['global', project], cb),
-    buildInfo: (cb) => db.getBuild(project, buildNum, cb),
+    configs: (cb) => db.getConfigs(['global', buildData.project], cb),
+    buildInfo: (cb) => db.getBuild(buildData.project, buildData.buildNum, cb),
   }, function(err, data) {
     if (err) return cb(err)
 
@@ -48,10 +32,10 @@ function updateStatus(event, context, cb) {
     build.config = config.initConfig(data.configs, build)
     build.token = build.config.secretEnv.GITHUB_TOKEN
 
-    if (event.state == 'success') {
+    if (buildData.status == 'success') {
       build.status = 'success'
       log.info(`Build #${build.buildNum} successful!`)
-    } else if (build.status == 'failure') {
+    } else if (buildData.status == 'failure') {
       build.status = 'failure'
       log.info(`Build #${build.buildNum} failed`)
     } else {

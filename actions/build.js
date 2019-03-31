@@ -268,6 +268,7 @@ function prepareLambdaConfig(buildConfig) {
       ].join(':'),
       NODE_PATH: process.env.NODE_PATH,
       PYTHONPATH: path.join(vendorDir, 'lib/python2.7/site-packages'),
+      PERL5LIB: path.join(vendorDir, 'lib/perl5/vendor_perl'),
 
       // To try to get colored output
       TERM: 'xterm-256color',

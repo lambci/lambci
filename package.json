@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "ansi_up": "^3.0.0",
-    "nave": "^2.2.3",
+    "nave": "^2.2.4",
     "neo-async": "^2.6.0"
   },
   "devDependencies": {

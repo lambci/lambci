@@ -314,7 +314,7 @@ This configuration is hardcoded in `utils/config.js` and overridden by any confi
 ```js
 {
   cmd: 'npm install && npm test',
-  env: { // env values exposed to build commands
+  env: { // env values exposed to build commands. See below for default environment variables provided by lambci.
   },
   secretEnv: { // secret env values, exposure depends on inheritSecrets config below
     GITHUB_TOKEN: '',
@@ -353,6 +353,55 @@ This configuration is hardcoded in `utils/config.js` and overridden by any confi
   },
 }
 ```
+
+### Environment Variables 
+
+By default, builds have access to the following environment variables: 
+
+**`CI`**
+
+*Default:* `true`  
+Signifies that this a build triggered by a CI pipeline.
+
+**`LAMBCI`**
+
+*Default:* `true`  
+Signifies that lambCI triggered this build.
+
+**`LAMBCI_REPO`**
+
+*Example:* ``  
+URL for the repository for the target source code for this build
+
+**`LAMBCI_BRANCH`**
+
+*Example:* `master`  
+Branch name for the git repository to build the source from.
+
+**`LAMBCI_CLONE_REPO`**
+
+*Example:* ``
+
+**`LAMBCI_CHECKOUT_BRANCH`**
+
+*Default:* build.checkoutBranch,
+
+**`LAMBCI_COMMIT`**
+
+Example: `ca82a6dff817ec66f44342007202690a93763949`  
+Git commit hash string this build is based on.
+
+**`LAMBCI_PULL_REQUEST`**
+
+*Default:* '' (Empty string)  
+*Example:* `46`  
+Pull Request number for this build
+
+**`AWS_REQUEST_ID`**
+
+*Example:* `79104EXAMPLEB723`  
+String identifier of AWS request to trigger build.
+
 
 ### SNS Notifications (for email, SMS, etc)
 

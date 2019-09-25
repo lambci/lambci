@@ -99,14 +99,12 @@ Resources:
       PrimaryKey:
         Name: project
         Type: String
-      ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
 
   BuildsTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub ${AWS::StackName}-builds
+      BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: project
           AttributeType: S
@@ -123,9 +121,6 @@ Resources:
           KeyType: HASH
         - AttributeName: buildNum
           KeyType: RANGE
-      ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
       LocalSecondaryIndexes:
         - IndexName: trigger
           KeySchema:

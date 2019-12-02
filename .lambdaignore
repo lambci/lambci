@@ -19,5 +19,6 @@ node_modules/*/examples/*
 node_modules/ansi_up/dist/*
 node_modules/ansi_up/.vscode/*
 node_modules/ansi_up/*.png
+node_modules/ansi_up/tags
 node_modules/neo-async/async.min.js
 node_modules/neo-async/dist/*

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+# NB: this is deprecated, Rust is too large for any recent version to fit on Lambda
+
 VERSION=${1:-1.11.0}
 
 echo "Installing Rust ${VERSION}..."
@@ -15,8 +17,6 @@ if ! [ -d $CARGO_HOME ]; then
   curl -sSL https://lambci.s3.amazonaws.com/binaries/rust-${VERSION}-rustup.tgz | tar -xz -C ~
   set +x
 fi
-
-source ~/init/gcc
 
 echo "Rust setup complete"
 echo ""

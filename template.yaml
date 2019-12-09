@@ -55,11 +55,14 @@ Resources:
     Properties:
       FunctionName: !Sub ${AWS::StackName}-build
       Description: !Sub 'LambCI build function for stack: ${AWS::StackName}'
-      Runtime: nodejs8.10
+      Runtime: provided
       CodeUri: build/lambda.zip
       Handler: index.handler
       Timeout: 900
       MemorySize: 3008
+      Layers:
+        - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:553035198032:layer:lambci-base:10
+        - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:553035198032:layer:gcc72-lambda1:4
       Events:
         Webhook:
           Type: Api

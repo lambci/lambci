@@ -2,4 +2,5 @@ node_modules
 npm-debug.log
 build/*.zip
 build/*.yaml
-build/docker
+build/runtime/layer
+build/runtime/layer.zip

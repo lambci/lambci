@@ -25,7 +25,7 @@ exports.BASE_BUILD_DIR = path.join(exports.BASE_DIR, 'build') // eg: /tmp/lambci
 // .lambci.js or .lambci.json file
 
 exports.DEFAULT_CONFIG = {
-  cmd: 'npm install && npm test',
+  cmd: 'npm ci && npm test',
   env: {
   },
   secretEnv: {

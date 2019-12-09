@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+# NB: LambCI now uses a layer for gcc, only use this if you need an older version of GCC
+
 VERSION=${1:-4.8.5}
 
 echo "Installing GCC ${VERSION}..."

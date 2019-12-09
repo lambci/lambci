@@ -2,8 +2,8 @@ version: '2.4'
 services:
   lambci:
     build:
-      context: ./build/docker
-      dockerfile: ../../Dockerfile
+      context: ./build
+      dockerfile: ../Dockerfile
     image: lambci/lambci
     # Lambda only has these files/links in /dev:
     # /dev/full

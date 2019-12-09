@@ -181,9 +181,9 @@ function lambdaBuild(build, cb) {
 }
 
 function runInBash(cmd, opts, cb) {
-  // Would love to create a pseudo terminal here (pty), but don't have permissions in Lambda
+  // Would love to create a pseudo terminal here, but /dev/pts doesn't exist on Lambda
   /*
-  var proc = require('pty.js').spawn('/bin/bash', ['-c', config.cmd], {
+  var proc = require('node-pty').spawn('/bin/bash', ['-c', config.cmd], {
     name: 'xterm-256color',
     cwd: cloneDir,
     env: env,
@@ -200,7 +200,7 @@ function runInBash(cmd, opts, cb) {
 
   log.info(`$ ${logCmd}`)
 
-  var proc = spawn(path.join(__dirname, '../vendor/bin/bash'), ['-c', cmd], opts)
+  var proc = spawn('/opt/bin/bash', ['-c', cmd], opts)
   proc.stdout.pipe(utils.lineStream(log.info))
   proc.stderr.pipe(utils.lineStream(log.error))
   proc.on('error', cb)
@@ -249,26 +249,27 @@ function dockerBuild(build, cb) {
 // For when executing under Lambda (but not ECS/Docker)
 function prepareLambdaConfig(buildConfig) {
 
-  var vendorDir = path.join(__dirname, '../vendor')
   var defaultLambdaConfig = {
     env: {
       HOME: config.HOME_DIR,
-      SHELL: path.join(vendorDir, 'bin/bash'),
+      SHELL: '/opt/bin/bash',
       PATH: [
         path.join(config.HOME_DIR, '.local/bin'),
         path.join(config.HOME_DIR, 'usr/bin'),
-        path.join(vendorDir, 'bin'),
         path.join(__dirname, '../node_modules/.bin'),
+        '/opt/bin',
         process.env.PATH,
       ].join(':'),
       LD_LIBRARY_PATH: [
         path.join(config.HOME_DIR, 'usr/lib64'),
-        path.join(vendorDir, 'lib'),
         process.env.LD_LIBRARY_PATH,
       ].join(':'),
       NODE_PATH: process.env.NODE_PATH,
-      PYTHONPATH: path.join(vendorDir, 'lib/python2.7/site-packages'),
-      PERL5LIB: path.join(vendorDir, 'lib/perl5/vendor_perl'),
+      PYTHONPATH: [
+        path.join(config.HOME_DIR, '.local/lib/python3.6/site-packages'),
+        '/opt/lib/python3.6/site-packages',
+      ].join(':'),
+      PERL5LIB: '/opt/share/perl5/vendor_perl:/opt/lib/perl5/vendor_perl',
 
       // To try to get colored output
       TERM: 'xterm-256color',

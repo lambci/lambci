@@ -46,17 +46,21 @@ It can be easily launched and kept up-to-date as a [CloudFormation
 Stack](https://aws.amazon.com/cloudformation/), or you can manually create the
 different resources yourself.
 
+## Installed languages
+
+* Node.js 12.x (including `npm`/`npx`)
+* Python 3.6 (including `pip`)
+* Gcc 7.2 (including `c++`)
+
 ## Supported languages
 
-* Node.js (multiple versions via [nave](https://github.com/isaacs/nave))
-* Python ([2.7, 3.6.8, 3.7.2](#python))
+* Check the [Recipes](#language-recipes) list below on how to configure these:
+* Node.js (any version via [nave](https://github.com/isaacs/nave))
+* Python ([3.6.8, 3.7.2](#python))
 * Java (OpenJDK [1.8 and 1.7](#java))
 * Go ([any version](#go))
 * Ruby ([2.6.0, 2.5.3, 2.4.5, 2.3.8, 2.2.10, 2.1.10, 2.0.0-p648](#ruby))
 * PHP ([7.3.3, 7.2.16, 7.1.27, 7.0.32, 5.6.38](#php))
-* Native compilation with a [pre-built gcc 4.8.5](#native-gcc-compilation)
-* Rust ([1.11.0, 1.10.0](#rust), but any version should work)
-* Check the [Recipes](#language-recipes) list below for the status of other languages/tools
 
 ## Prerequisites
 
@@ -158,7 +162,7 @@ Console and see the [Questions](#questions) section below.
 
 Many configuration values can be specified in a `.lambci.js`, `.lambci.json` or `package.json` file in the root of your repository – and all values can be set in the DynamoDB configuration table (named `<stack>-config`, eg, `lambci-config`)
 
-For example, the default command that LambCI will try to run is `npm install && npm test`, but let's say you have a python project – you could put the following in `.lambci.json` in your repository root:
+For example, the default command that LambCI will try to run is `npm ci && npm test`, but let's say you have a python project – you could put the following in `.lambci.json` in your repository root:
 
 ```json
 {
@@ -231,7 +235,7 @@ Here's an example `package.json` overriding the `cmd` property:
     "lambci-build": "eslint . && mocha"
   },
   "lambci": {
-    "cmd": "npm install && npm run lambci-build"
+    "cmd": "npm ci && npm run lambci-build"
   }
 }
 ```
@@ -240,7 +244,7 @@ And the same example using `.lambci.js`:
 
 ```js
 module.exports = {
-  cmd: 'npm install && npm run lambci-build'
+  cmd: 'npm ci && npm run lambci-build'
 }
 ```
 
@@ -313,7 +317,7 @@ This configuration is hardcoded in `utils/config.js` and overridden by any confi
 
 ```js
 {
-  cmd: 'npm install && npm test',
+  cmd: 'npm ci && npm test',
   env: { // env values exposed to build commands
   },
   secretEnv: { // secret env values, exposure depends on inheritSecrets config below
@@ -437,26 +441,24 @@ If you discover any security issues with LambCI please email [security@lambci.or
 
 ## Language Recipes
 
-LambCI doesn't currently have any language-specific settings. The default
-command is `npm install && npm test` which will use the default Lambda version
-of Node.js (8.10.x) and npm (5.6.0).
+The default command is `npm ci && npm test` which will use Node.js 12.14.0 and npm 6.13.3.
 
 The way to build with different Node.js versions, or other languages entirely,
 is just to override the `cmd` config property.
 
 LambCI comes with a collection of helper scripts to setup your environment
 for languages not supported out of the box on AWS Lambda – that is,
-every language except Node.js and Python 2.7
+every language except Node.js and Python 3.6
 
 ### Node.js
 
 LambCI comes with [nave](https://github.com/isaacs/nave) installed and
 available on the `PATH`, so if you wanted to run your npm install and tests
-using the latest Node.js v10.x and npm, you could do specify:
+using Node.js v10.x, you could do specify:
 
 ```json
 {
-  "cmd": "nave use 10 bash -c 'npm install && npm test'"
+  "cmd": "nave use 10 bash -c 'npm ci && npm test'"
 }
 ```
 
@@ -464,7 +466,7 @@ If you're happy using the built-in npm to install, you could simplify this a lit
 
 ```json
 {
-  "cmd": "npm install && nave use 10 npm test"
+  "cmd": "npm ci && nave use 10 npm test"
 }
 ```
 
@@ -473,18 +475,18 @@ have processes run in parallel using a tool like
 [npm-run-all](https://github.com/mysticatea/npm-run-all) – the logs will be a
 little messy though!
 
-Here's an example package.json for running your tests in Node.js v6, v8 and v10 simultaneously:
+Here's an example package.json for running your tests in Node.js v8, v10 and v12 simultaneously:
 
 ```json
 {
   "lambci": {
-    "cmd": "npm install && npm run ci"
+    "cmd": "npm ci && npm run ci-all"
   },
   "scripts": {
-    "ci": "run-p ci:*",
-    "ci:node4": "nave use 6 npm test",
-    "ci:node5": "nave use 8 npm test",
-    "ci:node6": "nave use 10 npm test"
+    "ci-all": "run-p ci:*",
+    "ci:node8": "nave use 8 npm test",
+    "ci:node10": "nave use 10 npm test",
+    "ci:node12": "nave use 12 npm test"
   },
   "devDependencies": {
     "npm-run-all": "*"
@@ -495,7 +497,7 @@ Here's an example package.json for running your tests in Node.js v6, v8 and v10 
 ### Python
 
 LambCI comes with [pip](https://pip.pypa.io) installed and available on the
-`PATH`, and Lambda has Python 2.7 already installed. `$HOME/.local/bin` is also
+`PATH`, and Lambda has Python 3.6 already installed. `$HOME/.local/bin` is also
 added to `PATH`, so local pip installs should work:
 
 ```json
@@ -511,7 +513,7 @@ script you can source to setup the pyenv root and download prebuilt
 versions for you.
 
 Call it with the Python version you want (currently: `3.7.2`, `3.6.8` or
-`system`, which will use the 2.7 version already installed on Lambda):
+`system`, which will use the 3.6 version already installed on Lambda):
 
 ```json
 {
@@ -600,44 +602,6 @@ and overrides of `--disable-cgi` and `--disable-fpm`.
 You can see an example of this working
 [here](https://github.com/mhart/test-ci-project/blob/3f26c1d2a6d963c54fec8b24cc439bece894e033/build-php.sh) –
 and the resulting [build log](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/mhart/test-ci-project/builds/140/3e9954f8a74dda5f4050b65bcf56cde8.html).
-
-### Native (gcc) compilation
-
-AWS Lambda also has no native compiler, so you need to download one as part of your build process.
-We have a precompiled gcc 4.8.5 that works in the Lambda environment with a full set of linux headers:
-
-```json
-{
-  "cmd": ". ~/init/gcc && npm install && npm test"
-}
-```
-
-Keep in mind that native compilation is finicky at best, especially when
-installed in a non-default location, so it may not work out-of-the-box for
-complicated libraries that depend on other headers/libraries.
-
-You can see examples of this working
-[here](https://github.com/mhart/test-ci-project/blob/71815a5e74d45f7ebb4682468587cfa352eae925/build-native-node.sh) –
-and the resulting [build log](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/mhart/test-ci-project/builds/125/2f5b18c9c55d1683a641d4d9ae8c2139.html).
-
-### Rust
-
-Rust is not installed on AWS Lambda, so needs to be downloaded as part of
-your build.
-
-LambCI includes a script you can source before running your build commands
-that will install Rust, cargo and gcc. Call it with the Rust version
-you want (currently: `1.11.0` or `1.10.0`):
-
-```json
-{
-  "cmd": ". ~/init/rust 1.10.0 && cargo build && cargo test"
-}
-```
-
-You can see an example of this working
-[here](https://github.com/mhart/test-ci-project/blob/f0a6829c4c804dfad6e4f673de8fa79d1558d3cf/build-rust.sh) –
-and the resulting [build log](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/mhart/test-ci-project/builds/128/e69f562a0ce3e0435dda8366740d38ee.html).
 
 ## Extending with ECS
 

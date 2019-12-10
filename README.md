@@ -60,7 +60,7 @@ different resources yourself.
 * Java (OpenJDK [1.8](#java))
 * Go ([any version](#go))
 * Ruby ([2.6.0, 2.5.3, 2.4.5, 2.3.8, 2.2.10, 2.1.10, 2.0.0-p648](#ruby))
-* PHP ([7.3.3, 7.2.16, 7.1.27, 7.0.32, 5.6.38](#php))
+* PHP ([7.3.13, 7.2.26, 7.1.33, 7.0.32, 5.6.38](#php))
 
 ## Prerequisites
 
@@ -586,11 +586,11 @@ your build.
 
 LambCI includes a script you can source before running your build commands
 that will install PHP, phpenv and composer. Call it with the PHP version
-you want (currently: `7.3.3`, `7.2.16`, `7.1.27`, `7.0.32` or `5.6.38`):
+you want (currently: `7.3.13`, `7.2.26`, `7.1.33`, `7.0.32` or `5.6.38`):
 
 ```json
 {
-  "cmd": ". ~/init/php 7.3.3 && composer install -n --prefer-dist && vendor/bin/phpunit"
+  "cmd": ". ~/init/php 7.3.13 && composer install -n --prefer-dist && vendor/bin/phpunit"
 }
 ```
 

@@ -56,7 +56,7 @@ different resources yourself.
 
 * Check the [Recipes](#language-recipes) list below on how to configure these:
 * Node.js (any version via [nave](https://github.com/isaacs/nave))
-* Python ([3.6.8, 3.7.2](#python))
+* Python ([3.8.0, 3.7.4, 3.6.9](#python))
 * Java (OpenJDK [1.8](#java))
 * Go ([any version](#go))
 * Ruby ([2.6.5, 2.5.7, 2.4.9, 2.3.8, 2.2.10, 2.1.10, 2.0.0-p648](#ruby))
@@ -512,12 +512,12 @@ LambCI comes with [pyenv](https://github.com/pyenv/pyenv) installed and a
 script you can source to setup the pyenv root and download prebuilt
 versions for you.
 
-Call it with the Python version you want (currently: `3.7.2`, `3.6.8` or
+Call it with the Python version you want (currently: `3.8.0`, `3.7.4`, `3.6.9` or
 `system`, which will use the 3.6 version already installed on Lambda):
 
 ```json
 {
-  "cmd": ". ~/init/python 3.6.8 && pip install --user tox && tox"
+  "cmd": ". ~/init/python 3.8.0 && pip install --user tox && tox"
 }
 ```
 

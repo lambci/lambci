@@ -552,7 +552,7 @@ directory structure. Call it with the Go version you want (any of the versions
 
 ```json
 {
-  "cmd": ". ~/init/go 1.11.4 && make test"
+  "cmd": ". ~/init/go 1.13.5 && make test"
 }
 ```
 

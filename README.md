@@ -59,7 +59,7 @@ different resources yourself.
 * Python ([3.6.8, 3.7.2](#python))
 * Java (OpenJDK [1.8](#java))
 * Go ([any version](#go))
-* Ruby ([2.6.0, 2.5.3, 2.4.5, 2.3.8, 2.2.10, 2.1.10, 2.0.0-p648](#ruby))
+* Ruby ([2.6.5, 2.5.7, 2.4.9, 2.3.8, 2.2.10, 2.1.10, 2.0.0-p648](#ruby))
 * PHP ([7.3.13, 7.2.26, 7.1.33, 7.0.32, 5.6.38](#php))
 
 ## Prerequisites
@@ -567,11 +567,11 @@ your build.
 
 LambCI includes a script you can source before running your build commands
 that will install Ruby, rbenv, gem and bundler. Call it with the Ruby version
-you want (currently: `2.6.0`, `2.5.3`, `2.4.5`, `2.3.8`, `2.2.10`, `2.1.10` or `2.0.0-p648`):
+you want (currently: `2.6.5`, `2.5.7`, `2.4.9`, `2.3.8`, `2.2.10`, `2.1.10` or `2.0.0-p648`):
 
 ```json
 {
-  "cmd": ". ~/init/ruby 2.4.5 && bundle install && bundle exec rake"
+  "cmd": ". ~/init/ruby 2.6.5 && bundle install && bundle exec rake"
 }
 ```
 

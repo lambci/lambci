@@ -57,7 +57,7 @@ different resources yourself.
 * Check the [Recipes](#language-recipes) list below on how to configure these:
 * Node.js (any version via [nave](https://github.com/isaacs/nave))
 * Python ([3.6.8, 3.7.2](#python))
-* Java (OpenJDK [1.8 and 1.7](#java))
+* Java (OpenJDK [1.8](#java))
 * Go ([any version](#go))
 * Ruby ([2.6.0, 2.5.3, 2.4.5, 2.3.8, 2.2.10, 2.1.10, 2.0.0-p648](#ruby))
 * PHP ([7.3.3, 7.2.16, 7.1.27, 7.0.32, 5.6.38](#php))
@@ -527,12 +527,12 @@ The Java SDK is not installed on AWS Lambda, so needs to be downloaded as part o
 your build – but the JRE *does* exist on Lambda, so the overall impact is small.
 
 LambCI includes a script you can source before running your build commands
-that will install and setup the SDK correctly, as well as Maven (v3.3.9). Call
-it with the OpenJDK version you want (`1.7` or `1.8`):
+that will install and setup the SDK correctly, as well as Maven (v3.6.3). Call
+it with the OpenJDK version you want (currently only `1.8`):
 
 ```json
 {
-  "cmd": ". ~/init/java 1.7 && mvn install -B -V && mvn test"
+  "cmd": ". ~/init/java 1.8 && mvn install -B -V && mvn test"
 }
 ```
 

@@ -17,6 +17,7 @@
     "s3": "npm run zip && ./publish.sh",
     "zip": "rm -rf build/lambda.zip node_modules && npm ci --prod && zip -qyr build/lambda.zip . -x@.lambdaignore",
     "package": "npm run zip && sam package --template-file template.yaml --s3-bucket ${S3_BUCKET:-lambci} --s3-prefix ${S3_PREFIX:-package} --output-template-file build/packaged.yaml",
+    "publish-sar": "npm run package && sam publish -t build/packaged.yaml",
     "deploy": "npm run package && sam deploy --stack-name ${STACK:-lambci} --template-file build/packaged.yaml --capabilities CAPABILITY_IAM",
     "docker": "npm run zip && docker-compose build"
   },

@@ -14,6 +14,18 @@ Metadata:
         Parameters:
           - SlackToken
           - SlackChannel
+  AWS::ServerlessRepo::Application:
+    Name: lambci
+    Description: A continuous integration system built on AWS Lambda
+    Author: LambCI
+    SpdxLicenseId: MIT
+    LicenseUrl: LICENSE
+    ReadmeUrl: README-SAR.md
+    Labels: ['continuous-integration', 'ci', 'git', 'github', 'build', 'lambda', 'lambci']
+    HomePageUrl: https://github.com/lambci/lambci
+    SemanticVersion: 0.11.0
+    SourceCodeUrl: https://github.com/lambci/lambci/tree/v0.11.0
+
 Parameters:
   GithubToken:
     Description: GitHub OAuth token

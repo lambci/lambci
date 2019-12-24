@@ -5,6 +5,7 @@
 *Serverless continuous integration*
 
 [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/template.yaml)
+[![Serverless App Repository](https://img.shields.io/badge/Available-serverless%20app%20repository-blue.svg)](https://serverlessrepo.aws.amazon.com/applications/arn:aws:serverlessrepo:us-east-1:553035198032:applications~lambci)
 [![LambCI Build Status](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/lambci/lambci/branches/master/2c03c00899d9b188a928a910320eacdc.svg)](https://lambci-public-buildresults-e3xwlufrwb3i.s3.amazonaws.com/gh/lambci/lambci/branches/master/8f82e6f4df48d23dead65035f625f5c0.html)
 [![Gitter](https://img.shields.io/gitter/room/lambci/lambci.svg)](https://gitter.im/lambci/lambci)
 
@@ -81,7 +82,7 @@ You can get around many of these limitations by [configuring LambCI to send task
 
 ## Installation
 
-You don't need to clone this repository – the easiest way to install LambCI is to [spin up a CloudFormation stack](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/template.yaml), which will use a transformed [template.yaml](https://github.com/lambci/lambci/blob/master/template.yaml) – this is just a collection of related AWS resources, including the main LambCI Lambda function and DynamoDB tables, that you can update or remove together – it should take around 3 minutes to spin up.
+You don't need to clone this repository – the easiest way to install LambCI is to [deploy it from the Serverless Application Repository](https://serverlessrepo.aws.amazon.com/applications/arn:aws:serverlessrepo:us-east-1:553035198032:applications~lambci) or [directly spin up a CloudFormation stack](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/template.yaml). This will create a collection of related AWS resources, including the main LambCI Lambda function and DynamoDB tables, that you can update or remove together – it should take around 3 minutes to spin up.
 
 You can use multiple repositories from the one stack, and you can run multiple stacks with different names side-by-side too (eg, `lambci-private` and `lambci-public`).
 
@@ -113,7 +114,7 @@ Pick any name, and when you click "Add integration" Slack will generate an API t
 
 ### 3. Launch the LambCI CloudFormation stack
 
-You can either [use this direct link](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/template.yaml) or navigate in your AWS Console to `Services > CloudFormation`, choose "Create Stack" and use the [S3 link](https://lambci.s3.amazonaws.com/templates/template.yaml):
+You can either [deploy it from the Serverless Application Repository](https://serverlessrepo.aws.amazon.com/applications/arn:aws:serverlessrepo:us-east-1:553035198032:applications~lambci) or [use this direct CloudFormation link](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=lambci&templateURL=https://lambci.s3.amazonaws.com/templates/template.yaml) or navigate in your AWS Console to `Services > CloudFormation`, choose "Create Stack" and use the [S3 link](https://lambci.s3.amazonaws.com/templates/template.yaml):
 
 <img alt="CloudFormation Step 1" src="https://lambci.s3.amazonaws.com/assets/cfn1_2.png" width="404" height="63">
 
@@ -157,6 +158,43 @@ By default LambCI only responds to pushes on the master branch and pull
 requests ([you can configure this](#configuration)), so try either of those –
 if nothing happens, then check `Services > CloudWatch > Logs` in the AWS
 Console and see the [Questions](#questions) section below.
+
+### Installing as a nested stack in another CloudFormation stack
+
+You can also embed LambCI in your own stack, using a `AWS::Serverless::Application` resource:
+
+```yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  LambCI:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:us-east-1:553035198032:applications/lambci
+        SemanticVersion: 0.11.0
+      Parameters:
+        GithubToken: '123456789abcdef123456789abcdef123456789'
+        GithubSecret: 'my-web-secret'
+        SlackChannel: '#general'
+        SlackToken: 'xoxb-123456789-abcdefABCDEFabcdef'
+
+Outputs:
+  S3Bucket:
+    Description: Name of the build results S3 bucket
+    Value: !GetAtt LambCI.Outputs.S3Bucket
+  WebhookUrl:
+    Description: GitHub webhook URL
+    Value: !GetAtt LambCI.Outputs.WebhookUrl
+```
+
+If you save the above as `template.yml`, then you can use the
+[AWS SAM CLI](https://github.com/awslabs/aws-sam-cli) to deploy from the same directory:
+
+```console
+sam deploy --stack-name lambci --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND
+```
 
 ## Configuration
 

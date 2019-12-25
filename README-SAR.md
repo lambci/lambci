@@ -40,7 +40,7 @@ It integrates with Slack, and updates your Pull Request and other commit statuse
 * Python (3.8.0, 3.7.4, 3.6.9)
 * Java (OpenJDK 1.8.0)
 * Go (any version)
-* Ruby (2.6.5, 2.5.7, 2.4.9, 2.3.8, 2.2.10, 2.1.10, 2.0.0-p648)
+* Ruby (2.7.0, 2.6.5, 2.5.7, 2.4.9, 2.3.8, 2.2.10, 2.1.10, 2.0.0-p648)
 * PHP (7.3.13, 7.2.26, 7.1.33, 7.0.32, 5.6.38)
 
 ## Prerequisites

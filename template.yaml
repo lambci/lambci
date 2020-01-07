@@ -73,7 +73,7 @@ Resources:
       Timeout: 900
       MemorySize: 3008
       Layers:
-        - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:553035198032:layer:lambci-base:10
+        - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:553035198032:layer:lambci-base:11
         - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:553035198032:layer:gcc72-lambda1:4
       Events:
         Webhook:

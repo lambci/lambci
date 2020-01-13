@@ -173,7 +173,7 @@ Resources:
     Properties:
       Location:
         ApplicationId: arn:aws:serverlessrepo:us-east-1:553035198032:applications/lambci
-        SemanticVersion: 0.11.1
+        SemanticVersion: 0.11.2
       Parameters:
         GithubToken: '123456789abcdef123456789abcdef123456789'
         GithubSecret: 'my-web-secret'

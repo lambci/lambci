@@ -23,8 +23,8 @@ Metadata:
     ReadmeUrl: README-SAR.md
     Labels: ['continuous-integration', 'ci', 'git', 'github', 'build', 'lambda', 'lambci']
     HomePageUrl: https://github.com/lambci/lambci
-    SemanticVersion: 0.11.1
-    SourceCodeUrl: https://github.com/lambci/lambci/tree/v0.11.1
+    SemanticVersion: 0.11.2
+    SourceCodeUrl: https://github.com/lambci/lambci/tree/v0.11.2
 
 Parameters:
   GithubToken:

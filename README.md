@@ -479,7 +479,7 @@ If you discover any security issues with LambCI please email [security@lambci.or
 
 ## Language Recipes
 
-The default command is `npm ci && npm test` which will use Node.js 12.14.1 and npm 6.13.4.
+The default command is `npm ci && npm test` which will use Node.js 12.14.1 and npm 6.13.6.
 
 The way to build with different Node.js versions, or other languages entirely,
 is just to override the `cmd` config property.

@@ -372,6 +372,7 @@ This configuration is hardcoded in `utils/config.js` and overridden by any confi
       username: 'LambCI',
       iconUrl: 'https://lambci.s3.amazonaws.com/assets/logo-48x48.png',
       asUser: false,
+      onlyOnFail: false, // Only notify when failing, off by default
     },
   },
   build: false, // Build nothing by default except master and PRs

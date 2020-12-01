@@ -4,6 +4,7 @@ var config = require('../utils/config')
 var log = require('../utils/log')
 
 var USER_AGENT = config.STACK
+var STACK_NAME = config.STACK
 
 exports.createClient = function(token, options, build) {
   return new SlackClient(token, options, build)
@@ -17,6 +18,7 @@ function SlackClient(token, options, build) {
   this.username = options.username
   this.iconUrl = options.iconUrl
   this.asUser = options.asUser
+  this.showStackName = options.showStackName
   this.lastTs = null // Most recent timestamp
 
   this.repo = build.repo
@@ -80,6 +82,13 @@ SlackClient.prototype.updateStatus = function(status, cb) {
   if (status.text) {
     attachment.text = status.text
     attachment.mrkdwn_in = ['text']
+  }
+  if (this.showStackName) {
+    attachment.fields.push({
+      title: 'Stack',
+      value: `${STACK_NAME}`,
+      short: true,
+    })
   }
   this.update({attachments: JSON.stringify([attachment])}, cb)
 }

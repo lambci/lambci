@@ -31,6 +31,9 @@ function GithubClient(build) {
   })
 
   build.statusEmitter.finishTasks.push((build, cb) => {
+    // Don't update statuses if we're doing a docker build and we launched successfully
+    if (!build.error && build.config.docker) return cb()
+
     var status = {
       state: build.error ? 'failure' : 'success',
       description: build.error ? build.error.message : `Build #${build.buildNum} successful!`,
@@ -122,11 +125,13 @@ exports.parseEvent = function(event, eventType) {
   // Log the git event for debugging
   log.raw(event)
 
-  if (!~['push', 'pull_request'].indexOf(eventType)) {
+  if (!~['push', 'pull_request', 'status'].indexOf(eventType)) {
     if (event.pull_request) {
       eventType = 'pull_request'
     } else if (event.pusher) {
       eventType = 'push'
+    } else if (event.state) {
+      eventType = 'status'
     } else {
       throw new Error(`Unknown GitHub event type: ${eventType}`)
     }
@@ -179,7 +184,7 @@ exports.parseEvent = function(event, eventType) {
     build.isFork = build.cloneRepo != build.repo
     build.prNum = prNum
 
-  } else {
+  } else if (eventType == 'push') {
     // https://developer.github.com/v3/activity/events/types/#pushevent
 
     var branchMatch = (event.ref || '').match(/^refs\/heads\/(.+)$/)
@@ -207,6 +212,19 @@ exports.parseEvent = function(event, eventType) {
       if ((commit.committer || {}).username) committers.push(commit.committer.username)
       return committers
     }, []))
+  } else if (eventType == 'status') {
+      if (event.state == 'pending') {
+        return {ignore: `Status is pending`}
+      }
+
+      var matches = (event.description || "").match(/#([0-9]+)/)
+      if ((matches == null) || (matches.length < 2)) {
+        throw new Error('failed to extract build number from description')
+      }
+
+      build.buildNum = parseInt(matches[1])
+      build.commit = (event.commit || {}).sha
+      build.status = event.state
   }
 
   if (!/^[a-zA-Z0-9-_.]+\/[a-zA-Z0-9-_.]+$/.test(build.repo)) {

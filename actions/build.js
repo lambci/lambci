@@ -1,8 +1,8 @@
 var path = require('path')
-var EventEmitter = require('events')
 var spawn = require('child_process').spawn
 var async = require('neo-async')
 var AWS = require('aws-sdk')
+var BuildInfo = require('./buildInfo.js')
 var utils = require('../utils')
 var log = require('../utils/log')
 var config = require('../utils/config')
@@ -113,18 +113,22 @@ function patchUncaughtHandlers(build, cb) {
 }
 
 function buildDone(build, cb) {
+  var finishTasks = build.statusEmitter.finishTasks
 
-  // Don't update statuses if we're doing a docker build and we launched successfully
-  if (!build.error && build.config.docker) return cb()
+  // Don't update statuses if we're doing a docker build and we launched successfully.
+  // We still need to properly call finish tasks handlers for docker builds
+  // to end the log uploader etc. and to properly shutdown the lambda.
+  // Otherwise the lamdbda will keep uploading the log until the function times out.
+  if (build.error || !build.config.docker) {
+      log.info(build.error ? `Build #${build.buildNum} failed: ${build.error.message}` :
+        `Build #${build.buildNum} successful!`)
 
-  log.info(build.error ? `Build #${build.buildNum} failed: ${build.error.message}` :
-    `Build #${build.buildNum} successful!`)
+      build.endedAt = new Date()
+      build.status = build.error ? 'failure' : 'success'
+      build.statusEmitter.emit('finish', build)
 
-  build.endedAt = new Date()
-  build.status = build.error ? 'failure' : 'success'
-  build.statusEmitter.emit('finish', build)
-
-  var finishTasks = build.statusEmitter.finishTasks.concat(db.finishBuild)
+      finishTasks = finishTasks.concat(db.finishBuild)
+  }
 
   async.forEach(finishTasks, (task, cb) => task(build, cb), function(taskErr) {
     log.logIfErr(taskErr)
@@ -316,63 +320,3 @@ function prepareDockerConfig(buildConfig) {
   }
   return utils.merge(defaultDockerConfig, buildConfig)
 }
-
-function BuildInfo(buildData, context) {
-  this.startedAt = new Date()
-  this.endedAt = null
-
-  this.status = 'pending'
-  this.statusEmitter = new EventEmitter()
-
-  // Any async functions to run on 'finish' should be added to this array,
-  // and be of the form: function(build, cb)
-  this.statusEmitter.finishTasks = []
-
-  this.project = buildData.project
-  this.buildNum = buildData.buildNum || 0
-
-  this.repo = buildData.repo || this.project.replace(/^gh\//, '')
-
-  if (buildData.trigger) {
-    var triggerPieces = buildData.trigger.split('/')
-    this.trigger = buildData.trigger
-    this.eventType = triggerPieces[0] == 'pr' ? 'pull_request' : 'push'
-    this.prNum = triggerPieces[0] == 'pr' ? +triggerPieces[1] : 0
-    this.branch = triggerPieces[0] == 'push' ? triggerPieces[1] : (buildData.branch || 'master')
-  } else {
-    this.eventType = buildData.eventType
-    this.prNum = buildData.prNum
-    this.branch = buildData.branch
-    this.trigger = this.prNum ? `pr/${this.prNum}` : `push/${this.branch}`
-  }
-
-  this.event = buildData.event
-  this.isPrivate = buildData.isPrivate
-  this.isRebuild = buildData.isRebuild
-
-  this.branch = buildData.branch
-  this.cloneRepo = buildData.cloneRepo || this.repo
-  this.checkoutBranch = buildData.checkoutBranch || this.branch
-  this.commit = buildData.commit
-  this.baseCommit = buildData.baseCommit
-  this.comment = buildData.comment
-  this.user = buildData.user
-
-  this.isFork = this.cloneRepo != this.repo
-
-  this.committers = buildData.committers
-
-  this.config = null
-  this.cloneDir = path.join(config.BASE_BUILD_DIR, this.repo)
-
-  this.requestId = context.awsRequestId
-  this.logGroupName = context.logGroupName
-  this.logStreamName = context.logStreamName
-
-  this.token = ''
-  this.logUrl = ''
-  this.lambdaLogUrl = ''
-  this.buildDirUrl = ''
-  this.error = null
-}
-

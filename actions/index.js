@@ -7,6 +7,5 @@ exports.version = function(event, context, cb) {
 }
 
 exports.build = require('./build')
-
 exports.rebuild = require('./rebuild')
-
+exports.updateStatus = require('./updateStatus')

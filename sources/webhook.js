@@ -61,11 +61,19 @@ exports.build = function(event, context, cb) {
       return done(null, {msg: buildData.ignore})
     }
 
-    lambda.invoke({
-      InvocationType: 'Event',
-      FunctionName: process.env.AWS_LAMBDA_FUNCTION_NAME,
-      Payload: JSON.stringify(Object.assign({action: 'build'}, buildData)),
-    }, done)
+    if (eventType == 'status') {
+      lambda.invoke({
+        InvocationType: 'Event',
+        FunctionName: process.env.AWS_LAMBDA_FUNCTION_NAME,
+        Payload: JSON.stringify(Object.assign({action: 'updateStatus'}, buildData)),
+      }, done)
+    } else {
+      lambda.invoke({
+        InvocationType: 'Event',
+        FunctionName: process.env.AWS_LAMBDA_FUNCTION_NAME,
+        Payload: JSON.stringify(Object.assign({action: 'build'}, buildData)),
+      }, done)
+    }
   })
 }
 

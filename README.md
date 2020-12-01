@@ -1,3 +1,5 @@
+### Note: This repo is in maintenance mode as we assess whether [Serverless GitHub Actions](https://github.com/lambci/serverless-actions) might provide a better experience going forward
+
 <img align="left" src="https://lambci.s3.amazonaws.com/assets/logo-310x310.png" width="180px" height="180px">
 
 # LambCI

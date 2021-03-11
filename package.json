@@ -22,7 +22,7 @@
     "docker": "npm run zip && docker-compose build"
   },
   "dependencies": {
-    "ansi_up": "^3.0.0",
+    "ansi_up": "^5.0.0",
     "nave": "^3.2.1",
     "neo-async": "^2.6.1"
   },

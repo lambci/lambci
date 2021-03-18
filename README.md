@@ -51,7 +51,7 @@ different resources yourself.
 
 ## Installed languages
 
-* Node.js 12.x (including `npm`/`npx`)
+* Node.js 14.x (including `npm`/`npx`)
 * Python 3.6 (including `pip`)
 * Gcc 7.2 (including `c++`)
 

@@ -33,7 +33,7 @@ ARG NODE_VERSION
 RUN curl -sSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz | \
   tar -xJ --strip-components 1
 
-RUN curl -O https://raw.githubusercontent.com/lambci/node-custom-lambda/${NODE_VERSION}/v12.x/layer.zip && \
+RUN curl -O https://raw.githubusercontent.com/lambci/node-custom-lambda/${NODE_VERSION}/v14.x/layer.zip && \
   unzip -o layer.zip && \
   rm layer.zip
 

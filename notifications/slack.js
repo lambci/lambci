@@ -17,7 +17,9 @@ function SlackClient(token, options, build) {
   this.username = options.username
   this.iconUrl = options.iconUrl
   this.asUser = options.asUser
+  this.onlyOnFail = options.onlyOnFail
   this.lastTs = null // Most recent timestamp
+  this.hasFailed = false
 
   this.repo = build.repo
   this.branch = build.branch
@@ -33,12 +35,15 @@ function SlackClient(token, options, build) {
       fallback: `Started: ${build.repo} #${build.buildNum}`,
       title: `Build #${build.buildNum} started...`,
     }
-    this.statusQueue.push(status, log.logIfErr)
+    if (!this.onlyOnFail) {
+      this.statusQueue.push(status, log.logIfErr)
+    }
   })
 
   build.statusEmitter.finishTasks.push((build, cb) => {
     var status = {}, elapsedTxt = utils.elapsedTxt(build.startedAt, build.endedAt)
     if (build.error) {
+      this.hasFailed = true
       var txt = build.error.message
       if (build.error.logTail) {
         txt = `${build.error.logTail}\n${txt}`
@@ -48,7 +53,7 @@ function SlackClient(token, options, build) {
       status.fallback = `Failed: ${build.repo} #${build.buildNum} (${elapsedTxt})`
       status.title = `Build #${build.buildNum} failed (${elapsedTxt})`
       status.text = '```' + txt.replace(/```/g, "'''") + '```' // TODO: not sure best way to escape ```
-    } else {
+    } else if (!this.onlyOnFail) {
       status.color = 'good'
       status.fallback = `Success: ${build.repo} #${build.buildNum} (${elapsedTxt})`
       status.title = `Build #${build.buildNum} successful (${elapsedTxt})`
@@ -118,8 +123,13 @@ SlackClient.prototype.update = function(body, cb) {
   body.icon_url = body.icon_url || this.iconUrl
   body.as_user = body.as_user || this.asUser
 
+  if (this.onlyOnFail && !this.hasFailed) {
+    return;
+  }
+
   if (!body.ts) {
     return this.postMessage(body, cb)
+
   }
 
   this.request({path: '/api/chat.update', body: body}, cb)
